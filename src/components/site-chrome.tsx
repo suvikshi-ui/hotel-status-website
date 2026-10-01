@@ -12,8 +12,8 @@ export function SiteHeader() {
       <div className="mx-auto flex h-20 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <Link to="/" className="flex min-w-0 items-center gap-3 text-ink" onClick={() => setOpen(false)}>
           <video
-            src="/hotels/logo-digital.webm?v=2"
-            poster="/hotels/logo-digital.png?v=2"
+            src="/hotels/logo-digital.webm?v=3"
+            poster="/hotels/logo-digital.png?v=3"
             autoPlay
             loop
             muted

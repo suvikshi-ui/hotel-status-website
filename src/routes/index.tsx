@@ -72,8 +72,8 @@ function Home() {
         <section className="relative">
           <img src={HOTEL.hero.src} alt={HOTEL.hero.alt} className="block h-auto w-full" />
           <video
-            src="/hotels/logo-digital.webm?v=2"
-            poster="/hotels/logo-digital.png?v=2"
+            src="/hotels/logo-digital.webm?v=3"
+            poster="/hotels/logo-digital.png?v=3"
             autoPlay
             loop
             muted
