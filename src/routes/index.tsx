@@ -75,8 +75,7 @@ function Home() {
             alt={HOTEL.hero.alt}
             className="block h-auto w-full transition-transform duration-700 ease-out group-hover:scale-105"
           />
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 sm:pl-8">
-            <div className="flex max-w-[92%] items-center gap-3 sm:gap-5">
+          <div className="absolute top-3 left-3 flex max-w-[92%] items-center gap-3 sm:top-6 sm:left-8 sm:gap-5">
               <video
                 src="/hotels/logo-digital.webm?v=3"
                 poster="/hotels/logo-digital.png?v=3"
@@ -87,10 +86,9 @@ function Home() {
                 aria-hidden
                 className="size-16 shrink-0 object-contain sm:size-28"
               />
-              <h1 className="font-display text-2xl font-semibold leading-tight text-ink [text-shadow:0_0_10px_#fff,0_0_22px_#fff,0_1px_0_#fff] sm:text-5xl">
+              <h1 className="font-display text-2xl font-semibold leading-tight text-ink sm:text-5xl">
                 Hotel Status Residency
               </h1>
-            </div>
           </div>
         </section>
 
