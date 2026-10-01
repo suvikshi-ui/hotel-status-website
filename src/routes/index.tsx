@@ -75,23 +75,27 @@ function Home() {
             alt={HOTEL.hero.alt}
             className="block h-auto w-full transition-transform duration-700 ease-out group-hover:scale-105"
           />
-          <video
-            src="/hotels/logo-digital.webm?v=3"
-            poster="/hotels/logo-digital.png?v=3"
-            autoPlay
-            loop
-            muted
-            playsInline
-            aria-hidden
-            className="absolute top-1 left-2 size-24 object-contain sm:top-3 sm:left-4 sm:size-36"
-          />
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 sm:pl-8">
+            <div className="flex max-w-[92%] items-center gap-3 sm:gap-5">
+              <video
+                src="/hotels/logo-digital.webm?v=3"
+                poster="/hotels/logo-digital.png?v=3"
+                autoPlay
+                loop
+                muted
+                playsInline
+                aria-hidden
+                className="size-16 shrink-0 object-contain sm:size-28"
+              />
+              <h1 className="font-display text-2xl font-semibold leading-tight text-ink [text-shadow:0_0_10px_#fff,0_0_22px_#fff,0_1px_0_#fff] sm:text-5xl">
+                Hotel Status Residency
+              </h1>
+            </div>
+          </div>
         </section>
 
         <section id="stay" className="mx-auto max-w-6xl px-4 pt-12 pb-14 sm:px-6">
           <p className="text-xs tracking-[0.22em] text-muted uppercase">Mahape, Navi Mumbai</p>
-          <h1 className="mt-2 max-w-3xl font-display text-4xl font-semibold text-ink sm:text-6xl">
-            Hotel Status Residency
-          </h1>
           <p className="mt-5 max-w-2xl text-base leading-relaxed text-ink-soft">{HOTEL.description}</p>
           <Button asChild variant="ink" className="mt-8 rounded-none tracking-[0.16em] uppercase">
             <Link to="/contact">Book a stay</Link>
