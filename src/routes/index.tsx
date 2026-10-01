@@ -70,30 +70,31 @@ function Home() {
     <PageShell>
       <main>
         <section className="group relative overflow-hidden">
-          <img
-            src={HOTEL.hero.src}
-            alt={HOTEL.hero.alt}
-            className="block h-auto w-full transition-transform duration-700 ease-out group-hover:scale-105"
-          />
-          <div className="absolute top-3 left-3 flex max-w-[92%] items-center gap-3 sm:top-6 sm:left-8 sm:gap-5">
-              <video
-                src="/hotels/logo-digital.webm?v=3"
-                poster="/hotels/logo-digital.png?v=3"
-                autoPlay
-                loop
-                muted
-                playsInline
-                aria-hidden
-                className="size-16 shrink-0 object-contain sm:size-28"
-              />
-              <h1 className="font-display text-2xl font-semibold leading-tight text-ink sm:text-5xl">
-                Hotel Status Residency
-              </h1>
+          <div className="relative transition-transform duration-700 ease-out group-hover:scale-105">
+            <img src={HOTEL.hero.src} alt={HOTEL.hero.alt} className="block h-auto w-full" />
+            <video
+              src="/hotels/logo-digital.webm?v=3"
+              poster="/hotels/logo-digital.png?v=3"
+              autoPlay
+              loop
+              muted
+              playsInline
+              aria-hidden
+              className="pointer-events-none absolute w-[6.2%] origin-right object-contain"
+              style={{
+                left: "23%",
+                top: "13%",
+                transform: "perspective(640px) rotateX(8deg) rotateY(18deg)",
+              }}
+            />
           </div>
         </section>
 
         <section id="stay" className="mx-auto max-w-6xl px-4 pt-12 pb-14 sm:px-6">
           <p className="text-xs tracking-[0.22em] text-muted uppercase">Mahape, Navi Mumbai</p>
+          <h1 className="mt-2 max-w-3xl font-display text-4xl font-semibold text-ink sm:text-6xl">
+            Hotel Status Residency
+          </h1>
           <p className="mt-5 max-w-2xl text-base leading-relaxed text-ink-soft">{HOTEL.description}</p>
           <Button asChild variant="ink" className="mt-8 rounded-none tracking-[0.16em] uppercase">
             <Link to="/contact">Book a stay</Link>
