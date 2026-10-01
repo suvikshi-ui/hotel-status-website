@@ -72,14 +72,14 @@ function Home() {
         <section className="relative">
           <img src={HOTEL.hero.src} alt={HOTEL.hero.alt} className="block h-auto w-full" />
           <video
-            src="/hotels/logo-digital.webm"
-            poster="/hotels/logo-digital.png"
+            src="/hotels/logo-digital.webm?v=2"
+            poster="/hotels/logo-digital.png?v=2"
             autoPlay
             loop
             muted
             playsInline
             aria-hidden
-            className="absolute top-2.5 left-3 size-16 object-contain sm:top-5 sm:left-6 sm:size-24"
+            className="absolute top-1 left-2 size-24 object-contain sm:top-3 sm:left-4 sm:size-36"
           />
         </section>
 
