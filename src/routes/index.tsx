@@ -69,8 +69,12 @@ function Home() {
   return (
     <PageShell>
       <main>
-        <section className="relative">
-          <img src={HOTEL.hero.src} alt={HOTEL.hero.alt} className="block h-auto w-full" />
+        <section className="group relative overflow-hidden">
+          <img
+            src={HOTEL.hero.src}
+            alt={HOTEL.hero.alt}
+            className="block h-auto w-full transition-transform duration-700 ease-out group-hover:scale-105"
+          />
           <video
             src="/hotels/logo-digital.webm?v=3"
             poster="/hotels/logo-digital.png?v=3"
@@ -542,8 +546,12 @@ function RoomCard({ room }: { room: RoomType }) {
 
   return (
     <article className="flex flex-col">
-      <button type="button" className="relative aspect-[3/2] w-full overflow-hidden" onClick={() => setOpen(0)}>
-        <img src={cover.src} alt={cover.alt} className="size-full object-cover" />
+      <button type="button" className="group relative aspect-[3/2] w-full overflow-hidden" onClick={() => setOpen(0)}>
+        <img
+          src={cover.src}
+          alt={cover.alt}
+          className="size-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+        />
       </button>
       <div className="flex flex-1 flex-col border-b border-ink/10 py-5">
         <h3 className="font-display text-3xl font-semibold">{room.name}</h3>

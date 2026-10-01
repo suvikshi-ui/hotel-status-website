@@ -25,7 +25,7 @@ export function PhotoGallery({ photos, featured }: { photos: RoomPhoto[]; featur
                 src={photo.src}
                 alt={photo.alt}
                 loading={index < 2 ? "eager" : "lazy"}
-                className="absolute inset-0 size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                className="absolute inset-0 size-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
               />
             </button>
           );
