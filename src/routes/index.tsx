@@ -71,9 +71,14 @@ function Home() {
       <main>
         <section className="relative">
           <img src={HOTEL.hero.src} alt={HOTEL.hero.alt} className="block h-auto w-full" />
-          <img
-            src="/hotels/logo-mark.png"
-            alt=""
+          <video
+            src="/hotels/logo-digital.webm"
+            poster="/hotels/logo-digital.png"
+            autoPlay
+            loop
+            muted
+            playsInline
+            aria-hidden
             className="absolute top-2.5 left-3 size-16 object-contain sm:top-5 sm:left-6 sm:size-24"
           />
         </section>
