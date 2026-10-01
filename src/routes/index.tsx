@@ -80,11 +80,11 @@ function Home() {
               muted
               playsInline
               aria-hidden
-              className="pointer-events-none absolute w-[6.2%] origin-right object-contain"
+              className="pointer-events-none absolute w-[5.6%] origin-center object-contain"
               style={{
-                left: "23%",
-                top: "13%",
-                transform: "perspective(640px) rotateX(8deg) rotateY(18deg)",
+                left: "31.2%",
+                top: "16.4%",
+                transform: "perspective(1200px) rotateX(6deg) rotateY(2deg)",
               }}
             />
           </div>
