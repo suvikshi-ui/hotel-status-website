@@ -111,6 +111,19 @@
   }
 }
 
+a {
+  transition:
+    transform 700ms ease-out,
+    color 200ms ease-out,
+    background-color 200ms ease-out,
+    border-color 200ms ease-out,
+    opacity 200ms ease-out;
+}
+
+a:hover {
+  transform: scale(1.06);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -119,5 +132,9 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  a:hover {
+    transform: none;
   }
 }
