@@ -83,7 +83,7 @@ function Home() {
               className="pointer-events-none absolute w-[5.6%] origin-center object-contain"
               style={{
                 left: "31.2%",
-                top: "16.4%",
+                top: "7%",
                 transform: "perspective(1200px) rotateX(6deg) rotateY(2deg)",
               }}
             />
