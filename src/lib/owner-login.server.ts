@@ -13,7 +13,7 @@ export async function saveOwnerLogin(password: string): Promise<void> {
   const ctx = await auth.$context;
   const email = HOTEL.email.toLowerCase();
   const hashed = await ctx.password.hash(password);
-  const existing = await ctx.internalAdapter.findUserByEmail(email);
+  const existing = await ctx.internalAdapter.findUserByEmail(email, { includeAccounts: true });
   if (!existing?.user) {
     const user = await ctx.internalAdapter.createUser({
       email,
