@@ -3,8 +3,13 @@ import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { GROK_PROVIDERS, authClient, authEnabled, signIn } from "@/lib/auth/client";
 import { HOTEL } from "@/lib/hotels";
+import { setOwnerPassword } from "@/lib/owner-reset.functions";
 
 export const Route = createFileRoute("/login")({
+  validateSearch: (search: Record<string, unknown>): { reset?: string; done?: string } => ({
+    reset: typeof search.reset === "string" && search.reset.length > 0 ? search.reset : undefined,
+    done: search.done === "1" ? "1" : undefined,
+  }),
   component: OwnerLogin,
   head: () => ({
     meta: [{ title: "Owner desk · Hotel Status Residency" }],
@@ -16,11 +21,32 @@ const field =
 
 function OwnerLogin() {
   const navigate = useNavigate();
+  const { reset, done } = Route.useSearch();
   const [mode, setMode] = useState<"sign-in" | "create">("sign-in");
   const [email, setEmail] = useState(HOTEL.email);
   const [password, setPassword] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function onReset(event: FormEvent) {
+    event.preventDefault();
+    if (!reset) return;
+    setError(null);
+    if (password.length < 8) {
+      setError("Use at least 8 characters.");
+      return;
+    }
+    setPending(true);
+    try {
+      await setOwnerPassword({ data: { token: reset, password } });
+      setPassword("");
+      await navigate({ to: "/login", search: { done: "1" } });
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Could not reset the password.");
+    } finally {
+      setPending(false);
+    }
+  }
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -68,7 +94,30 @@ function OwnerLogin() {
           Guests book without an account. This desk is only for the hotel, so you can see who booked, which room, and the dates.
         </p>
 
-        {authEnabled ? (
+        {authEnabled && reset ? (
+          <form onSubmit={onReset} className="mt-10 grid gap-6">
+            <p className="text-sm leading-relaxed text-ink-soft">
+              Set a new password for {HOTEL.email}. This link works once.
+            </p>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs tracking-[0.18em] text-muted uppercase">New password</span>
+              <input
+                id="owner-new-password"
+                type="password"
+                required
+                minLength={8}
+                autoComplete="new-password"
+                className={field}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+              />
+            </label>
+            {error ? <p className="text-sm text-terracotta">{error}</p> : null}
+            <Button type="submit" variant="ink" disabled={pending} className="rounded-none tracking-[0.16em] uppercase">
+              {pending ? "Please wait…" : "Save new password"}
+            </Button>
+          </form>
+        ) : authEnabled ? (
           <form onSubmit={onSubmit} className="mt-10 grid gap-6">
             <label className="flex flex-col gap-1">
               <span className="text-xs tracking-[0.18em] text-muted uppercase">Email</span>
@@ -95,6 +144,7 @@ function OwnerLogin() {
                 onChange={(event) => setPassword(event.target.value)}
               />
             </label>
+            {done === "1" ? <p className="text-sm text-success">Password updated. Sign in with the new one.</p> : null}
             {error ? <p className="text-sm text-terracotta">{error}</p> : null}
             <Button type="submit" variant="ink" disabled={pending} className="rounded-none tracking-[0.16em] uppercase">
               {pending ? "Please wait…" : mode === "create" ? "Create owner sign-in" : "Open the desk"}
