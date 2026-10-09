@@ -1,9 +1,10 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { addDays, format, parseISO } from "date-fns";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { PageShell } from "@/components/site-chrome";
 import { Button } from "@/components/ui/button";
 import { useBookings, type Booking } from "@/lib/bookings";
+import { listTakenDates, type TakenStay } from "@/lib/bookings.functions";
 import { formatInr, formatLongDate, nightsBetween, todayIso, tomorrowIso } from "@/lib/format";
 import { getHotel, HOTEL, type RoomType } from "@/lib/hotels";
 import { cn } from "@/lib/utils";
@@ -74,8 +75,9 @@ const field =
 
 function BookPage() {
   const search = Route.useSearch();
-  const bookings = useBookings((s) => s.bookings);
+  const mine = useBookings((s) => s.bookings);
   const add = useBookings((s) => s.add);
+  const [taken, setTaken] = useState<TakenStay[]>([]);
 
   const [roomId, setRoomId] = useState<RoomId>(search.room ?? "deluxe");
   const [checkIn, setCheckIn] = useState(search.checkIn ?? todayIso());
@@ -89,17 +91,33 @@ function BookPage() {
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<Booking | null>(null);
 
+  useEffect(() => {
+    let live = true;
+    listTakenDates()
+      .then((rows) => {
+        if (live) setTaken(rows);
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [done]);
+
   const room = HOTEL.rooms.find((item) => item.id === roomId) ?? HOTEL.rooms[0];
   const datesOk = checkOut > checkIn;
   const nights = datesOk ? nightsBetween(checkIn, checkOut) : 0;
   const total = nights * room.price * rooms;
-  const clash = bookings.find(
-    (booking) =>
-      booking.status === "confirmed" &&
-      booking.roomTypeId === room.id &&
-      booking.checkIn < checkOut &&
-      booking.checkOut > checkIn,
-  );
+  const clash =
+    taken.find(
+      (stay) => stay.room_type === room.id && stay.check_in < checkOut && stay.check_out > checkIn,
+    ) ??
+    mine.find(
+      (booking) =>
+        booking.status === "confirmed" &&
+        booking.roomTypeId === room.id &&
+        booking.checkIn < checkOut &&
+        booking.checkOut > checkIn,
+    );
 
   function onCheckIn(value: string) {
     setCheckIn(value);
@@ -164,7 +182,7 @@ function BookPage() {
         <p className="text-xs tracking-[0.22em] text-gold uppercase">Hotel Status Residency</p>
         <h1 className="mt-3 font-display text-5xl font-semibold">Book a stay</h1>
         <p className="mt-4 max-w-xl text-base leading-relaxed text-ink-soft">
-          Choose a room and the dates. The booking is saved for the hotel, so it is the same on every device.
+          Choose a room and the dates. You get a booking number. The hotel sees the same stay on the owner desk.
         </p>
 
         {done ? (
@@ -246,8 +264,11 @@ function BookPage() {
 
             {clash ? (
               <p className="mt-4 text-sm text-terracotta">
-                {room.name} is already booked {formatLongDate(clash.checkIn)} to {formatLongDate(clash.checkOut)}.
-                Pick other dates, or another room type.
+                {room.name} is already booked{" "}
+                {"checkIn" in clash
+                  ? `${formatLongDate(clash.checkIn)} to ${formatLongDate(clash.checkOut)}`
+                  : `${formatLongDate(clash.check_in)} to ${formatLongDate(clash.check_out)}`}
+                . Pick other dates, or another room type.
               </p>
             ) : null}
 
@@ -366,9 +387,12 @@ function Confirmed({ booking, onAnother }: { booking: Booking; onAnother: () => 
         {formatLongDate(booking.checkIn)} — {formatLongDate(booking.checkOut)} · {booking.nights} night
         {booking.nights === 1 ? "" : "s"} · {formatInr(booking.total)}
       </p>
+      <p className="mt-3 text-sm leading-relaxed text-ink-soft">
+        Keep this number. Find the stay later with the booking number and the phone used here.
+      </p>
       <div className="mt-6 flex flex-wrap gap-3">
         <Button asChild variant="ink" className="rounded-none tracking-[0.16em] uppercase">
-          <Link to="/bookings">My bookings</Link>
+          <Link to="/bookings">Find this stay</Link>
         </Button>
         <Button type="button" variant="outline" className="rounded-none tracking-[0.16em] uppercase" onClick={onAnother}>
           Book another

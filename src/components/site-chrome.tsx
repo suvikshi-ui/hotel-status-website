@@ -1,8 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { useBookings } from "@/lib/bookings";
 import { HOTEL } from "@/lib/hotels";
 
 export function SiteHeader() {
@@ -70,7 +69,7 @@ export function SiteHeader() {
             to="/bookings"
             className="flex h-11 items-center px-3 text-xs tracking-[0.18em] text-ink uppercase"
           >
-            Bookings
+            Your stay
           </Link>
           <Button asChild size="sm" variant="ink" className="ml-3 rounded-none tracking-[0.16em] uppercase">
             <Link to="/book/$hotelId" params={{ hotelId: HOTEL.id }}>
@@ -115,7 +114,7 @@ export function SiteHeader() {
               Gallery
             </Link>
             <Link to="/bookings" className="flex h-11 items-center text-sm tracking-[0.16em] text-ink uppercase" onClick={() => setOpen(false)}>
-              Bookings
+              Your stay
             </Link>
             <Button asChild variant="ink" className="mt-2 w-full rounded-none tracking-[0.16em] uppercase">
               <Link to="/book/$hotelId" params={{ hotelId: HOTEL.id }} onClick={() => setOpen(false)}>
@@ -163,7 +162,10 @@ export function SiteFooter() {
               Book a stay
             </Link>
             <Link to="/bookings" className="text-cream">
-              My bookings
+              Find your stay
+            </Link>
+            <Link to="/owner" className="text-cream">
+              Owner desk
             </Link>
           </p>
         </div>
@@ -173,11 +175,6 @@ export function SiteFooter() {
 }
 
 export function PageShell({ children }: { children: ReactNode }) {
-  const load = useBookings((s) => s.load);
-  useEffect(() => {
-    void load();
-  }, [load]);
-
   return (
     <div className="flex min-h-dvh flex-col bg-paper text-ink">
       <SiteHeader />

@@ -13,9 +13,12 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as BookingsRouteImport } from './routes/bookings'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as HotelsRouteImport } from './routes/hotels'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as OwnerRouteImport } from './routes/owner'
 import { Route as BookHotelIdRouteImport } from './routes/book.$hotelId'
 import { Route as HotelsIndexRouteImport } from './routes/hotels.index'
 import { Route as HotelsHotelIdRouteImport } from './routes/hotels.$hotelId'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -37,6 +40,16 @@ const HotelsRoute = HotelsRouteImport.update({
   path: '/hotels',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OwnerRoute = OwnerRouteImport.update({
+  id: '/owner',
+  path: '/owner',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BookHotelIdRoute = BookHotelIdRouteImport.update({
   id: '/book/$hotelId',
   path: '/book/$hotelId',
@@ -52,23 +65,34 @@ const HotelsHotelIdRoute = HotelsHotelIdRouteImport.update({
   path: '/$hotelId',
   getParentRoute: () => HotelsRoute,
 } as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/bookings': typeof BookingsRoute
   '/contact': typeof ContactRoute
   '/hotels': typeof HotelsRouteWithChildren
+  '/login': typeof LoginRoute
+  '/owner': typeof OwnerRoute
   '/book/$hotelId': typeof BookHotelIdRoute
   '/hotels/$hotelId': typeof HotelsHotelIdRoute
   '/hotels/': typeof HotelsIndexRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/bookings': typeof BookingsRoute
   '/contact': typeof ContactRoute
+  '/login': typeof LoginRoute
+  '/owner': typeof OwnerRoute
   '/book/$hotelId': typeof BookHotelIdRoute
   '/hotels/$hotelId': typeof HotelsHotelIdRoute
   '/hotels': typeof HotelsIndexRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -76,9 +100,12 @@ export interface FileRoutesById {
   '/bookings': typeof BookingsRoute
   '/contact': typeof ContactRoute
   '/hotels': typeof HotelsRouteWithChildren
+  '/login': typeof LoginRoute
+  '/owner': typeof OwnerRoute
   '/book/$hotelId': typeof BookHotelIdRoute
   '/hotels/$hotelId': typeof HotelsHotelIdRoute
   '/hotels/': typeof HotelsIndexRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -87,26 +114,35 @@ export interface FileRouteTypes {
     | '/bookings'
     | '/contact'
     | '/hotels'
+    | '/login'
+    | '/owner'
     | '/book/$hotelId'
     | '/hotels/$hotelId'
     | '/hotels/'
+    | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/bookings'
     | '/contact'
+    | '/login'
+    | '/owner'
     | '/book/$hotelId'
     | '/hotels/$hotelId'
     | '/hotels'
+    | '/api/auth/$'
   id:
     | '__root__'
     | '/'
     | '/bookings'
     | '/contact'
     | '/hotels'
+    | '/login'
+    | '/owner'
     | '/book/$hotelId'
     | '/hotels/$hotelId'
     | '/hotels/'
+    | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -114,7 +150,10 @@ export interface RootRouteChildren {
   BookingsRoute: typeof BookingsRoute
   ContactRoute: typeof ContactRoute
   HotelsRoute: typeof HotelsRouteWithChildren
+  LoginRoute: typeof LoginRoute
+  OwnerRoute: typeof OwnerRoute
   BookHotelIdRoute: typeof BookHotelIdRoute
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -147,6 +186,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HotelsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/owner': {
+      id: '/owner'
+      path: '/owner'
+      fullPath: '/owner'
+      preLoaderRoute: typeof OwnerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/book/$hotelId': {
       id: '/book/$hotelId'
       path: '/book/$hotelId'
@@ -167,6 +220,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/hotels/$hotelId'
       preLoaderRoute: typeof HotelsHotelIdRouteImport
       parentRoute: typeof HotelsRoute
+    }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -189,7 +249,10 @@ const rootRouteChildren: RootRouteChildren = {
   BookingsRoute: BookingsRoute,
   ContactRoute: ContactRoute,
   HotelsRoute: HotelsRouteWithChildren,
+  LoginRoute: LoginRoute,
+  OwnerRoute: OwnerRoute,
   BookHotelIdRoute: BookHotelIdRoute,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
