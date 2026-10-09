@@ -26,7 +26,14 @@ export function SearchPanel({ value, variant = "bar" }: Props) {
       next.checkOut = format(addDays(parseISO(next.checkIn), 1), "yyyy-MM-dd");
     }
     void navigate({
-      to: "/contact",
+      to: "/book/$hotelId",
+      params: { hotelId: "residency" },
+      search: {
+        checkIn: next.checkIn,
+        checkOut: next.checkOut,
+        guests: next.guests,
+        rooms: next.rooms,
+      },
     });
   }
 

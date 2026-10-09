@@ -24,9 +24,10 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { Lightbox, PhotoGallery } from "@/components/photo-gallery";
+import { SearchPanel } from "@/components/search-panel";
 import { PageShell } from "@/components/site-chrome";
 import { Button } from "@/components/ui/button";
-import { formatInr } from "@/lib/format";
+import { formatInr, todayIso, tomorrowIso } from "@/lib/format";
 import { AMENITIES, GALLERY, HOTEL, type AmenityId, type RoomType } from "@/lib/hotels";
 
 const AMENITY_ICON: Record<AmenityId, typeof Wifi> = {
@@ -96,9 +97,18 @@ function Home() {
             Hotel Status Residency
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-relaxed text-ink-soft">{HOTEL.description}</p>
-          <Button asChild variant="ink" className="mt-8 rounded-none tracking-[0.16em] uppercase">
-            <Link to="/contact">Book a stay</Link>
-          </Button>
+          <div className="mt-8 max-w-4xl">
+            <SearchPanel
+              value={{
+                area: "",
+                checkIn: todayIso(),
+                checkOut: tomorrowIso(),
+                guests: 2,
+                rooms: 1,
+                sort: "status",
+              }}
+            />
+          </div>
           <dl className="mt-12 grid gap-6 border-t border-ink/10 pt-8 sm:grid-cols-4">
             <div>
               <dt className="text-xs tracking-[0.18em] text-muted uppercase">Locality</dt>
@@ -569,7 +579,13 @@ function RoomCard({ room }: { room: RoomType }) {
         <p className="mt-4 font-display text-2xl tabular-nums">{formatInr(room.price)}</p>
         <p className="text-xs tracking-[0.14em] text-muted uppercase">per night</p>
         <Button asChild variant="outline" className="mt-5 w-full rounded-none tracking-[0.14em] uppercase">
-          <Link to="/contact">Contact the hotel</Link>
+          <Link
+            to="/book/$hotelId"
+            params={{ hotelId: HOTEL.id }}
+            search={{ room: room.id as "deluxe" | "super-deluxe" | "suite" }}
+          >
+            Book this room
+          </Link>
         </Button>
       </div>
       <Lightbox photos={room.photos} index={open} onClose={() => setOpen(null)} onIndex={setOpen} />

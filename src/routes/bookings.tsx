@@ -42,8 +42,10 @@ function BookingsPage() {
           <div className="glass mt-10 rounded-lg p-8">
             <h2 className="font-display text-2xl font-semibold">No rooms yet.</h2>
             <p className="mt-2 text-sm text-muted">Hold a night at the Mahape residency.</p>
-            <Button asChild className="mt-6">
-              <Link to="/contact">Contact</Link>
+            <Button asChild className="mt-6 rounded-none tracking-[0.14em] uppercase">
+              <Link to="/book/$hotelId" params={{ hotelId: HOTEL.id }}>
+                Book a stay
+              </Link>
             </Button>
           </div>
         ) : (

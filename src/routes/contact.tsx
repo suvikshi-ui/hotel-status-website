@@ -1,5 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageShell } from "@/components/site-chrome";
+import { Button } from "@/components/ui/button";
 import { HOTEL } from "@/lib/hotels";
 
 export const Route = createFileRoute("/contact")({
@@ -16,8 +17,13 @@ function ContactPage() {
         <p className="text-xs tracking-[0.22em] text-gold uppercase">Hotel Status Residency</p>
         <h1 className="mt-3 font-display text-5xl font-semibold">Contact</h1>
         <p className="mt-4 max-w-xl text-base leading-relaxed text-ink-soft">
-          A stay is arranged directly with the hotel. Call either number, or write to the email below.
+          Book a room online, or call the front desk. Both numbers are answered through the day and night.
         </p>
+        <Button asChild variant="ink" className="mt-8 rounded-none tracking-[0.16em] uppercase">
+          <Link to="/book/$hotelId" params={{ hotelId: HOTEL.id }}>
+            Book a stay
+          </Link>
+        </Button>
 
         <dl className="mt-12 divide-y divide-ink/10 border-y border-ink/10">
           <div className="grid gap-2 py-6 sm:grid-cols-[10rem_1fr]">
