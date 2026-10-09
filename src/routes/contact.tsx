@@ -16,7 +16,7 @@ function ContactPage() {
         <p className="text-xs tracking-[0.22em] text-gold uppercase">Hotel Status Residency</p>
         <h1 className="mt-3 font-display text-5xl font-semibold">Contact</h1>
         <p className="mt-4 max-w-xl text-base leading-relaxed text-ink-soft">
-          This page is for enquiries. A stay is arranged directly with the hotel. Phone and email will be added here.
+          A stay is arranged directly with the hotel. Call either number below.
         </p>
 
         <dl className="mt-12 divide-y divide-ink/10 border-y border-ink/10">
@@ -26,11 +26,13 @@ function ContactPage() {
           </div>
           <div className="grid gap-2 py-6 sm:grid-cols-[10rem_1fr]">
             <dt className="text-xs tracking-[0.18em] text-muted uppercase">Phone</dt>
-            <dd className="text-ink-soft">To be added</dd>
-          </div>
-          <div className="grid gap-2 py-6 sm:grid-cols-[10rem_1fr]">
-            <dt className="text-xs tracking-[0.18em] text-muted uppercase">Email</dt>
-            <dd className="text-ink-soft">To be added</dd>
+            <dd className="flex flex-col gap-2">
+              {HOTEL.phones.map((phone) => (
+                <a key={phone} href={`tel:+91${phone}`} className="tabular-nums">
+                  {phone.replace(/(\d{5})(\d{5})/, "$1 $2")}
+                </a>
+              ))}
+            </dd>
           </div>
           <div className="grid gap-2 py-6 sm:grid-cols-[10rem_1fr]">
             <dt className="text-xs tracking-[0.18em] text-muted uppercase">Front desk</dt>

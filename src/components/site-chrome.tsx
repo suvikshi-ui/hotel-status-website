@@ -120,7 +120,16 @@ export function SiteFooter() {
         </div>
         <div className="text-sm text-cream/70">
           <p className="text-xs tracking-[0.18em] text-gold uppercase">Contact</p>
-          <p className="mt-3">Ask the hotel directly. Phone and email will be added on the contact page.</p>
+          <p className="mt-3">
+            {HOTEL.phones.map((phone, index) => (
+              <span key={phone}>
+                {index > 0 ? " · " : null}
+                <a href={`tel:+91${phone}`} className="tabular-nums text-cream">
+                  {phone.replace(/(\d{5})(\d{5})/, "$1 $2")}
+                </a>
+              </span>
+            ))}
+          </p>
         </div>
         <div className="text-sm text-cream/70">
           <p className="text-xs tracking-[0.18em] text-gold uppercase">The stay</p>
