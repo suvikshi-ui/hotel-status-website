@@ -73,8 +73,8 @@ function Home() {
           <div className="relative transition-transform duration-700 ease-out group-hover:scale-105">
             <img src={HOTEL.hero.src} alt={HOTEL.hero.alt} className="block h-auto w-full" />
             <video
-              src="/hotels/logo-digital.webm?v=3"
-              poster="/hotels/logo-digital.png?v=3"
+              src="/hotels/logo-digital.webm?v=4"
+              poster="/hotels/logo-digital.png?v=4"
               autoPlay
               loop
               muted
