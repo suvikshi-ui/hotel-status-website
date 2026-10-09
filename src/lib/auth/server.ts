@@ -33,7 +33,7 @@ import { betterAuth } from "better-auth";
 import { bearer, genericOAuth } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { getCookie } from "@tanstack/react-start/server";
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { Pool } from "pg";
 import { ensureDbReady, getPglite } from "../db";
 import { emailAndPasswordEnabled } from "./email-password";
@@ -62,6 +62,17 @@ const globalAuthRef = globalThis as typeof globalThis & {
 function previewAuthSecret(): string {
   globalAuthRef.__grokAuthPreviewSecret__ ??= randomBytes(32).toString("hex");
   return globalAuthRef.__grokAuthPreviewSecret__;
+}
+
+// One secret on every server. A random secret per process signs the login
+// cookie on one server and rejects it on the next, so a refresh sends the
+// owner back to the sign-in page. DATABASE_URL is already the same everywhere.
+function stableAuthSecret(): string {
+  const explicit = env("BETTER_AUTH_SECRET");
+  if (explicit) return explicit;
+  const databaseUrl = env("DATABASE_URL");
+  if (databaseUrl) return createHash("sha256").update(`hotel-status-owner:${databaseUrl}`).digest("hex");
+  return previewAuthSecret();
 }
 
 /** Read an env var, treating empty/whitespace as unset. */
@@ -181,7 +192,7 @@ export const auth = betterAuth({
   baseURL,
   // Deployed apps inject BETTER_AUTH_SECRET. Preview: process-stable secret on
   // globalThis so HMR doesn't invalidate PGLite-backed sessions (see above).
-  secret: env("BETTER_AUTH_SECRET") ?? previewAuthSecret(),
+  secret: stableAuthSecret(),
   database,
 
   // CSRF / origin check for credentialed auth POSTs (email sign-up/sign-in, …).
