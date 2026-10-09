@@ -18,6 +18,7 @@ import {
   razorpayConfigured,
   syncPaymentStatus,
 } from "@/lib/razorpay.server";
+import { notifyOwnerOfBooking } from "@/lib/owner-notify.server";
 
 export type { BookingRow, TakenStay };
 
@@ -64,7 +65,13 @@ export const createBooking = createServerFn({ method: "POST" })
       throw new Error("Check-out must be after check-in.");
     }
     const row = await insertBooking({ ...data, phone: phoneDigits(data.phone) });
-    return attachPaymentLink(row);
+    const saved = await attachPaymentLink(row);
+    try {
+      await notifyOwnerOfBooking(saved);
+    } catch {
+      // The stay is already saved. A missed alert must not undo it.
+    }
+    return saved;
   });
 
 export const findBooking = createServerFn({ method: "POST" })

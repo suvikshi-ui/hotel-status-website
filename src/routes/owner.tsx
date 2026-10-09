@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { SendBooking } from "@/components/send-booking";
 import { RedirectToSignIn, UserButton } from "@/lib/auth/gates";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { cancelOwnerBooking, listOwnerBookings, paymentSetup, type BookingRow } from "@/lib/bookings.functions";
@@ -162,23 +161,6 @@ function OwnerDesk() {
                   {row.rooms === 1 ? "" : "s"}
                 </p>
                 <p className="mt-1 text-sm tabular-nums">{formatInr(row.total_amount)}</p>
-                {!cancelled ? (
-                  <SendBooking
-                    stay={{
-                      id: row.id,
-                      guestName: row.guest_name,
-                      phone: row.phone,
-                      email: row.email,
-                      roomName: room?.name ?? row.room_type,
-                      checkIn: row.check_in,
-                      checkOut: row.check_out,
-                      nights: nightsBetween(row.check_in, row.check_out),
-                      guests: row.guests,
-                      rooms: row.rooms,
-                      total: row.total_amount,
-                    }}
-                  />
-                ) : null}
                 {!cancelled && row.payment_status !== "paid" && row.payment_url ? (
                   <a href={row.payment_url} className="mt-3 inline-block text-sm underline">
                     Razorpay link

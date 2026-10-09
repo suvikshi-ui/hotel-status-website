@@ -2,7 +2,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { PageShell } from "@/components/site-chrome";
 import { PayStay } from "@/components/pay-stay";
-import { SendBooking } from "@/components/send-booking";
 import { Button } from "@/components/ui/button";
 import { cancelGuestBooking, findBooking, refreshPayment, type BookingRow } from "@/lib/bookings.functions";
 import { formatInr, formatLongDate, nightsBetween } from "@/lib/format";
@@ -149,23 +148,6 @@ function FindBookingPage() {
             <p className="mt-2 text-sm tabular-nums">{formatInr(booking.total_amount)}</p>
             {booking.status === "confirmed" ? (
               <PayStay status={booking.payment_status} url={booking.payment_url} amount={booking.total_amount} />
-            ) : null}
-            {booking.status === "confirmed" ? (
-              <SendBooking
-                stay={{
-                  id: booking.id,
-                  guestName: booking.guest_name,
-                  phone: booking.phone,
-                  email: booking.email,
-                  roomName: room?.name ?? "Room",
-                  checkIn: booking.check_in,
-                  checkOut: booking.check_out,
-                  nights: nightsBetween(booking.check_in, booking.check_out),
-                  guests: booking.guests,
-                  rooms: booking.rooms,
-                  total: booking.total_amount,
-                }}
-              />
             ) : null}
             <div className="mt-5 flex flex-wrap gap-2">
               <Button asChild size="sm" variant="outline" className="rounded-none tracking-[0.14em] uppercase">
