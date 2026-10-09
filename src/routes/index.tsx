@@ -109,6 +109,12 @@ function Home() {
               }}
             />
           </div>
+          <p className="mt-4 text-sm text-ink-soft">
+            Already booked?{" "}
+            <Link to="/bookings" className="underline decoration-ink/30 underline-offset-4">
+              Find your stay
+            </Link>
+          </p>
           <dl className="mt-12 grid gap-6 border-t border-ink/10 pt-8 sm:grid-cols-4">
             <div>
               <dt className="text-xs tracking-[0.18em] text-muted uppercase">Locality</dt>

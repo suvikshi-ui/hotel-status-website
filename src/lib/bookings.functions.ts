@@ -1,8 +1,19 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { cancelBookingRow, insertBooking, listBookingRows, type BookingRow } from "@/lib/bookings.server";
+import { authMiddleware } from "@/lib/auth/middleware";
+import {
+  cancelBookingForPhone,
+  cancelBookingRow,
+  findBookingRow,
+  insertBooking,
+  listBookingRows,
+  listTakenStays,
+  type BookingRow,
+  type TakenStay,
+} from "@/lib/bookings.server";
+import { assertOwner } from "@/lib/owner.server";
 
-export type { BookingRow };
+export type { BookingRow, TakenStay };
 
 const bookingInput = z.object({
   guestName: z.string().trim().min(1).max(120),
@@ -16,15 +27,27 @@ const bookingInput = z.object({
   totalAmount: z.number().int().min(0).max(10_000_000),
 });
 
+const lookupInput = z.object({
+  id: z.string().trim().min(1).max(40),
+  phone: z.string().trim().min(7).max(20),
+});
+
 function noStore() {
   return import("@tanstack/react-start/server").then(({ setResponseHeader }) => {
     setResponseHeader("Cache-Control", "no-store");
   });
 }
 
-export const listBookings = createServerFn({ method: "GET" }).handler(async (): Promise<BookingRow[]> => {
+export function phoneDigits(value: string): string {
+  const digits = value.replace(/\D/g, "");
+  if (digits.length === 12 && digits.startsWith("91")) return digits.slice(2);
+  if (digits.length === 11 && digits.startsWith("0")) return digits.slice(1);
+  return digits;
+}
+
+export const listTakenDates = createServerFn({ method: "GET" }).handler(async (): Promise<TakenStay[]> => {
   await noStore();
-  return listBookingRows();
+  return listTakenStays();
 });
 
 export const createBooking = createServerFn({ method: "POST" })
@@ -34,12 +57,36 @@ export const createBooking = createServerFn({ method: "POST" })
     if (data.checkOut <= data.checkIn) {
       throw new Error("Check-out must be after check-in.");
     }
-    return insertBooking(data);
+    return insertBooking({ ...data, phone: phoneDigits(data.phone) });
   });
 
-export const cancelBooking = createServerFn({ method: "POST" })
-  .validator(z.object({ id: z.string().trim().min(1).max(40) }))
+export const findBooking = createServerFn({ method: "POST" })
+  .validator(lookupInput)
   .handler(async ({ data }): Promise<BookingRow | null> => {
     await noStore();
+    return findBookingRow(data.id.trim().toUpperCase(), phoneDigits(data.phone));
+  });
+
+export const cancelGuestBooking = createServerFn({ method: "POST" })
+  .validator(lookupInput)
+  .handler(async ({ data }): Promise<BookingRow | null> => {
+    await noStore();
+    return cancelBookingForPhone(data.id.trim().toUpperCase(), phoneDigits(data.phone));
+  });
+
+export const listOwnerBookings = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }): Promise<BookingRow[]> => {
+    await noStore();
+    await assertOwner(context.userId);
+    return listBookingRows();
+  });
+
+export const cancelOwnerBooking = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator(z.object({ id: z.string().trim().min(1).max(40) }))
+  .handler(async ({ context, data }): Promise<BookingRow | null> => {
+    await noStore();
+    await assertOwner(context.userId);
     return cancelBookingRow(data.id);
   });

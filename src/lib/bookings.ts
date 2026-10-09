@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { cancelBooking, createBooking, listBookings, type BookingRow } from "@/lib/bookings.functions";
+import { createBooking, type BookingRow } from "@/lib/bookings.functions";
 import { nightsBetween } from "@/lib/format";
 
 export type Booking = {
@@ -26,11 +26,7 @@ type BookingInput = Omit<Booking, "id" | "createdAt" | "status">;
 
 type BookingState = {
   bookings: Booking[];
-  loaded: boolean;
-  error: string | null;
-  load: () => Promise<void>;
   add: (input: BookingInput) => Promise<Booking>;
-  cancel: (id: string) => Promise<void>;
 };
 
 export function rowToBooking(row: BookingRow): Booking {
@@ -57,19 +53,6 @@ export function rowToBooking(row: BookingRow): Booking {
 
 export const useBookings = create<BookingState>()((set, get) => ({
   bookings: [],
-  loaded: false,
-  error: null,
-  load: async () => {
-    try {
-      const rows = await listBookings();
-      set({ bookings: rows.map(rowToBooking), loaded: true, error: null });
-    } catch (error) {
-      set({
-        loaded: true,
-        error: error instanceof Error ? error.message : "Could not load bookings.",
-      });
-    }
-  },
   add: async (input) => {
     const row = await createBooking({
       data: {
@@ -85,19 +68,7 @@ export const useBookings = create<BookingState>()((set, get) => ({
       },
     });
     const booking = rowToBooking(row);
-    set({ bookings: [booking, ...get().bookings.filter((item) => item.id !== booking.id)], error: null });
+    set({ bookings: [booking, ...get().bookings.filter((item) => item.id !== booking.id)] });
     return booking;
-  },
-  cancel: async (id) => {
-    const row = await cancelBooking({ data: { id } });
-    if (!row) {
-      await get().load();
-      return;
-    }
-    set({
-      bookings: get().bookings.map((booking) =>
-        booking.id === id ? { ...booking, status: "cancelled" } : booking,
-      ),
-    });
   },
 }));
