@@ -1,13 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { PageShell } from "@/components/site-chrome";
+import { PayStay } from "@/components/pay-stay";
 import { Button } from "@/components/ui/button";
-import { cancelGuestBooking, findBooking, type BookingRow } from "@/lib/bookings.functions";
+import { cancelGuestBooking, findBooking, refreshPayment, type BookingRow } from "@/lib/bookings.functions";
 import { formatInr, formatLongDate, nightsBetween } from "@/lib/format";
 import { HOTEL } from "@/lib/hotels";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/bookings")({
+  validateSearch: (search: Record<string, unknown>): { paid?: string } => ({
+    paid: typeof search.paid === "string" ? search.paid : undefined,
+  }),
   component: FindBookingPage,
   head: () => ({
     meta: [{ title: "Your stay · Hotel Status Residency" }],
@@ -18,6 +22,7 @@ const field =
   "h-11 w-full border-0 border-b border-ink/20 bg-transparent px-0 text-sm text-ink outline-none focus:border-ink";
 
 function FindBookingPage() {
+  const { paid } = Route.useSearch();
   const [id, setId] = useState("");
   const [phone, setPhone] = useState("");
   const [pending, setPending] = useState(false);
@@ -34,6 +39,24 @@ function FindBookingPage() {
       if (!row) setError("No stay matches that booking number and phone.");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not look up the stay.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function checkPayment() {
+    if (!booking) return;
+    setPending(true);
+    setError(null);
+    try {
+      const row = await refreshPayment({ data: { id: booking.id, phone } });
+      if (!row) {
+        setError("No stay matches that booking number and phone.");
+        return;
+      }
+      setBooking(row);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Could not check the payment.");
     } finally {
       setPending(false);
     }
@@ -99,6 +122,11 @@ function FindBookingPage() {
           </Button>
         </form>
 
+        {paid === "0" ? (
+          <p className="mt-4 text-sm text-terracotta">Payment was not completed.</p>
+        ) : paid && /^HSR-\d{6}$/.test(paid) ? (
+          <p className="mt-4 text-sm text-success">Payment received for {paid}. Look the stay up to see it here.</p>
+        ) : null}
         {error ? <p className="mt-4 text-sm text-terracotta">{error}</p> : null}
 
         {booking ? (
@@ -118,12 +146,20 @@ function FindBookingPage() {
               room{booking.rooms === 1 ? "" : "s"}
             </p>
             <p className="mt-2 text-sm tabular-nums">{formatInr(booking.total_amount)}</p>
+            {booking.status === "confirmed" ? (
+              <PayStay status={booking.payment_status} url={booking.payment_url} amount={booking.total_amount} />
+            ) : null}
             <div className="mt-5 flex flex-wrap gap-2">
               <Button asChild size="sm" variant="outline" className="rounded-none tracking-[0.14em] uppercase">
                 <Link to="/book/$hotelId" params={{ hotelId: HOTEL.id }}>
                   Book again
                 </Link>
               </Button>
+              {booking.status === "confirmed" && booking.payment_status !== "paid" && booking.payment_url ? (
+                <Button size="sm" variant="ghost" disabled={pending} onClick={() => void checkPayment()}>
+                  I’ve paid
+                </Button>
+              ) : null}
               {booking.status === "confirmed" ? (
                 <Button size="sm" variant="ghost" disabled={pending} onClick={() => void cancel()}>
                   Cancel stay

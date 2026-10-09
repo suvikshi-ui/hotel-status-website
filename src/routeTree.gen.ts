@@ -19,6 +19,8 @@ import { Route as BookHotelIdRouteImport } from './routes/book.$hotelId'
 import { Route as HotelsIndexRouteImport } from './routes/hotels.index'
 import { Route as HotelsHotelIdRouteImport } from './routes/hotels.$hotelId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiRazorpayCallbackRouteImport } from './routes/api/razorpay/callback'
+import { Route as ApiRazorpayWebhookRouteImport } from './routes/api/razorpay/webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -70,6 +72,16 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiRazorpayCallbackRoute = ApiRazorpayCallbackRouteImport.update({
+  id: '/api/razorpay/callback',
+  path: '/api/razorpay/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRazorpayWebhookRoute = ApiRazorpayWebhookRouteImport.update({
+  id: '/api/razorpay/webhook',
+  path: '/api/razorpay/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -82,6 +94,8 @@ export interface FileRoutesByFullPath {
   '/hotels/$hotelId': typeof HotelsHotelIdRoute
   '/hotels/': typeof HotelsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/razorpay/callback': typeof ApiRazorpayCallbackRoute
+  '/api/razorpay/webhook': typeof ApiRazorpayWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -93,6 +107,8 @@ export interface FileRoutesByTo {
   '/hotels/$hotelId': typeof HotelsHotelIdRoute
   '/hotels': typeof HotelsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/razorpay/callback': typeof ApiRazorpayCallbackRoute
+  '/api/razorpay/webhook': typeof ApiRazorpayWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -106,6 +122,8 @@ export interface FileRoutesById {
   '/hotels/$hotelId': typeof HotelsHotelIdRoute
   '/hotels/': typeof HotelsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/razorpay/callback': typeof ApiRazorpayCallbackRoute
+  '/api/razorpay/webhook': typeof ApiRazorpayWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -120,6 +138,8 @@ export interface FileRouteTypes {
     | '/hotels/$hotelId'
     | '/hotels/'
     | '/api/auth/$'
+    | '/api/razorpay/callback'
+    | '/api/razorpay/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -131,6 +151,8 @@ export interface FileRouteTypes {
     | '/hotels/$hotelId'
     | '/hotels'
     | '/api/auth/$'
+    | '/api/razorpay/callback'
+    | '/api/razorpay/webhook'
   id:
     | '__root__'
     | '/'
@@ -143,6 +165,8 @@ export interface FileRouteTypes {
     | '/hotels/$hotelId'
     | '/hotels/'
     | '/api/auth/$'
+    | '/api/razorpay/callback'
+    | '/api/razorpay/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -154,6 +178,8 @@ export interface RootRouteChildren {
   OwnerRoute: typeof OwnerRoute
   BookHotelIdRoute: typeof BookHotelIdRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiRazorpayCallbackRoute: typeof ApiRazorpayCallbackRoute
+  ApiRazorpayWebhookRoute: typeof ApiRazorpayWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -228,6 +254,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/razorpay/callback': {
+      id: '/api/razorpay/callback'
+      path: '/api/razorpay/callback'
+      fullPath: '/api/razorpay/callback'
+      preLoaderRoute: typeof ApiRazorpayCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/razorpay/webhook': {
+      id: '/api/razorpay/webhook'
+      path: '/api/razorpay/webhook'
+      fullPath: '/api/razorpay/webhook'
+      preLoaderRoute: typeof ApiRazorpayWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -253,6 +293,8 @@ const rootRouteChildren: RootRouteChildren = {
   OwnerRoute: OwnerRoute,
   BookHotelIdRoute: BookHotelIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiRazorpayCallbackRoute: ApiRazorpayCallbackRoute,
+  ApiRazorpayWebhookRoute: ApiRazorpayWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

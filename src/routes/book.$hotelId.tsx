@@ -2,6 +2,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { addDays, format, parseISO } from "date-fns";
 import { useEffect, useState, type FormEvent } from "react";
 import { PageShell } from "@/components/site-chrome";
+import { PayStay } from "@/components/pay-stay";
 import { Button } from "@/components/ui/button";
 import { useBookings, type Booking } from "@/lib/bookings";
 import { listTakenDates, type TakenStay } from "@/lib/bookings.functions";
@@ -182,7 +183,7 @@ function BookPage() {
         <p className="text-xs tracking-[0.22em] text-gold uppercase">Hotel Status Residency</p>
         <h1 className="mt-3 font-display text-5xl font-semibold">Book a stay</h1>
         <p className="mt-4 max-w-xl text-base leading-relaxed text-ink-soft">
-          Choose a room and the dates. You get a booking number. The hotel sees the same stay on the owner desk.
+          Choose a room and the dates. You get a booking number, then pay that total on Razorpay.
         </p>
 
         {done ? (
@@ -388,8 +389,9 @@ function Confirmed({ booking, onAnother }: { booking: Booking; onAnother: () => 
         {booking.nights === 1 ? "" : "s"} · {formatInr(booking.total)}
       </p>
       <p className="mt-3 text-sm leading-relaxed text-ink-soft">
-        Keep this number. Find the stay later with the booking number and the phone used here.
+        Keep this number. The hotel sees the same stay. Find it later with this number and the phone used here.
       </p>
+      <PayStay status={booking.paymentStatus} url={booking.paymentUrl} amount={booking.total} />
       <div className="mt-6 flex flex-wrap gap-3">
         <Button asChild variant="ink" className="rounded-none tracking-[0.16em] uppercase">
           <Link to="/bookings">Find this stay</Link>
