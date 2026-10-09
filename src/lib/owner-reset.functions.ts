@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { resetOwnerPassword } from "@/lib/owner-reset.server";
+import { replaceOwnerPassword, resetOwnerPassword } from "@/lib/owner-reset.server";
 
 export const setOwnerPassword = createServerFn({ method: "POST" })
   .validator(
@@ -11,5 +11,12 @@ export const setOwnerPassword = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }): Promise<{ ok: true }> => {
     await resetOwnerPassword(data.token, data.password);
+    return { ok: true };
+  });
+
+export const forgotOwnerPassword = createServerFn({ method: "POST" })
+  .validator(z.object({ password: z.string().min(8).max(128) }))
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    await replaceOwnerPassword(data.password);
     return { ok: true };
   });

@@ -3,7 +3,7 @@ import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { GROK_PROVIDERS, authClient, authEnabled, signIn } from "@/lib/auth/client";
 import { HOTEL } from "@/lib/hotels";
-import { setOwnerPassword } from "@/lib/owner-reset.functions";
+import { forgotOwnerPassword, setOwnerPassword } from "@/lib/owner-reset.functions";
 
 export const Route = createFileRoute("/login")({
   validateSearch: (search: Record<string, unknown>): { reset?: string; done?: string } => ({
@@ -22,24 +22,31 @@ const field =
 function OwnerLogin() {
   const navigate = useNavigate();
   const { reset, done } = Route.useSearch();
-  const [mode, setMode] = useState<"sign-in" | "create">("sign-in");
+  const [mode, setMode] = useState<"sign-in" | "create" | "forgot">(reset ? "forgot" : "sign-in");
   const [email, setEmail] = useState(HOTEL.email);
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function onReset(event: FormEvent) {
     event.preventDefault();
-    if (!reset) return;
     setError(null);
     if (password.length < 8) {
       setError("Use at least 8 characters.");
       return;
     }
+    if (password !== confirm) {
+      setError("Those passwords do not match.");
+      return;
+    }
     setPending(true);
     try {
-      await setOwnerPassword({ data: { token: reset, password } });
+      if (reset) await setOwnerPassword({ data: { token: reset, password } });
+      else await forgotOwnerPassword({ data: { password } });
       setPassword("");
+      setConfirm("");
+      setMode("sign-in");
       await navigate({ to: "/login", search: { done: "1" } });
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not reset the password.");
@@ -94,10 +101,10 @@ function OwnerLogin() {
           Guests book without an account. This desk is only for the hotel, so you can see who booked, which room, and the dates.
         </p>
 
-        {authEnabled && reset ? (
+        {authEnabled && (reset || mode === "forgot") ? (
           <form onSubmit={onReset} className="mt-10 grid gap-6">
             <p className="text-sm leading-relaxed text-ink-soft">
-              Set a new password for {HOTEL.email}. This link works once.
+              Set a new password for {HOTEL.email}. The old one stops working.
             </p>
             <label className="flex flex-col gap-1">
               <span className="text-xs tracking-[0.18em] text-muted uppercase">New password</span>
@@ -112,10 +119,36 @@ function OwnerLogin() {
                 onChange={(event) => setPassword(event.target.value)}
               />
             </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs tracking-[0.18em] text-muted uppercase">Confirm password</span>
+              <input
+                id="owner-confirm-password"
+                type="password"
+                required
+                minLength={8}
+                autoComplete="new-password"
+                className={field}
+                value={confirm}
+                onChange={(event) => setConfirm(event.target.value)}
+              />
+            </label>
             {error ? <p className="text-sm text-terracotta">{error}</p> : null}
             <Button type="submit" variant="ink" disabled={pending} className="rounded-none tracking-[0.16em] uppercase">
               {pending ? "Please wait…" : "Save new password"}
             </Button>
+            <button
+              type="button"
+              className="text-left text-sm text-ink-soft underline decoration-ink/30 underline-offset-4"
+              onClick={() => {
+                setMode("sign-in");
+                setError(null);
+                setPassword("");
+                setConfirm("");
+                void navigate({ to: "/login", search: {} });
+              }}
+            >
+              Back to sign in
+            </button>
           </form>
         ) : authEnabled ? (
           <form onSubmit={onSubmit} className="mt-10 grid gap-6">
@@ -144,6 +177,19 @@ function OwnerLogin() {
                 onChange={(event) => setPassword(event.target.value)}
               />
             </label>
+            {mode === "sign-in" ? (
+              <button
+                type="button"
+                className="-mt-3 text-left text-sm text-ink-soft underline decoration-ink/30 underline-offset-4"
+                onClick={() => {
+                  setMode("forgot");
+                  setError(null);
+                  setPassword("");
+                }}
+              >
+                Forgot password?
+              </button>
+            ) : null}
             {done === "1" ? <p className="text-sm text-success">Password updated. Sign in with the new one.</p> : null}
             {error ? <p className="text-sm text-terracotta">{error}</p> : null}
             <Button type="submit" variant="ink" disabled={pending} className="rounded-none tracking-[0.16em] uppercase">
