@@ -147,9 +147,9 @@ export const HOTEL: Hotel = {
       size: "18 m²",
       price: 2499,
       photos: [
-        { src: "/hotels/rooms/standard-1.jpg", alt: "Deluxe room with a queen bed, gold runner, and gold wallpaper" },
-        { src: "/hotels/rooms/standard-2.jpg", alt: "Deluxe room headboard with gold cushions and bedside lamps" },
-        { src: "/hotels/rooms/standard-bath.jpg", alt: "Deluxe room bathroom" },
+        { src: "/hotels/gallery/deluxe-1.jpg", alt: "Deluxe room with a gold runner and patterned wallpaper" },
+        { src: "/hotels/gallery/deluxe-2.jpg", alt: "Deluxe room from the foot of the bed" },
+        { src: "/hotels/gallery/deluxe-window.jpg", alt: "Deluxe room beside the window and desk" },
       ],
     },
     {
@@ -159,8 +159,8 @@ export const HOTEL: Hotel = {
       size: "24 m²",
       price: 3499,
       photos: [
-        { src: "/hotels/rooms/deluxe-1.jpg", alt: "Super Deluxe room with a queen bed and gold runner" },
-        { src: "/hotels/rooms/deluxe-bath.jpg", alt: "Super Deluxe room bathroom" },
+        { src: "/hotels/gallery/super-1.jpg", alt: "Super Deluxe room with a feature wall and gold cushions" },
+        { src: "/hotels/gallery/super-twin.jpg", alt: "Super Deluxe twin room with two beds" },
       ],
     },
     {
@@ -170,8 +170,9 @@ export const HOTEL: Hotel = {
       size: "32 m²",
       price: 4499,
       photos: [
-        { src: "/hotels/rooms/family-1.jpg", alt: "Suite with a queen bed and an extra single bed" },
-        { src: "/hotels/rooms/family-2.jpg", alt: "Suite looking across both beds to the television" },
+        { src: "/hotels/gallery/suite-1.jpg", alt: "Suite with a large bed and a second bed beyond" },
+        { src: "/hotels/gallery/suite-2.jpg", alt: "Suite with a sitting chair and television" },
+        { src: "/hotels/gallery/suite-sitting.jpg", alt: "Suite sitting corner with a sofa" },
       ],
     },
   ],
@@ -192,7 +193,69 @@ export function allPhotos(hotel: Hotel = HOTEL): RoomPhoto[] {
   return hotel.rooms.flatMap((room) => room.photos);
 }
 
-export function galleryPhotos(hotel: Hotel = HOTEL): RoomPhoto[] {
-  const order = ["suite", "super-deluxe", "deluxe"] as const;
-  return order.flatMap((id) => hotel.rooms.find((room) => room.id === id)?.photos ?? []);
+export type GalleryGroup = {
+  id: string;
+  title: string;
+  photos: RoomPhoto[];
+};
+
+export const GALLERY: GalleryGroup[] = [
+  {
+    id: "deluxe",
+    title: "Deluxe",
+    photos: [
+      { src: "/hotels/gallery/deluxe-1.jpg", alt: "Deluxe room with a gold runner and patterned wallpaper" },
+      { src: "/hotels/gallery/deluxe-2.jpg", alt: "Deluxe room from the foot of the bed" },
+      { src: "/hotels/gallery/deluxe-6.jpg", alt: "Deluxe room with lamps, curtains and a work desk" },
+      { src: "/hotels/gallery/deluxe-window.jpg", alt: "Deluxe room beside the window" },
+      { src: "/hotels/gallery/deluxe-4.jpg", alt: "Deluxe room with curtains and a wall-mounted television" },
+      { src: "/hotels/gallery/deluxe-5.jpg", alt: "Deluxe room looking toward the curtains" },
+      { src: "/hotels/gallery/deluxe-3.jpg", alt: "Deluxe room with a tufted headboard" },
+      { src: "/hotels/gallery/deluxe-detail.jpg", alt: "Gold cushion and the runner on a deluxe bed" },
+      { src: "/hotels/gallery/deluxe-tv.jpg", alt: "Television wall in a deluxe room" },
+    ],
+  },
+  {
+    id: "super-deluxe",
+    title: "Super Deluxe",
+    photos: [
+      { src: "/hotels/gallery/super-1.jpg", alt: "Super Deluxe room with a feature wall" },
+      { src: "/hotels/gallery/super-twin.jpg", alt: "Super Deluxe twin room with two beds" },
+    ],
+  },
+  {
+    id: "suite",
+    title: "Suite",
+    photos: [
+      { src: "/hotels/gallery/suite-1.jpg", alt: "Suite with two beds" },
+      { src: "/hotels/gallery/suite-2.jpg", alt: "Suite with a chair and television" },
+      { src: "/hotels/gallery/suite-3.jpg", alt: "Larger suite with a second bed" },
+      { src: "/hotels/gallery/suite-sitting.jpg", alt: "Sitting corner in the suite" },
+    ],
+  },
+  {
+    id: "hotel",
+    title: "The hotel",
+    photos: [
+      { src: "/hotels/gallery/exterior.jpg", alt: "Hotel Status Residency from the front" },
+      { src: "/hotels/gallery/reception.jpg", alt: "Reception desk" },
+      { src: "/hotels/gallery/lounge.jpg", alt: "Lounge with a sofa" },
+      { src: "/hotels/gallery/lift.jpg", alt: "Lift lobby" },
+      { src: "/hotels/gallery/corridor-1.jpg", alt: "Corridor and staircase" },
+      { src: "/hotels/gallery/corridor-2.jpg", alt: "Corridor toward the rooms" },
+    ],
+  },
+  {
+    id: "bathrooms",
+    title: "Bathrooms",
+    photos: [
+      { src: "/hotels/gallery/bath-1.jpg", alt: "Bathroom with a shower and wash basin" },
+      { src: "/hotels/gallery/bath-2.jpg", alt: "Bathroom with a vessel basin" },
+      { src: "/hotels/gallery/bath-3.jpg", alt: "Bathroom with a bathtub" },
+    ],
+  },
+];
+
+export function galleryPhotos(): RoomPhoto[] {
+  return GALLERY.flatMap((group) => group.photos);
 }

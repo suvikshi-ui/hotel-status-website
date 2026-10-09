@@ -27,7 +27,7 @@ import { Lightbox, PhotoGallery } from "@/components/photo-gallery";
 import { PageShell } from "@/components/site-chrome";
 import { Button } from "@/components/ui/button";
 import { formatInr } from "@/lib/format";
-import { AMENITIES, HOTEL, galleryPhotos, type AmenityId, type RoomType } from "@/lib/hotels";
+import { AMENITIES, GALLERY, HOTEL, type AmenityId, type RoomType } from "@/lib/hotels";
 
 const AMENITY_ICON: Record<AmenityId, typeof Wifi> = {
   wifi: Wifi,
@@ -155,11 +155,16 @@ function Home() {
 
         <section id="gallery" className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
           <p className="text-xs tracking-[0.22em] text-gold uppercase">Gallery</p>
-          <h2 className="mt-3 font-display text-4xl font-semibold">The rooms, as they are</h2>
+          <h2 className="mt-3 font-display text-4xl font-semibold">The hotel, as it is</h2>
           <p className="mt-3 max-w-lg text-sm text-ink-soft">Tap a photograph to open it.</p>
-          <div className="mt-8">
-            <PhotoGallery photos={galleryPhotos()} />
-          </div>
+          {GALLERY.map((group) => (
+            <div key={group.id} className="mt-10">
+              <h3 className="font-display text-2xl font-semibold">{group.title}</h3>
+              <div className="mt-4">
+                <PhotoGallery photos={group.photos} />
+              </div>
+            </div>
+          ))}
         </section>
       </main>
     </PageShell>
