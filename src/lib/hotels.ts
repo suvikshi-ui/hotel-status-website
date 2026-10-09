@@ -48,6 +48,7 @@ export type Hotel = {
   pins: string[];
   address: string;
   phones: string[];
+  email: string;
   stars: 3;
   tagline: string;
   description: string;
@@ -97,6 +98,7 @@ export const HOTEL: Hotel = {
   address:
     "Plot No. PAP-595 and 596, Mahape MIDC Road, TTC Industrial Area, near Mahape Bus Stop, Mahape, Navi Mumbai, Maharashtra 400701",
   phones: ["9076011515", "9076011414"],
+  email: "hotelstatusresidency@gmail.com",
   stars: 3,
   tagline: "A residency in Mahape, Navi Mumbai.",
   description:

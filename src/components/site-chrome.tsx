@@ -130,6 +130,11 @@ export function SiteFooter() {
               </span>
             ))}
           </p>
+          <p className="mt-2">
+            <a href={`mailto:${HOTEL.email}`} className="text-cream">
+              {HOTEL.email}
+            </a>
+          </p>
         </div>
         <div className="text-sm text-cream/70">
           <p className="text-xs tracking-[0.18em] text-gold uppercase">The stay</p>

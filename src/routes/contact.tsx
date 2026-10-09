@@ -16,7 +16,7 @@ function ContactPage() {
         <p className="text-xs tracking-[0.22em] text-gold uppercase">Hotel Status Residency</p>
         <h1 className="mt-3 font-display text-5xl font-semibold">Contact</h1>
         <p className="mt-4 max-w-xl text-base leading-relaxed text-ink-soft">
-          A stay is arranged directly with the hotel. Call either number below.
+          A stay is arranged directly with the hotel. Call either number, or write to the email below.
         </p>
 
         <dl className="mt-12 divide-y divide-ink/10 border-y border-ink/10">
@@ -32,6 +32,12 @@ function ContactPage() {
                   {phone.replace(/(\d{5})(\d{5})/, "$1 $2")}
                 </a>
               ))}
+            </dd>
+          </div>
+          <div className="grid gap-2 py-6 sm:grid-cols-[10rem_1fr]">
+            <dt className="text-xs tracking-[0.18em] text-muted uppercase">Email</dt>
+            <dd>
+              <a href={`mailto:${HOTEL.email}`}>{HOTEL.email}</a>
             </dd>
           </div>
           <div className="grid gap-2 py-6 sm:grid-cols-[10rem_1fr]">
