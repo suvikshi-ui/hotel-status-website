@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { useBookings } from "@/lib/bookings";
 import { HOTEL } from "@/lib/hotels";
 
 export function SiteHeader() {
@@ -146,6 +147,11 @@ export function SiteFooter() {
 }
 
 export function PageShell({ children }: { children: ReactNode }) {
+  const load = useBookings((s) => s.load);
+  useEffect(() => {
+    void load();
+  }, [load]);
+
   return (
     <div className="flex min-h-dvh flex-col bg-paper text-ink">
       <SiteHeader />

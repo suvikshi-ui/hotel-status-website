@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { PageShell } from "@/components/site-chrome";
 import { Button } from "@/components/ui/button";
 import { useBookings } from "@/lib/bookings";
@@ -13,12 +13,14 @@ export const Route = createFileRoute("/bookings")({
 
 function BookingsPage() {
   const bookings = useBookings((s) => s.bookings);
+  const loaded = useBookings((s) => s.loaded);
+  const error = useBookings((s) => s.error);
   const cancel = useBookings((s) => s.cancel);
-  const [ready, setReady] = useState(false);
+  const load = useBookings((s) => s.load);
 
   useEffect(() => {
-    setReady(true);
-  }, []);
+    void load();
+  }, [load]);
 
   return (
     <PageShell>
@@ -26,11 +28,16 @@ function BookingsPage() {
         <p className="text-xs font-medium tracking-widest text-gold uppercase">Your board</p>
         <h1 className="mt-1 font-display text-4xl font-semibold">My bookings</h1>
         <p className="mt-2 text-ink-soft">
-          Every order is issued as {HOTEL.name}. This list stays on this device.
+          Every booking is saved for {HOTEL.name}. The list is the same on every device.
         </p>
 
-        {!ready ? (
+        {!loaded ? (
           <div className="glass mt-10 h-40 rounded-lg" />
+        ) : error ? (
+          <div className="glass mt-10 rounded-lg p-8">
+            <h2 className="font-display text-2xl font-semibold">Bookings are unavailable.</h2>
+            <p className="mt-2 text-sm text-muted">{error}</p>
+          </div>
         ) : bookings.length === 0 ? (
           <div className="glass mt-10 rounded-lg p-8">
             <h2 className="font-display text-2xl font-semibold">No rooms yet.</h2>
@@ -59,8 +66,9 @@ function BookingsPage() {
                     {HOTEL.locality}, {HOTEL.city} · PIN {HOTEL.pins.join(" / ")}
                   </p>
                   <p className="mt-3 text-sm">
-                    {room?.name} · {formatLongDate(booking.checkIn)} — {formatLongDate(booking.checkOut)}{" "}
-                    · {booking.nights} night{booking.nights === 1 ? "" : "s"} · {booking.guests} guests
+                    {room?.name} · {booking.guestName} · {formatLongDate(booking.checkIn)} —{" "}
+                    {formatLongDate(booking.checkOut)} · {booking.nights} night{booking.nights === 1 ? "" : "s"} ·{" "}
+                    {booking.guests} guests
                   </p>
                   <p className="mt-1 text-sm tabular-nums">{formatInr(booking.total)}</p>
                   <div className="mt-4 flex flex-wrap gap-2">
