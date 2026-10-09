@@ -12,6 +12,12 @@ import {
   type TakenStay,
 } from "@/lib/bookings.server";
 import { assertOwner } from "@/lib/owner.server";
+import {
+  attachPaymentLink,
+  cancelRemotePaymentLink,
+  razorpayConfigured,
+  syncPaymentStatus,
+} from "@/lib/razorpay.server";
 
 export type { BookingRow, TakenStay };
 
@@ -57,7 +63,8 @@ export const createBooking = createServerFn({ method: "POST" })
     if (data.checkOut <= data.checkIn) {
       throw new Error("Check-out must be after check-in.");
     }
-    return insertBooking({ ...data, phone: phoneDigits(data.phone) });
+    const row = await insertBooking({ ...data, phone: phoneDigits(data.phone) });
+    return attachPaymentLink(row);
   });
 
 export const findBooking = createServerFn({ method: "POST" })
@@ -67,11 +74,22 @@ export const findBooking = createServerFn({ method: "POST" })
     return findBookingRow(data.id.trim().toUpperCase(), phoneDigits(data.phone));
   });
 
+export const refreshPayment = createServerFn({ method: "POST" })
+  .validator(lookupInput)
+  .handler(async ({ data }): Promise<BookingRow | null> => {
+    await noStore();
+    const row = await findBookingRow(data.id.trim().toUpperCase(), phoneDigits(data.phone));
+    if (!row) return null;
+    return syncPaymentStatus(row);
+  });
+
 export const cancelGuestBooking = createServerFn({ method: "POST" })
   .validator(lookupInput)
   .handler(async ({ data }): Promise<BookingRow | null> => {
     await noStore();
-    return cancelBookingForPhone(data.id.trim().toUpperCase(), phoneDigits(data.phone));
+    const row = await cancelBookingForPhone(data.id.trim().toUpperCase(), phoneDigits(data.phone));
+    if (row?.payment_status !== "paid") await cancelRemotePaymentLink(row?.payment_link_id ?? null);
+    return row;
   });
 
 export const listOwnerBookings = createServerFn({ method: "GET" })
@@ -88,5 +106,15 @@ export const cancelOwnerBooking = createServerFn({ method: "POST" })
   .handler(async ({ context, data }): Promise<BookingRow | null> => {
     await noStore();
     await assertOwner(context.userId);
-    return cancelBookingRow(data.id);
+    const row = await cancelBookingRow(data.id);
+    if (row?.payment_status !== "paid") await cancelRemotePaymentLink(row?.payment_link_id ?? null);
+    return row;
+  });
+
+export const paymentSetup = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }): Promise<{ links: boolean }> => {
+    await noStore();
+    await assertOwner(context.userId);
+    return { links: razorpayConfigured() };
   });

@@ -13,6 +13,9 @@ export type BookingRow = {
   rooms: number;
   total_amount: number;
   status: "confirmed" | "cancelled";
+  payment_status: "unpaid" | "paid";
+  payment_url: string | null;
+  payment_link_id: string | null;
   created_at: string;
 };
 
@@ -28,23 +31,27 @@ export type NewBooking = {
   totalAmount: number;
 };
 
-const SELECT_BOOKINGS = `
-  select
-    id,
-    guest_name,
-    phone,
-    email,
-    room_type,
-    check_in::text as check_in,
-    check_out::text as check_out,
-    guests,
-    rooms,
-    total_amount,
-    status,
-    to_char(created_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') as created_at
-  from bookings
-  order by created_at desc
+const BOOKING_SELECT = `
+  id,
+  guest_name,
+  phone,
+  email,
+  room_type,
+  check_in::text as check_in,
+  check_out::text as check_out,
+  guests,
+  rooms,
+  total_amount,
+  status,
+  payment_status,
+  payment_url,
+  payment_link_id,
+  to_char(created_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') as created_at
 `;
+
+export { BOOKING_SELECT };
+
+const SELECT_BOOKINGS = `select ${BOOKING_SELECT} from bookings order by created_at desc`;
 
 export async function listBookingRows(): Promise<BookingRow[]> {
   const sql = await getSql();
@@ -58,22 +65,7 @@ export async function insertBooking(input: NewBooking): Promise<BookingRow> {
     const id = bookingId();
     try {
       const rows = await sql.query<BookingRow>(
-        `
-          select
-            id,
-            guest_name,
-            phone,
-            email,
-            room_type,
-            check_in::text as check_in,
-            check_out::text as check_out,
-            guests,
-            rooms,
-            total_amount,
-            status,
-            to_char(created_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') as created_at
-          from place_booking($1, $2, $3, $4, $5, $6::date, $7::date, $8, $9, $10)
-        `,
+        `select ${BOOKING_SELECT} from place_booking($1, $2, $3, $4, $5, $6::date, $7::date, $8, $9, $10)`,
         [
           id,
           input.guestName,
@@ -107,24 +99,7 @@ export async function insertBooking(input: NewBooking): Promise<BookingRow> {
 export async function cancelBookingRow(id: string): Promise<BookingRow | null> {
   const sql = await getSql();
   const rows = await sql.query<BookingRow>(
-    `
-      update bookings
-      set status = 'cancelled'
-      where id = $1 and status = 'confirmed'
-      returning
-        id,
-        guest_name,
-        phone,
-        email,
-        room_type,
-        check_in::text as check_in,
-        check_out::text as check_out,
-        guests,
-        rooms,
-        total_amount,
-        status,
-        to_char(created_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') as created_at
-    `,
+    `update bookings set status = 'cancelled' where id = $1 and status = 'confirmed' returning ${BOOKING_SELECT}`,
     [id],
   );
   return rows[0] ?? null;
@@ -150,16 +125,7 @@ export async function listTakenStays(): Promise<TakenStay[]> {
 export async function findBookingRow(id: string, phone: string): Promise<BookingRow | null> {
   const sql = await getSql();
   const rows = await sql.query<BookingRow>(
-    `
-      select
-        id, guest_name, phone, email, room_type,
-        check_in::text as check_in,
-        check_out::text as check_out,
-        guests, rooms, total_amount, status,
-        to_char(created_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') as created_at
-      from bookings
-      where id = $1 and phone = $2
-    `,
+    `select ${BOOKING_SELECT} from bookings where id = $1 and phone = $2`,
     [id, phone],
   );
   return rows[0] ?? null;
@@ -168,17 +134,10 @@ export async function findBookingRow(id: string, phone: string): Promise<Booking
 export async function cancelBookingForPhone(id: string, phone: string): Promise<BookingRow | null> {
   const sql = await getSql();
   const rows = await sql.query<BookingRow>(
-    `
-      update bookings
-      set status = 'cancelled'
-      where id = $1 and phone = $2 and status = 'confirmed'
-      returning
-        id, guest_name, phone, email, room_type,
-        check_in::text as check_in,
-        check_out::text as check_out,
-        guests, rooms, total_amount, status,
-        to_char(created_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') as created_at
-    `,
+    `update bookings
+     set status = 'cancelled'
+     where id = $1 and phone = $2 and status = 'confirmed'
+     returning ${BOOKING_SELECT}`,
     [id, phone],
   );
   return rows[0] ?? null;

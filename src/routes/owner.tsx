@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { RedirectToSignIn, UserButton } from "@/lib/auth/gates";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
-import { cancelOwnerBooking, listOwnerBookings, type BookingRow } from "@/lib/bookings.functions";
+import { cancelOwnerBooking, listOwnerBookings, paymentSetup, type BookingRow } from "@/lib/bookings.functions";
 import { formatInr, formatLongDate, nightsBetween, todayIso } from "@/lib/format";
 import { HOTEL } from "@/lib/hotels";
 import { cn } from "@/lib/utils";
@@ -48,6 +48,7 @@ function OwnerPage() {
 
 function OwnerDesk() {
   const [rows, setRows] = useState<BookingRow[] | null>(null);
+  const [linksOn, setLinksOn] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -59,6 +60,13 @@ function OwnerDesk() {
       })
       .catch((caught: unknown) => {
         if (live) setError(caught instanceof Error ? caught.message : "Could not load bookings.");
+      });
+    paymentSetup()
+      .then((setup) => {
+        if (live) setLinksOn(setup.links);
+      })
+      .catch(() => {
+        if (live) setLinksOn(false);
       });
     return () => {
       live = false;
@@ -112,6 +120,11 @@ function OwnerDesk() {
       </dl>
 
       {error ? <p className="mt-4 text-sm text-terracotta">{error}</p> : null}
+      {!linksOn ? (
+        <p className="mt-4 text-sm text-ink-soft">
+          Razorpay is not connected yet, so guests do not get a pay link. Add the API key id and secret on the host.
+        </p>
+      ) : null}
 
       {!rows ? (
         <div className="glass mt-8 h-40" />
@@ -131,6 +144,7 @@ function OwnerDesk() {
                   <p className="text-xs tracking-widest text-muted uppercase tabular-nums">{row.id}</p>
                   <span className={cn("text-xs font-medium", cancelled ? "text-muted" : "text-success")}>
                     {cancelled ? "Cancelled" : "Confirmed"}
+                    {row.payment_status === "paid" ? " · Paid" : cancelled ? "" : " · Unpaid"}
                   </span>
                 </div>
                 <h2 className="mt-2 font-display text-3xl font-semibold">{row.guest_name}</h2>
@@ -147,6 +161,11 @@ function OwnerDesk() {
                   {row.rooms === 1 ? "" : "s"}
                 </p>
                 <p className="mt-1 text-sm tabular-nums">{formatInr(row.total_amount)}</p>
+                {!cancelled && row.payment_status !== "paid" && row.payment_url ? (
+                  <a href={row.payment_url} className="mt-3 inline-block text-sm underline">
+                    Razorpay link
+                  </a>
+                ) : null}
                 {!cancelled ? (
                   <Button
                     size="sm"

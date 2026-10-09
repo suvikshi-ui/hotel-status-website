@@ -19,10 +19,12 @@ export type Booking = {
   tax: number;
   total: number;
   status: "confirmed" | "cancelled";
+  paymentStatus: "unpaid" | "paid";
+  paymentUrl: string | null;
   createdAt: string;
 };
 
-type BookingInput = Omit<Booking, "id" | "createdAt" | "status">;
+type BookingInput = Omit<Booking, "id" | "createdAt" | "status" | "paymentStatus" | "paymentUrl">;
 
 type BookingState = {
   bookings: Booking[];
@@ -47,6 +49,8 @@ export function rowToBooking(row: BookingRow): Booking {
     tax: 0,
     total: row.total_amount,
     status: row.status,
+    paymentStatus: row.payment_status,
+    paymentUrl: row.payment_url,
     createdAt: row.created_at,
   };
 }
