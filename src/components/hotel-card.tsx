@@ -11,7 +11,12 @@ export function HotelCard({ hotel, search }: { hotel: Hotel; search: ResolvedSea
   const status = getHotelStatus(hotel, search.checkIn, search.checkOut);
 
   return (
-    <Link to="/contact" className="glass group flex flex-col rounded-lg p-5">
+    <Link
+      to="/book/$hotelId"
+      params={{ hotelId: hotel.id }}
+      search={{ checkIn: search.checkIn, checkOut: search.checkOut, guests: search.guests, rooms: search.rooms }}
+      className="glass group flex flex-col rounded-lg p-5"
+    >
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-medium tracking-widest text-muted uppercase">

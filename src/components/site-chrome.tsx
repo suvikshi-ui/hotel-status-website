@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { useBookings } from "@/lib/bookings";
 import { HOTEL } from "@/lib/hotels";
 
 export function SiteHeader() {
@@ -22,7 +23,7 @@ export function SiteHeader() {
             className="size-14 shrink-0 object-contain sm:size-16"
           />
           <span className="min-w-0">
-            <span className="block font-display text-xl font-semibold tracking-tight sm:text-2xl">
+            <span className="block truncate font-display text-xl font-semibold tracking-tight sm:text-2xl">
               Hotel Status Residency
             </span>
             <span className="block text-[0.65rem] tracking-[0.22em] text-muted uppercase">Mahape</span>
@@ -65,19 +66,34 @@ export function SiteHeader() {
           >
             Gallery
           </Link>
+          <Link
+            to="/bookings"
+            className="flex h-11 items-center px-3 text-xs tracking-[0.18em] text-ink uppercase"
+          >
+            Bookings
+          </Link>
           <Button asChild size="sm" variant="ink" className="ml-3 rounded-none tracking-[0.16em] uppercase">
-            <Link to="/contact">Book a stay</Link>
+            <Link to="/book/$hotelId" params={{ hotelId: HOTEL.id }}>
+              Book a stay
+            </Link>
           </Button>
         </nav>
 
-        <button
-          type="button"
-          className="flex size-11 items-center justify-center text-ink md:hidden"
-          aria-label={open ? "Close menu" : "Open menu"}
-          onClick={() => setOpen((v) => !v)}
-        >
-          {open ? <X className="size-5" /> : <Menu className="size-5" />}
-        </button>
+        <div className="flex shrink-0 items-center md:hidden">
+          <Button asChild size="sm" variant="ink" className="rounded-none px-3 tracking-[0.14em] uppercase">
+            <Link to="/book/$hotelId" params={{ hotelId: HOTEL.id }}>
+              Book
+            </Link>
+          </Button>
+          <button
+            type="button"
+            className="flex size-11 items-center justify-center text-ink"
+            aria-label={open ? "Close menu" : "Open menu"}
+            onClick={() => setOpen((v) => !v)}
+          >
+            {open ? <X className="size-5" /> : <Menu className="size-5" />}
+          </button>
+        </div>
       </div>
 
       {open ? (
@@ -98,8 +114,11 @@ export function SiteHeader() {
             <Link to="/" hash="gallery" className="flex h-11 items-center text-sm tracking-[0.16em] text-ink uppercase" onClick={() => setOpen(false)}>
               Gallery
             </Link>
+            <Link to="/bookings" className="flex h-11 items-center text-sm tracking-[0.16em] text-ink uppercase" onClick={() => setOpen(false)}>
+              Bookings
+            </Link>
             <Button asChild variant="ink" className="mt-2 w-full rounded-none tracking-[0.16em] uppercase">
-              <Link to="/contact" onClick={() => setOpen(false)}>
+              <Link to="/book/$hotelId" params={{ hotelId: HOTEL.id }} onClick={() => setOpen(false)}>
                 Book a stay
               </Link>
             </Button>
@@ -139,6 +158,14 @@ export function SiteFooter() {
         <div className="text-sm text-cream/70">
           <p className="text-xs tracking-[0.18em] text-gold uppercase">The stay</p>
           <p className="mt-3">Deluxe, Super Deluxe and Suite rooms. Wi-Fi, parking, and a 24-hour front desk.</p>
+          <p className="mt-4 flex flex-col gap-2">
+            <Link to="/book/$hotelId" params={{ hotelId: HOTEL.id }} className="text-cream">
+              Book a stay
+            </Link>
+            <Link to="/bookings" className="text-cream">
+              My bookings
+            </Link>
+          </p>
         </div>
       </div>
     </footer>
@@ -146,6 +173,11 @@ export function SiteFooter() {
 }
 
 export function PageShell({ children }: { children: ReactNode }) {
+  const load = useBookings((s) => s.load);
+  useEffect(() => {
+    void load();
+  }, [load]);
+
   return (
     <div className="flex min-h-dvh flex-col bg-paper text-ink">
       <SiteHeader />
