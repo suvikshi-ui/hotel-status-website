@@ -3,11 +3,13 @@ import { addDays, format, parseISO } from "date-fns";
 import { useEffect, useState, type FormEvent } from "react";
 import { PageShell } from "@/components/site-chrome";
 import { PayStay } from "@/components/pay-stay";
+import { SendBooking } from "@/components/send-booking";
 import { Button } from "@/components/ui/button";
 import { useBookings, type Booking } from "@/lib/bookings";
 import { listTakenDates, type TakenStay } from "@/lib/bookings.functions";
 import { formatInr, formatLongDate, nightsBetween, todayIso, tomorrowIso } from "@/lib/format";
 import { getHotel, HOTEL, type RoomType } from "@/lib/hotels";
+import { openBookingSends } from "@/lib/booking-note";
 import { cn } from "@/lib/utils";
 
 const ROOM_IDS = ["deluxe", "super-deluxe", "suite"] as const;
@@ -168,6 +170,19 @@ function BookPage() {
         subtotal: total,
         tax: 0,
         total,
+      });
+      openBookingSends({
+        id: booking.id,
+        guestName: booking.guestName,
+        phone: booking.phone,
+        email: booking.email,
+        roomName: room.name,
+        checkIn: booking.checkIn,
+        checkOut: booking.checkOut,
+        nights: booking.nights,
+        guests: booking.guests,
+        rooms: booking.rooms,
+        total: booking.total,
       });
       setDone(booking);
     } catch (caught) {
@@ -392,6 +407,21 @@ function Confirmed({ booking, onAnother }: { booking: Booking; onAnother: () => 
         Keep this number. The hotel sees the same stay. Find it later with this number and the phone used here.
       </p>
       <PayStay status={booking.paymentStatus} url={booking.paymentUrl} amount={booking.total} />
+      <SendBooking
+        stay={{
+          id: booking.id,
+          guestName: booking.guestName,
+          phone: booking.phone,
+          email: booking.email,
+          roomName: room?.name ?? "Room",
+          checkIn: booking.checkIn,
+          checkOut: booking.checkOut,
+          nights: booking.nights,
+          guests: booking.guests,
+          rooms: booking.rooms,
+          total: booking.total,
+        }}
+      />
       <div className="mt-6 flex flex-wrap gap-3">
         <Button asChild variant="ink" className="rounded-none tracking-[0.16em] uppercase">
           <Link to="/bookings">Find this stay</Link>
