@@ -38,7 +38,7 @@ New (all optional; defaults shown):
 | `CHECKIN_HOUR` | `12` | Check-in hour (IST) the policy counts back from |
 | `GST_PERCENT` | `5` | Flat GST on room tariff. No slab, no Rs 7,500 threshold |
 | `PRICES_INCLUDE_GST` | true (`false` adds GST on top) | Whether listed prices already include GST |
-| `HOTEL_GSTIN` | none | Printed on invoices (shows "—" when unset) |
+| `HOTEL_GSTIN` | `27ATAPP6184D2ZL` (code default) | Printed on invoices; env value overrides the default |
 | `WHATSAPP_GUEST_BOOKING_TEMPLATE` | `guest_booking_received` | Guest booking message template |
 | `WHATSAPP_GUEST_RECEIPT_TEMPLATE` | `guest_payment_receipt` | Guest receipt template |
 | `FRONTDESK_SUPABASE_URL` | none | Status Ledger Supabase URL (front desk sync) |

@@ -224,7 +224,7 @@ export const getInvoice = createServerFn({ method: "POST" })
     const c = bookingConfig();
     return {
       row,
-      gstin: process.env.HOTEL_GSTIN?.trim() || null,
+      gstin: process.env.HOTEL_GSTIN?.trim() || "27ATAPP6184D2ZL",
       nights: nightsBetween(row.check_in, row.check_out),
       gst: gstBreakdown(row.total_amount, c.gstPercent, c.pricesIncludeGst),
       hotel: { name: HOTEL.name, address: HOTEL.address, phones: HOTEL.phones, email: HOTEL.email },
