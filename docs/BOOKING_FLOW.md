@@ -9,7 +9,7 @@ production deploy applies them automatically. Preview builds skip it
 
 | File | What it does |
 | --- | --- |
-| `migrations/0004_room_inventory.sql` | `room_inventory` (deluxe 8, super-deluxe 6, suite 4: **confirm the real split** and update the rows), per-room-type capacity in `place_booking` |
+| `migrations/0004_room_inventory.sql` + `0008_room_inventory_real_counts.sql` | `room_inventory` (deluxe 25, super-deluxe 3, suite 4 = 32 rooms, confirmed by owner), per-room-type capacity in `place_booking` |
 | `migrations/0005_payment_modes.sql` | `pending_payment` / `expired` statuses, payment modes, `amount_paid`, holds, `record_payment()` |
 | `migrations/0006_cancel_refund_invoice.sql` | `manage_token` (guest self-cancel link), refund columns, `invoice_counters` and the auto invoice number trigger (`HSR/2026-27/0001`) |
 | `migrations/0007_date_blocks.sql` | `date_blocks` (manual OTA/maintenance blocks) counted by `rooms_taken()` |

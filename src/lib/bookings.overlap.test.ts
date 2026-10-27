@@ -17,8 +17,10 @@ test("place_booking fills a room type up to its inventory, then rejects", async 
   await book(pg, "HSR-7", "deluxe", "2026-11-02", "2026-11-03");
 });
 
-test("default inventory totals 18 rooms", async () => {
+test("default inventory is 25 deluxe, 3 super-deluxe, 4 suite (32 rooms)", async () => {
   const pg = await freshDb();
   const res = await pg.query<{ total: number }>("select sum(rooms)::int as total from room_inventory");
-  assert.equal(res.rows[0]?.total, 18);
+  assert.equal(res.rows[0]?.total, 32);
+  const split = await pg.query<{ room_type: string; rooms: number }>("select room_type, rooms from room_inventory order by room_type");
+  assert.deepEqual(split.rows.map((r) => [r.room_type, r.rooms]), [["deluxe", 25], ["suite", 4], ["super-deluxe", 3]]);
 });
