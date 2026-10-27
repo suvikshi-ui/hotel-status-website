@@ -8,6 +8,8 @@ import {
   insertBooking,
   listBookingRows,
   listTakenStays,
+  roomsLeft,
+  type RoomsLeft,
   type BookingRow,
   type TakenStay,
 } from "@/lib/bookings.server";
@@ -20,7 +22,9 @@ import {
 } from "@/lib/razorpay.server";
 import { notifyOwnerOfBooking } from "@/lib/owner-notify.server";
 
-export type { BookingRow, TakenStay };
+export type { BookingRow, RoomsLeft, TakenStay };
+import { HOTEL } from "@/lib/hotels";
+import { nightsBetween } from "@/lib/format";
 
 const bookingInput = z.object({
   guestName: z.string().trim().min(1).max(120),
@@ -57,6 +61,26 @@ export const listTakenDates = createServerFn({ method: "GET" }).handler(async ()
   return listTakenStays();
 });
 
+const datesInput = z.object({
+  checkIn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  checkOut: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+
+export const checkRoomsLeft = createServerFn({ method: "POST" })
+  .validator(datesInput)
+  .handler(async ({ data }): Promise<RoomsLeft> => {
+    await noStore();
+    if (data.checkOut <= data.checkIn) return {};
+    return roomsLeft(data.checkIn, data.checkOut);
+  });
+
+/** The server prices the stay; the browser total is only a preview. */
+export function stayTotal(roomType: string, checkIn: string, checkOut: string, rooms: number): number {
+  const room = HOTEL.rooms.find((item) => item.id === roomType);
+  if (!room) throw new Error("Unknown room type.");
+  return room.price * rooms * nightsBetween(checkIn, checkOut);
+}
+
 export const createBooking = createServerFn({ method: "POST" })
   .validator(bookingInput)
   .handler(async ({ data }): Promise<BookingRow> => {
@@ -64,7 +88,8 @@ export const createBooking = createServerFn({ method: "POST" })
     if (data.checkOut <= data.checkIn) {
       throw new Error("Check-out must be after check-in.");
     }
-    const row = await insertBooking({ ...data, phone: phoneDigits(data.phone) });
+    const totalAmount = stayTotal(data.roomType, data.checkIn, data.checkOut, data.rooms);
+    const row = await insertBooking({ ...data, totalAmount, phone: phoneDigits(data.phone) });
     const saved = await attachPaymentLink(row);
     try {
       await notifyOwnerOfBooking(saved);

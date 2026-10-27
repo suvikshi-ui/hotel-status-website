@@ -87,7 +87,7 @@ export async function insertBooking(input: NewBooking): Promise<BookingRow> {
       const code = error && typeof error === "object" && "code" in error ? String(error.code) : "";
       const message = error instanceof Error ? error.message : "";
       if (code === "P0001" || message.includes("overlapping_booking")) {
-        throw new Error("Those dates are already booked for this room type.");
+        throw new Error("Not enough rooms of this type are free for those dates.");
       }
       if (code === "23505") continue;
       throw error;
@@ -103,6 +103,22 @@ export async function cancelBookingRow(id: string): Promise<BookingRow | null> {
     [id],
   );
   return rows[0] ?? null;
+}
+
+export type RoomsLeft = Record<string, { capacity: number; left: number }>;
+
+/** Rooms still free for every night of [checkIn, checkOut), per room type. */
+export async function roomsLeft(checkIn: string, checkOut: string): Promise<RoomsLeft> {
+  const sql = await getSql();
+  const rows = await sql.query<{ room_type: string; capacity: number; taken: number }>(
+    `select room_type, rooms as capacity, rooms_taken(room_type, $1::date, $2::date) as taken from room_inventory`,
+    [checkIn, checkOut],
+  );
+  const out: RoomsLeft = {};
+  for (const row of rows) {
+    out[row.room_type] = { capacity: Number(row.capacity), left: Math.max(0, Number(row.capacity) - Number(row.taken)) };
+  }
+  return out;
 }
 
 export type TakenStay = {
