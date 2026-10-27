@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { markPaidIfAmount, webhookSignature } from "@/lib/razorpay.server";
+import { recordPaymentIfAmount, webhookSignature } from "@/lib/razorpay.server";
 
 export const Route = createFileRoute("/api/razorpay/webhook")({
   server: {
@@ -26,7 +26,7 @@ export const Route = createFileRoute("/api/razorpay/webhook")({
           const amount = event.payload?.payment?.entity?.amount ?? event.payload?.payment_link?.entity?.amount_paid;
           const paymentId = event.payload?.payment?.entity?.id ?? null;
           if (/^HSR-\d{6}$/.test(reference) && typeof amount === "number") {
-            await markPaidIfAmount(reference, amount, paymentId);
+            await recordPaymentIfAmount(reference, amount, paymentId);
           }
         }
         return new Response("ok");

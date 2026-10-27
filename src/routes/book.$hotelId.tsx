@@ -5,7 +5,7 @@ import { PageShell } from "@/components/site-chrome";
 import { PayStay } from "@/components/pay-stay";
 import { Button } from "@/components/ui/button";
 import { useBookings, type Booking } from "@/lib/bookings";
-import { listTakenDates, type TakenStay } from "@/lib/bookings.functions";
+import { bookingOptions, checkRoomsLeft, type BookingOptions, type RoomsLeft } from "@/lib/bookings.functions";
 import { formatInr, formatLongDate, nightsBetween, todayIso, tomorrowIso } from "@/lib/format";
 import { getHotel, HOTEL, type RoomType } from "@/lib/hotels";
 import { cn } from "@/lib/utils";
@@ -48,7 +48,7 @@ function normalizePhone(value: string): string {
 
 function errorMessage(error: unknown): string {
   const raw = error instanceof Error ? error.message : "";
-  if (raw.includes("already booked")) return "Those dates are already booked for this room type.";
+  if (raw.includes("rooms of this type")) return "Not enough rooms of this type are free for those dates.";
   if (raw.includes("Check-out")) return "Check-out must be after check-in.";
   if (raw.trim()) return raw;
   return "Could not save the booking. Please try again.";
@@ -76,9 +76,16 @@ const field =
 
 function BookPage() {
   const search = Route.useSearch();
-  const mine = useBookings((s) => s.bookings);
   const add = useBookings((s) => s.add);
-  const [taken, setTaken] = useState<TakenStay[]>([]);
+  const [left, setLeft] = useState<RoomsLeft>({});
+  const [options, setOptions] = useState<BookingOptions>({ advancePercent: 30, payAtHotel: true, holdMinutes: 30 });
+  const [paymentMode, setPaymentMode] = useState<"full" | "advance" | "pay_at_hotel">("full");
+
+  useEffect(() => {
+    bookingOptions()
+      .then(setOptions)
+      .catch(() => {});
+  }, []);
 
   const [roomId, setRoomId] = useState<RoomId>(search.room ?? "deluxe");
   const [checkIn, setCheckIn] = useState(search.checkIn ?? todayIso());
@@ -94,31 +101,23 @@ function BookPage() {
 
   useEffect(() => {
     let live = true;
-    listTakenDates()
+    if (checkOut <= checkIn) return;
+    checkRoomsLeft({ data: { checkIn, checkOut } })
       .then((rows) => {
-        if (live) setTaken(rows);
+        if (live) setLeft(rows);
       })
       .catch(() => {});
     return () => {
       live = false;
     };
-  }, [done]);
+  }, [done, checkIn, checkOut]);
 
   const room = HOTEL.rooms.find((item) => item.id === roomId) ?? HOTEL.rooms[0];
   const datesOk = checkOut > checkIn;
   const nights = datesOk ? nightsBetween(checkIn, checkOut) : 0;
   const total = nights * room.price * rooms;
-  const clash =
-    taken.find(
-      (stay) => stay.room_type === room.id && stay.check_in < checkOut && stay.check_out > checkIn,
-    ) ??
-    mine.find(
-      (booking) =>
-        booking.status === "confirmed" &&
-        booking.roomTypeId === room.id &&
-        booking.checkIn < checkOut &&
-        booking.checkOut > checkIn,
-    );
+  const free = left[room.id]?.left;
+  const clash = datesOk && free !== undefined && free < rooms;
 
   function onCheckIn(value: string) {
     setCheckIn(value);
@@ -168,6 +167,7 @@ function BookPage() {
         subtotal: total,
         tax: 0,
         total,
+        paymentMode,
       });
       setDone(booking);
     } catch (caught) {
@@ -183,7 +183,7 @@ function BookPage() {
         <p className="text-xs tracking-[0.22em] text-gold uppercase">Hotel Status Residency</p>
         <h1 className="mt-3 font-display text-5xl font-semibold">Book a stay</h1>
         <p className="mt-4 max-w-xl text-base leading-relaxed text-ink-soft">
-          Choose a room and the dates. You get a booking number, then pay that total on Razorpay.
+          Choose a room, the dates and how to pay: in full or an advance on Razorpay, or at the hotel.
         </p>
 
         {done ? (
@@ -265,11 +265,14 @@ function BookPage() {
 
             {clash ? (
               <p className="mt-4 text-sm text-terracotta">
-                {room.name} is already booked{" "}
-                {"checkIn" in clash
-                  ? `${formatLongDate(clash.checkIn)} to ${formatLongDate(clash.checkOut)}`
-                  : `${formatLongDate(clash.check_in)} to ${formatLongDate(clash.check_out)}`}
-                . Pick other dates, or another room type.
+                {free === 0
+                  ? `${room.name} is sold out for those dates.`
+                  : `Only ${free} ${room.name} room${free === 1 ? "" : "s"} left for those dates.`}{" "}
+                Pick other dates, fewer rooms, or another room type.
+              </p>
+            ) : datesOk && free !== undefined && free <= 3 ? (
+              <p className="mt-4 text-sm text-ink-soft">
+                {free} {room.name} room{free === 1 ? "" : "s"} left for those dates.
               </p>
             ) : null}
 
@@ -314,6 +317,40 @@ function BookPage() {
               </label>
             </div>
 
+            <fieldset className="mt-8">
+              <legend className="text-xs tracking-[0.18em] text-muted uppercase">Payment</legend>
+              <div className="mt-4 grid gap-2 text-sm">
+                {(
+                  [
+                    ["full", `Pay the full amount online${datesOk ? ` (${formatInr(total)})` : ""}`],
+                    [
+                      "advance",
+                      `Pay ${options.advancePercent}% advance online${
+                        datesOk ? ` (${formatInr(Math.ceil((total * options.advancePercent) / 100))})` : ""
+                      }, the rest at the hotel`,
+                    ],
+                    ...(options.payAtHotel ? [["pay_at_hotel", "Pay at the hotel at check-in"] as const] : []),
+                  ] as const
+                ).map(([value, label]) => (
+                  <label key={value} className="flex items-center gap-3">
+                    <input
+                      type="radio"
+                      name="payment-mode"
+                      value={value}
+                      checked={paymentMode === value}
+                      onChange={() => setPaymentMode(value)}
+                    />
+                    <span>{label}</span>
+                  </label>
+                ))}
+              </div>
+              {paymentMode !== "pay_at_hotel" ? (
+                <p className="mt-2 text-xs text-muted">
+                  Rooms are held for {options.holdMinutes} minutes while you pay on Razorpay.
+                </p>
+              ) : null}
+            </fieldset>
+
             <div className="mt-8 flex flex-wrap items-end justify-between gap-4 border-t border-ink/10 pt-6">
               <div>
                 <p className="text-xs tracking-[0.18em] text-muted uppercase">
@@ -328,13 +365,13 @@ function BookPage() {
               <Button
                 type="submit"
                 variant="ink"
-                disabled={pending || !datesOk}
+                disabled={pending || !datesOk || clash}
                 className="rounded-none tracking-[0.16em] uppercase"
               >
-                {pending ? "Saving…" : "Confirm booking"}
+                {pending ? "Saving…" : paymentMode === "pay_at_hotel" ? "Confirm booking" : "Book and pay"}
               </Button>
             </div>
-            {error && !error.includes("already booked") ? (
+            {error ? (
               <p className="mt-4 text-sm text-terracotta">{error}</p>
             ) : null}
           </form>
@@ -380,7 +417,9 @@ function Confirmed({ booking, onAnother }: { booking: Booking; onAnother: () => 
   const room = HOTEL.rooms.find((item) => item.id === booking.roomTypeId);
   return (
     <div className="mt-10 border border-ink/15 bg-cream p-6">
-      <p className="text-xs tracking-[0.18em] text-success uppercase">Confirmed</p>
+      <p className="text-xs tracking-[0.18em] text-success uppercase">
+        {booking.status === "pending_payment" ? "Held — awaiting payment" : "Confirmed"}
+      </p>
       <h2 className="mt-2 font-display text-4xl font-semibold">{booking.id}</h2>
       <p className="mt-3 text-sm leading-relaxed">
         {room?.name ?? "Room"} · {booking.guestName}
@@ -391,7 +430,7 @@ function Confirmed({ booking, onAnother }: { booking: Booking; onAnother: () => 
       <p className="mt-3 text-sm leading-relaxed text-ink-soft">
         Keep this number. The hotel sees the same stay. Find it later with this number and the phone used here.
       </p>
-      <PayStay status={booking.paymentStatus} url={booking.paymentUrl} amount={booking.total} />
+      <PayStay row={booking.row} />
       <div className="mt-6 flex flex-wrap gap-3">
         <Button asChild variant="ink" className="rounded-none tracking-[0.16em] uppercase">
           <Link to="/bookings">Find this stay</Link>

@@ -18,13 +18,15 @@ export type Booking = {
   subtotal: number;
   tax: number;
   total: number;
-  status: "confirmed" | "cancelled";
-  paymentStatus: "unpaid" | "paid";
+  status: BookingRow["status"];
+  paymentStatus: BookingRow["payment_status"];
+  paymentMode: BookingRow["payment_mode"];
   paymentUrl: string | null;
   createdAt: string;
+  row: BookingRow;
 };
 
-type BookingInput = Omit<Booking, "id" | "createdAt" | "status" | "paymentStatus" | "paymentUrl">;
+type BookingInput = Omit<Booking, "id" | "createdAt" | "status" | "paymentStatus" | "paymentUrl" | "row">;
 
 type BookingState = {
   bookings: Booking[];
@@ -50,8 +52,10 @@ export function rowToBooking(row: BookingRow): Booking {
     total: row.total_amount,
     status: row.status,
     paymentStatus: row.payment_status,
+    paymentMode: row.payment_mode,
     paymentUrl: row.payment_url,
     createdAt: row.created_at,
+    row,
   };
 }
 
@@ -69,6 +73,7 @@ export const useBookings = create<BookingState>()((set, get) => ({
         guests: input.guests,
         rooms: input.rooms,
         totalAmount: input.total,
+        paymentMode: input.paymentMode,
       },
     });
     const booking = rowToBooking(row);
