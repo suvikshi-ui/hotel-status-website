@@ -4,6 +4,7 @@ import { authMiddleware } from "@/lib/auth/middleware";
 import {
   cancelBookingForPhone,
   cancelBookingRow,
+  collectBalanceRow,
   findBookingRow,
   insertBooking,
   listBookingRows,
@@ -14,6 +15,7 @@ import {
   type TakenStay,
 } from "@/lib/bookings.server";
 import { assertOwner } from "@/lib/owner.server";
+import { amountDueNow, bookingConfig } from "@/lib/booking-config.server";
 import {
   attachPaymentLink,
   cancelRemotePaymentLink,
@@ -36,6 +38,7 @@ const bookingInput = z.object({
   guests: z.number().int().min(1).max(12),
   rooms: z.number().int().min(1).max(8),
   totalAmount: z.number().int().min(0).max(10_000_000),
+  paymentMode: z.enum(["full", "advance", "pay_at_hotel"]).default("full"),
 });
 
 const lookupInput = z.object({
@@ -66,6 +69,13 @@ const datesInput = z.object({
   checkOut: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 });
 
+export type BookingOptions = { advancePercent: number; payAtHotel: boolean; holdMinutes: number };
+
+export const bookingOptions = createServerFn({ method: "GET" }).handler(async (): Promise<BookingOptions> => {
+  const config = bookingConfig();
+  return { advancePercent: config.advancePercent, payAtHotel: config.payAtHotel, holdMinutes: config.holdMinutes };
+});
+
 export const checkRoomsLeft = createServerFn({ method: "POST" })
   .validator(datesInput)
   .handler(async ({ data }): Promise<RoomsLeft> => {
@@ -88,8 +98,18 @@ export const createBooking = createServerFn({ method: "POST" })
     if (data.checkOut <= data.checkIn) {
       throw new Error("Check-out must be after check-in.");
     }
+    const config = bookingConfig();
+    if (data.paymentMode === "pay_at_hotel" && !config.payAtHotel) {
+      throw new Error("Pay at hotel is not available. Choose an online payment.");
+    }
     const totalAmount = stayTotal(data.roomType, data.checkIn, data.checkOut, data.rooms);
-    const row = await insertBooking({ ...data, totalAmount, phone: phoneDigits(data.phone) });
+    const row = await insertBooking({
+      ...data,
+      totalAmount,
+      phone: phoneDigits(data.phone),
+      amountDueNow: amountDueNow(totalAmount, data.paymentMode, config.advancePercent),
+      holdMinutes: config.holdMinutes,
+    });
     const saved = await attachPaymentLink(row);
     try {
       await notifyOwnerOfBooking(saved);
@@ -120,7 +140,7 @@ export const cancelGuestBooking = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<BookingRow | null> => {
     await noStore();
     const row = await cancelBookingForPhone(data.id.trim().toUpperCase(), phoneDigits(data.phone));
-    if (row?.payment_status !== "paid") await cancelRemotePaymentLink(row?.payment_link_id ?? null);
+    if (row?.payment_status === "unpaid") await cancelRemotePaymentLink(row?.payment_link_id ?? null);
     return row;
   });
 
@@ -139,8 +159,17 @@ export const cancelOwnerBooking = createServerFn({ method: "POST" })
     await noStore();
     await assertOwner(context.userId);
     const row = await cancelBookingRow(data.id);
-    if (row?.payment_status !== "paid") await cancelRemotePaymentLink(row?.payment_link_id ?? null);
+    if (row?.payment_status === "unpaid") await cancelRemotePaymentLink(row?.payment_link_id ?? null);
     return row;
+  });
+
+export const collectBalance = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator(z.object({ id: z.string().trim().min(1).max(40) }))
+  .handler(async ({ context, data }): Promise<BookingRow | null> => {
+    await noStore();
+    await assertOwner(context.userId);
+    return collectBalanceRow(data.id);
   });
 
 export const paymentSetup = createServerFn({ method: "GET" })

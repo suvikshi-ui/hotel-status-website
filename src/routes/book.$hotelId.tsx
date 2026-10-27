@@ -5,7 +5,7 @@ import { PageShell } from "@/components/site-chrome";
 import { PayStay } from "@/components/pay-stay";
 import { Button } from "@/components/ui/button";
 import { useBookings, type Booking } from "@/lib/bookings";
-import { checkRoomsLeft, type RoomsLeft } from "@/lib/bookings.functions";
+import { bookingOptions, checkRoomsLeft, type BookingOptions, type RoomsLeft } from "@/lib/bookings.functions";
 import { formatInr, formatLongDate, nightsBetween, todayIso, tomorrowIso } from "@/lib/format";
 import { getHotel, HOTEL, type RoomType } from "@/lib/hotels";
 import { cn } from "@/lib/utils";
@@ -78,6 +78,14 @@ function BookPage() {
   const search = Route.useSearch();
   const add = useBookings((s) => s.add);
   const [left, setLeft] = useState<RoomsLeft>({});
+  const [options, setOptions] = useState<BookingOptions>({ advancePercent: 30, payAtHotel: true, holdMinutes: 30 });
+  const [paymentMode, setPaymentMode] = useState<"full" | "advance" | "pay_at_hotel">("full");
+
+  useEffect(() => {
+    bookingOptions()
+      .then(setOptions)
+      .catch(() => {});
+  }, []);
 
   const [roomId, setRoomId] = useState<RoomId>(search.room ?? "deluxe");
   const [checkIn, setCheckIn] = useState(search.checkIn ?? todayIso());
@@ -159,6 +167,7 @@ function BookPage() {
         subtotal: total,
         tax: 0,
         total,
+        paymentMode,
       });
       setDone(booking);
     } catch (caught) {
@@ -174,7 +183,7 @@ function BookPage() {
         <p className="text-xs tracking-[0.22em] text-gold uppercase">Hotel Status Residency</p>
         <h1 className="mt-3 font-display text-5xl font-semibold">Book a stay</h1>
         <p className="mt-4 max-w-xl text-base leading-relaxed text-ink-soft">
-          Choose a room and the dates. You get a booking number, then pay that total on Razorpay.
+          Choose a room, the dates and how to pay: in full or an advance on Razorpay, or at the hotel.
         </p>
 
         {done ? (
@@ -308,6 +317,40 @@ function BookPage() {
               </label>
             </div>
 
+            <fieldset className="mt-8">
+              <legend className="text-xs tracking-[0.18em] text-muted uppercase">Payment</legend>
+              <div className="mt-4 grid gap-2 text-sm">
+                {(
+                  [
+                    ["full", `Pay the full amount online${datesOk ? ` (${formatInr(total)})` : ""}`],
+                    [
+                      "advance",
+                      `Pay ${options.advancePercent}% advance online${
+                        datesOk ? ` (${formatInr(Math.ceil((total * options.advancePercent) / 100))})` : ""
+                      }, the rest at the hotel`,
+                    ],
+                    ...(options.payAtHotel ? [["pay_at_hotel", "Pay at the hotel at check-in"] as const] : []),
+                  ] as const
+                ).map(([value, label]) => (
+                  <label key={value} className="flex items-center gap-3">
+                    <input
+                      type="radio"
+                      name="payment-mode"
+                      value={value}
+                      checked={paymentMode === value}
+                      onChange={() => setPaymentMode(value)}
+                    />
+                    <span>{label}</span>
+                  </label>
+                ))}
+              </div>
+              {paymentMode !== "pay_at_hotel" ? (
+                <p className="mt-2 text-xs text-muted">
+                  Rooms are held for {options.holdMinutes} minutes while you pay on Razorpay.
+                </p>
+              ) : null}
+            </fieldset>
+
             <div className="mt-8 flex flex-wrap items-end justify-between gap-4 border-t border-ink/10 pt-6">
               <div>
                 <p className="text-xs tracking-[0.18em] text-muted uppercase">
@@ -325,7 +368,7 @@ function BookPage() {
                 disabled={pending || !datesOk || clash}
                 className="rounded-none tracking-[0.16em] uppercase"
               >
-                {pending ? "Saving…" : "Confirm booking"}
+                {pending ? "Saving…" : paymentMode === "pay_at_hotel" ? "Confirm booking" : "Book and pay"}
               </Button>
             </div>
             {error ? (
@@ -374,7 +417,9 @@ function Confirmed({ booking, onAnother }: { booking: Booking; onAnother: () => 
   const room = HOTEL.rooms.find((item) => item.id === booking.roomTypeId);
   return (
     <div className="mt-10 border border-ink/15 bg-cream p-6">
-      <p className="text-xs tracking-[0.18em] text-success uppercase">Confirmed</p>
+      <p className="text-xs tracking-[0.18em] text-success uppercase">
+        {booking.status === "pending_payment" ? "Held — awaiting payment" : "Confirmed"}
+      </p>
       <h2 className="mt-2 font-display text-4xl font-semibold">{booking.id}</h2>
       <p className="mt-3 text-sm leading-relaxed">
         {room?.name ?? "Room"} · {booking.guestName}
@@ -385,7 +430,7 @@ function Confirmed({ booking, onAnother }: { booking: Booking; onAnother: () => 
       <p className="mt-3 text-sm leading-relaxed text-ink-soft">
         Keep this number. The hotel sees the same stay. Find it later with this number and the phone used here.
       </p>
-      <PayStay status={booking.paymentStatus} url={booking.paymentUrl} amount={booking.total} />
+      <PayStay row={booking.row} />
       <div className="mt-6 flex flex-wrap gap-3">
         <Button asChild variant="ink" className="rounded-none tracking-[0.16em] uppercase">
           <Link to="/bookings">Find this stay</Link>

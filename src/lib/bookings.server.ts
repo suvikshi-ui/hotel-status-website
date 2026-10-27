@@ -12,8 +12,13 @@ export type BookingRow = {
   guests: number;
   rooms: number;
   total_amount: number;
-  status: "confirmed" | "cancelled";
-  payment_status: "unpaid" | "paid";
+  status: "pending_payment" | "confirmed" | "cancelled" | "expired";
+  payment_status: "unpaid" | "partial" | "paid" | "pay_at_hotel" | "refunded" | "partially_refunded";
+  payment_mode: "full" | "advance" | "pay_at_hotel";
+  amount_due_now: number;
+  amount_paid: number;
+  balance: number;
+  hold_expires_at: string | null;
   payment_url: string | null;
   payment_link_id: string | null;
   created_at: string;
@@ -29,6 +34,9 @@ export type NewBooking = {
   guests: number;
   rooms: number;
   totalAmount: number;
+  paymentMode: "full" | "advance" | "pay_at_hotel";
+  amountDueNow: number;
+  holdMinutes: number;
 };
 
 const BOOKING_SELECT = `
@@ -46,6 +54,12 @@ const BOOKING_SELECT = `
   payment_status,
   payment_url,
   payment_link_id,
+  payment_mode,
+  amount_due_now,
+  amount_paid,
+  greatest(total_amount - amount_paid, 0) as balance,
+  case when hold_expires_at is null then null
+    else to_char(hold_expires_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') end as hold_expires_at,
   to_char(created_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') as created_at
 `;
 
@@ -65,7 +79,7 @@ export async function insertBooking(input: NewBooking): Promise<BookingRow> {
     const id = bookingId();
     try {
       const rows = await sql.query<BookingRow>(
-        `select ${BOOKING_SELECT} from place_booking($1, $2, $3, $4, $5, $6::date, $7::date, $8, $9, $10)`,
+        `select ${BOOKING_SELECT} from place_booking($1, $2, $3, $4, $5, $6::date, $7::date, $8, $9, $10, $11, $12, $13)`,
         [
           id,
           input.guestName,
@@ -77,6 +91,9 @@ export async function insertBooking(input: NewBooking): Promise<BookingRow> {
           input.guests,
           input.rooms,
           input.totalAmount,
+          input.paymentMode,
+          input.amountDueNow,
+          input.holdMinutes,
         ],
       );
       const row = rows[0];
@@ -99,7 +116,7 @@ export async function insertBooking(input: NewBooking): Promise<BookingRow> {
 export async function cancelBookingRow(id: string): Promise<BookingRow | null> {
   const sql = await getSql();
   const rows = await sql.query<BookingRow>(
-    `update bookings set status = 'cancelled' where id = $1 and status = 'confirmed' returning ${BOOKING_SELECT}`,
+    `update bookings set status = 'cancelled' where id = $1 and status in ('confirmed', 'pending_payment') returning ${BOOKING_SELECT}`,
     [id],
   );
   return rows[0] ?? null;
@@ -133,7 +150,7 @@ export async function listTakenStays(): Promise<TakenStay[]> {
     `
       select room_type, check_in::text as check_in, check_out::text as check_out
       from bookings
-      where status = 'confirmed'
+      where booking_active(bookings)
     `,
   );
 }
@@ -152,9 +169,22 @@ export async function cancelBookingForPhone(id: string, phone: string): Promise<
   const rows = await sql.query<BookingRow>(
     `update bookings
      set status = 'cancelled'
-     where id = $1 and phone = $2 and status = 'confirmed'
+     where id = $1 and phone = $2 and status in ('confirmed', 'pending_payment')
      returning ${BOOKING_SELECT}`,
     [id, phone],
+  );
+  return rows[0] ?? null;
+}
+
+/** Owner records the balance taken at the desk (cash/UPI/card at the hotel). */
+export async function collectBalanceRow(id: string): Promise<BookingRow | null> {
+  const sql = await getSql();
+  const rows = await sql.query<BookingRow>(
+    `update bookings
+     set amount_paid = total_amount, payment_status = 'paid'
+     where id = $1 and status = 'confirmed' and amount_paid < total_amount
+     returning ${BOOKING_SELECT}`,
+    [id],
   );
   return rows[0] ?? null;
 }

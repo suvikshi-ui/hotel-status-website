@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { cancelGuestBooking, findBooking, refreshPayment, type BookingRow } from "@/lib/bookings.functions";
 import { formatInr, formatLongDate, nightsBetween } from "@/lib/format";
 import { HOTEL } from "@/lib/hotels";
+import { statusLabel } from "@/lib/booking-labels";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/bookings")({
@@ -133,8 +134,8 @@ function FindBookingPage() {
           <article className="mt-8 border border-ink/15 bg-cream p-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-xs tracking-widest text-muted uppercase tabular-nums">{booking.id}</p>
-              <span className={cn("text-xs font-medium", booking.status === "cancelled" ? "text-muted" : "text-success")}>
-                {booking.status === "cancelled" ? "Cancelled" : "Confirmed"}
+              <span className={cn("text-xs font-medium", booking.status === "confirmed" ? "text-success" : "text-muted")}>
+                {statusLabel(booking)}
               </span>
             </div>
             <h2 className="mt-2 font-display text-3xl font-semibold">{room?.name ?? "Room"}</h2>
@@ -146,21 +147,19 @@ function FindBookingPage() {
               room{booking.rooms === 1 ? "" : "s"}
             </p>
             <p className="mt-2 text-sm tabular-nums">{formatInr(booking.total_amount)}</p>
-            {booking.status === "confirmed" ? (
-              <PayStay status={booking.payment_status} url={booking.payment_url} amount={booking.total_amount} />
-            ) : null}
+            <PayStay row={booking} />
             <div className="mt-5 flex flex-wrap gap-2">
               <Button asChild size="sm" variant="outline" className="rounded-none tracking-[0.14em] uppercase">
                 <Link to="/book/$hotelId" params={{ hotelId: HOTEL.id }}>
                   Book again
                 </Link>
               </Button>
-              {booking.status === "confirmed" && booking.payment_status !== "paid" && booking.payment_url ? (
+              {booking.status === "pending_payment" && booking.payment_url ? (
                 <Button size="sm" variant="ghost" disabled={pending} onClick={() => void checkPayment()}>
                   I’ve paid
                 </Button>
               ) : null}
-              {booking.status === "confirmed" ? (
+              {booking.status === "confirmed" || booking.status === "pending_payment" ? (
                 <Button size="sm" variant="ghost" disabled={pending} onClick={() => void cancel()}>
                   Cancel stay
                 </Button>

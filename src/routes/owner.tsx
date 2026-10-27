@@ -3,9 +3,10 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { RedirectToSignIn, UserButton } from "@/lib/auth/gates";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
-import { cancelOwnerBooking, listOwnerBookings, paymentSetup, type BookingRow } from "@/lib/bookings.functions";
+import { cancelOwnerBooking, collectBalance, listOwnerBookings, paymentSetup, type BookingRow } from "@/lib/bookings.functions";
 import { formatInr, formatLongDate, nightsBetween, todayIso } from "@/lib/format";
 import { HOTEL } from "@/lib/hotels";
+import { statusLabel } from "@/lib/booking-labels";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/owner")({
@@ -73,6 +74,19 @@ function OwnerDesk() {
     };
   }, []);
 
+  async function collect(id: string) {
+    setBusyId(id);
+    setError(null);
+    try {
+      const row = await collectBalance({ data: { id } });
+      if (row) setRows((list) => list?.map((item) => (item.id === row.id ? row : item)) ?? null);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Could not record the payment.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   async function cancel(id: string) {
     setBusyId(id);
     setError(null);
@@ -137,14 +151,13 @@ function OwnerDesk() {
         <ul className="mt-8 flex flex-col gap-4">
           {rows.map((row) => {
             const room = HOTEL.rooms.find((item) => item.id === row.room_type);
-            const cancelled = row.status === "cancelled";
+            const cancelled = row.status === "cancelled" || row.status === "expired";
             return (
               <li key={row.id} className="border border-ink/15 bg-cream p-5">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-xs tracking-widest text-muted uppercase tabular-nums">{row.id}</p>
                   <span className={cn("text-xs font-medium", cancelled ? "text-muted" : "text-success")}>
-                    {cancelled ? "Cancelled" : "Confirmed"}
-                    {row.payment_status === "paid" ? " · Paid" : cancelled ? "" : " · Unpaid"}
+                    {statusLabel(row)}
                   </span>
                 </div>
                 <h2 className="mt-2 font-display text-3xl font-semibold">{row.guest_name}</h2>
@@ -160,8 +173,22 @@ function OwnerDesk() {
                   {nightsBetween(row.check_in, row.check_out)} nights · {row.guests} guests · {row.rooms} room
                   {row.rooms === 1 ? "" : "s"}
                 </p>
-                <p className="mt-1 text-sm tabular-nums">{formatInr(row.total_amount)}</p>
-                {!cancelled && row.payment_status !== "paid" && row.payment_url ? (
+                <p className="mt-1 text-sm tabular-nums">
+                  {formatInr(row.total_amount)} · paid {formatInr(row.amount_paid)}
+                  {row.balance > 0 && !cancelled ? ` · balance ${formatInr(row.balance)}` : ""}
+                </p>
+                {row.status === "confirmed" && row.balance > 0 ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="mt-3 mr-2"
+                    disabled={busyId === row.id}
+                    onClick={() => void collect(row.id)}
+                  >
+                    Balance collected at desk
+                  </Button>
+                ) : null}
+                {row.status === "pending_payment" && row.payment_url ? (
                   <a href={row.payment_url} className="mt-3 inline-block text-sm underline">
                     Razorpay link
                   </a>
