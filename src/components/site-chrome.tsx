@@ -170,6 +170,14 @@ export function SiteFooter() {
           </p>
         </div>
       </div>
+      <div className="border-t border-cream/10">
+        <nav aria-label="Legal" className="mx-auto flex max-w-6xl flex-wrap gap-x-6 gap-y-2 px-4 py-5 text-xs text-cream/70 sm:px-6">
+          <Link to="/terms" className="text-cream">Terms of Service</Link>
+          <Link to="/privacy" className="text-cream">Privacy Policy</Link>
+          <Link to="/refund" className="text-cream">Refund &amp; Cancellation Policy</Link>
+          <span>GSTIN 27ATAPP6184D2ZL</span>
+        </nav>
+      </div>
     </footer>
   );
 }
