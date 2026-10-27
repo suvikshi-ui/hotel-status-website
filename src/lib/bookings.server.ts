@@ -257,3 +257,35 @@ export async function recordRefund(
   );
   return rows[0] ?? null;
 }
+
+export type DateBlock = {
+  id: number;
+  room_type: string;
+  rooms: number;
+  start_date: string;
+  end_date: string;
+  source: string;
+  note: string;
+};
+
+export async function listDateBlocks(): Promise<DateBlock[]> {
+  const sql = await getSql();
+  const rows = await sql.query<DateBlock>(
+    `select id::int as id, room_type, rooms, start_date::text as start_date, end_date::text as end_date, source, note
+     from date_blocks where end_date >= current_date order by start_date, room_type`,
+  );
+  return rows;
+}
+
+export async function addDateBlock(input: Omit<DateBlock, "id">): Promise<void> {
+  const sql = await getSql();
+  await sql.query(
+    `insert into date_blocks (room_type, rooms, start_date, end_date, source, note) values ($1, $2, $3::date, $4::date, $5, $6)`,
+    [input.room_type, input.rooms, input.start_date, input.end_date, input.source, input.note],
+  );
+}
+
+export async function deleteDateBlock(id: number): Promise<void> {
+  const sql = await getSql();
+  await sql.query(`delete from date_blocks where id = $1`, [id]);
+}

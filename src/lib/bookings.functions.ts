@@ -2,7 +2,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { authMiddleware } from "@/lib/auth/middleware";
 import {
+  addDateBlock,
   collectBalanceRow,
+  deleteDateBlock,
+  listDateBlocks,
+  type DateBlock,
   findBookingById,
   findBookingByToken,
   findBookingRow,
@@ -27,7 +31,7 @@ import { cancelPolicy, cancelWithRefund, refundPreview } from "@/lib/cancellatio
 import { policyText } from "@/lib/cancel-policy";
 import { gstBreakdown, type GstBreakdown } from "@/lib/gst";
 
-export type { BookingRow, RoomsLeft, TakenStay };
+export type { BookingRow, DateBlock, RoomsLeft, TakenStay };
 import { HOTEL } from "@/lib/hotels";
 import { nightsBetween } from "@/lib/format";
 
@@ -225,4 +229,43 @@ export const getInvoice = createServerFn({ method: "POST" })
       gst: gstBreakdown(row.total_amount, c.gstPercent, c.pricesIncludeGst),
       hotel: { name: HOTEL.name, address: HOTEL.address, phones: HOTEL.phones, email: HOTEL.email },
     };
+  });
+
+export const listBlocks = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }): Promise<DateBlock[]> => {
+    await noStore();
+    await assertOwner(context.userId);
+    return listDateBlocks();
+  });
+
+export const addBlock = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator(
+    z
+      .object({
+        room_type: z.enum(["deluxe", "super-deluxe", "suite"]),
+        rooms: z.number().int().min(1).max(50),
+        start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        source: z.enum(["makemytrip", "fabhotels", "brevistay", "walk-in", "maintenance", "other"]),
+        note: z.string().trim().max(200).default(""),
+      })
+      .refine((v) => v.end_date > v.start_date, { message: "End date must be after start date." }),
+  )
+  .handler(async ({ context, data }): Promise<DateBlock[]> => {
+    await noStore();
+    await assertOwner(context.userId);
+    await addDateBlock(data);
+    return listDateBlocks();
+  });
+
+export const removeBlock = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator(z.object({ id: z.number().int().positive() }))
+  .handler(async ({ context, data }): Promise<DateBlock[]> => {
+    await noStore();
+    await assertOwner(context.userId);
+    await deleteDateBlock(data.id);
+    return listDateBlocks();
   });

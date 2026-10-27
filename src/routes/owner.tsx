@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { RedirectToSignIn, UserButton } from "@/lib/auth/gates";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
+import { DateBlocks } from "@/components/date-blocks";
 import { cancelOwnerBooking, collectBalance, listOwnerBookings, paymentSetup, type BookingRow } from "@/lib/bookings.functions";
 import { formatInr, formatLongDate, nightsBetween, todayIso } from "@/lib/format";
 import { HOTEL } from "@/lib/hotels";
@@ -133,6 +134,11 @@ function OwnerDesk() {
         </div>
       </dl>
 
+      <p className="mt-4 border border-terracotta/40 p-3 text-sm text-terracotta">
+        OTA warning: website bookings are not sent to MakeMyTrip, FabHotels or Brevistay, and their bookings do not
+        reach this site. Close sold rooms on each OTA extranet, and use “Block dates” below for OTA sales.
+      </p>
+
       {error ? <p className="mt-4 text-sm text-terracotta">{error}</p> : null}
       {!linksOn ? (
         <p className="mt-4 text-sm text-ink-soft">
@@ -219,6 +225,7 @@ function OwnerDesk() {
           })}
         </ul>
       )}
+      <DateBlocks />
     </>
   );
 }
