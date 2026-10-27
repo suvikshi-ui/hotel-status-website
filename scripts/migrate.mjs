@@ -26,6 +26,13 @@ if (!databaseUrl) {
   process.exit(0);
 }
 
+// Vercel preview builds (pull requests, branches) must never migrate the
+// shared production database. Only production deploys and local runs migrate.
+if (process.env.VERCEL_ENV && process.env.VERCEL_ENV !== "production") {
+  console.log(`[migrate] VERCEL_ENV=${process.env.VERCEL_ENV} — skipping (only production migrates).`);
+  process.exit(0);
+}
+
 const migrationsDir = join(dirname(fileURLToPath(import.meta.url)), "..", "migrations");
 
 async function main() {
