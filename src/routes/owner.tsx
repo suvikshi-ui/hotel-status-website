@@ -188,6 +188,16 @@ function OwnerDesk() {
                     Balance collected at desk
                   </Button>
                 ) : null}
+                {row.invoice_number ? (
+                  <a className="text-xs underline" href={`/invoice/${row.id}?t=${row.manage_token}`} target="_blank" rel="noreferrer">
+                    Invoice {row.invoice_number}
+                  </a>
+                ) : null}
+                {row.refund_amount > 0 ? (
+                  <span className="text-xs">
+                    Refund ₹{row.refund_amount} · {row.refund_status === "failed" ? "refund by hand" : row.refund_status}
+                  </span>
+                ) : null}
                 {row.status === "pending_payment" && row.payment_url ? (
                   <a href={row.payment_url} className="mt-3 inline-block text-sm underline">
                     Razorpay link

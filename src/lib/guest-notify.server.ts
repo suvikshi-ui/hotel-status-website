@@ -25,9 +25,8 @@ function paymentLine(row: BookingRow): string {
   }
 }
 
-export function manageLink(row: BookingRow & { manage_token?: string | null }): string {
-  const base = `${siteOrigin()}/bookings?id=${encodeURIComponent(row.id)}`;
-  return row.manage_token ? `${base}&t=${encodeURIComponent(row.manage_token)}` : base;
+export function manageLink(row: BookingRow): string {
+  return `${siteOrigin()}/manage/${encodeURIComponent(row.id)}?t=${encodeURIComponent(row.manage_token)}`;
 }
 
 export function bookingText(row: BookingRow): string {
@@ -50,7 +49,7 @@ export function bookingText(row: BookingRow): string {
   ].join("\n");
 }
 
-export function receiptText(row: BookingRow & { invoice_number?: string | null }): string {
+export function receiptText(row: BookingRow): string {
   return [
     `Dear ${row.guest_name},`,
     "",
@@ -59,7 +58,7 @@ export function receiptText(row: BookingRow & { invoice_number?: string | null }
     row.total_amount > row.amount_paid
       ? `Balance at the hotel: ${rupees(row.total_amount - row.amount_paid)}`
       : "Paid in full.",
-    row.invoice_number ? `Tax invoice ${row.invoice_number}: ${siteOrigin()}/invoice/${row.id}` : "",
+    row.invoice_number ? `Tax invoice ${row.invoice_number}: ${siteOrigin()}/invoice/${row.id}?t=${row.manage_token}` : "",
     "",
     `Manage your booking: ${manageLink(row)}`,
   ]

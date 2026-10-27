@@ -21,6 +21,14 @@ export type BookingRow = {
   hold_expires_at: string | null;
   payment_url: string | null;
   payment_link_id: string | null;
+  payment_id: string | null;
+  manage_token: string;
+  cancelled_at: string | null;
+  refund_amount: number;
+  refund_id: string | null;
+  refund_status: string | null;
+  invoice_number: string | null;
+  invoiced_at: string | null;
   created_at: string;
 };
 
@@ -54,6 +62,16 @@ const BOOKING_SELECT = `
   payment_status,
   payment_url,
   payment_link_id,
+  payment_id,
+  manage_token,
+  refund_amount,
+  refund_id,
+  refund_status,
+  invoice_number,
+  case when invoiced_at is null then null
+    else to_char(invoiced_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') end as invoiced_at,
+  case when cancelled_at is null then null
+    else to_char(cancelled_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') end as cancelled_at,
   payment_mode,
   amount_due_now,
   amount_paid,
@@ -185,6 +203,57 @@ export async function collectBalanceRow(id: string): Promise<BookingRow | null> 
      where id = $1 and status = 'confirmed' and amount_paid < total_amount
      returning ${BOOKING_SELECT}`,
     [id],
+  );
+  return rows[0] ?? null;
+}
+
+export async function findBookingByToken(id: string, token: string): Promise<BookingRow | null> {
+  if (!/^[0-9a-f]{32}$/.test(token)) return null;
+  const sql = await getSql();
+  const rows = await sql.query<BookingRow>(
+    `select ${BOOKING_SELECT} from bookings where id = $1 and manage_token = $2`,
+    [id, token],
+  );
+  return rows[0] ?? null;
+}
+
+export async function findBookingById(id: string): Promise<BookingRow | null> {
+  const sql = await getSql();
+  const rows = await sql.query<BookingRow>(`select ${BOOKING_SELECT} from bookings where id = $1`, [id]);
+  return rows[0] ?? null;
+}
+
+/** Marks a live booking cancelled with the refund it is owed. Null if it was not live. */
+export async function markCancelled(id: string, refundAmount: number): Promise<BookingRow | null> {
+  const sql = await getSql();
+  const rows = await sql.query<BookingRow>(
+    `update bookings
+     set status = 'cancelled', cancelled_at = now(), refund_amount = $2,
+         refund_status = case when $2 > 0 then 'pending' else null end
+     where id = $1 and status in ('confirmed', 'pending_payment')
+     returning ${BOOKING_SELECT}`,
+    [id, refundAmount],
+  );
+  return rows[0] ?? null;
+}
+
+export async function recordRefund(
+  id: string,
+  refundId: string | null,
+  status: "processed" | "pending" | "failed",
+): Promise<BookingRow | null> {
+  const sql = await getSql();
+  const rows = await sql.query<BookingRow>(
+    `update bookings
+     set refund_id = coalesce($2, refund_id),
+         refund_status = $3,
+         payment_status = case
+           when $3 = 'failed' then payment_status
+           when refund_amount >= amount_paid then 'refunded'
+           else 'partially_refunded' end
+     where id = $1
+     returning ${BOOKING_SELECT}`,
+    [id, refundId, status],
   );
   return rows[0] ?? null;
 }

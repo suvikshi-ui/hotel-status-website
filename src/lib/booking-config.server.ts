@@ -11,6 +11,8 @@ export type BookingConfig = {
   holdMinutes: number;
   payAtHotel: boolean;
   fullRefundHours: number;
+  lateRefundPercent: number;
+  checkInHour: number;
   gstPercent: number;
   pricesIncludeGst: boolean;
 };
@@ -21,6 +23,8 @@ export function bookingConfig(): BookingConfig {
     holdMinutes: num("PAYMENT_HOLD_MINUTES", 30, 15, 24 * 60),
     payAtHotel: process.env.PAY_AT_HOTEL_ENABLED?.trim() !== "false",
     fullRefundHours: num("CANCEL_FULL_REFUND_HOURS", 24, 0, 24 * 60),
+    lateRefundPercent: num("CANCEL_LATE_REFUND_PERCENT", 0, 0, 100),
+    checkInHour: num("CHECKIN_HOUR", 12, 0, 23),
     gstPercent: num("GST_PERCENT", 5, 0, 28),
     pricesIncludeGst: process.env.PRICES_INCLUDE_GST?.trim() !== "false",
   };

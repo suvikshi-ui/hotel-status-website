@@ -24,3 +24,9 @@ export function statusLabel(row: Pick<BookingRow, "status" | "payment_status">):
 export function paymentLabel(status: BookingRow["payment_status"]): string {
   return PAYMENT[status];
 }
+
+export const ROOM_LABELS: Record<string, string> = {
+  deluxe: "Deluxe",
+  "super-deluxe": "Super Deluxe",
+  suite: "Suite",
+};

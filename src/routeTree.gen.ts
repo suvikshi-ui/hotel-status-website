@@ -18,6 +18,8 @@ import { Route as OwnerRouteImport } from './routes/owner'
 import { Route as BookHotelIdRouteImport } from './routes/book.$hotelId'
 import { Route as HotelsIndexRouteImport } from './routes/hotels.index'
 import { Route as HotelsHotelIdRouteImport } from './routes/hotels.$hotelId'
+import { Route as InvoiceIdRouteImport } from './routes/invoice.$id'
+import { Route as ManageIdRouteImport } from './routes/manage.$id'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiRazorpayCallbackRouteImport } from './routes/api/razorpay/callback'
 import { Route as ApiRazorpayWebhookRouteImport } from './routes/api/razorpay/webhook'
@@ -67,6 +69,16 @@ const HotelsHotelIdRoute = HotelsHotelIdRouteImport.update({
   path: '/$hotelId',
   getParentRoute: () => HotelsRoute,
 } as any)
+const InvoiceIdRoute = InvoiceIdRouteImport.update({
+  id: '/invoice/$id',
+  path: '/invoice/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ManageIdRoute = ManageIdRouteImport.update({
+  id: '/manage/$id',
+  path: '/manage/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -92,6 +104,8 @@ export interface FileRoutesByFullPath {
   '/owner': typeof OwnerRoute
   '/book/$hotelId': typeof BookHotelIdRoute
   '/hotels/$hotelId': typeof HotelsHotelIdRoute
+  '/invoice/$id': typeof InvoiceIdRoute
+  '/manage/$id': typeof ManageIdRoute
   '/hotels/': typeof HotelsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/razorpay/callback': typeof ApiRazorpayCallbackRoute
@@ -105,6 +119,8 @@ export interface FileRoutesByTo {
   '/owner': typeof OwnerRoute
   '/book/$hotelId': typeof BookHotelIdRoute
   '/hotels/$hotelId': typeof HotelsHotelIdRoute
+  '/invoice/$id': typeof InvoiceIdRoute
+  '/manage/$id': typeof ManageIdRoute
   '/hotels': typeof HotelsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/razorpay/callback': typeof ApiRazorpayCallbackRoute
@@ -120,6 +136,8 @@ export interface FileRoutesById {
   '/owner': typeof OwnerRoute
   '/book/$hotelId': typeof BookHotelIdRoute
   '/hotels/$hotelId': typeof HotelsHotelIdRoute
+  '/invoice/$id': typeof InvoiceIdRoute
+  '/manage/$id': typeof ManageIdRoute
   '/hotels/': typeof HotelsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/razorpay/callback': typeof ApiRazorpayCallbackRoute
@@ -136,6 +154,8 @@ export interface FileRouteTypes {
     | '/owner'
     | '/book/$hotelId'
     | '/hotels/$hotelId'
+    | '/invoice/$id'
+    | '/manage/$id'
     | '/hotels/'
     | '/api/auth/$'
     | '/api/razorpay/callback'
@@ -149,6 +169,8 @@ export interface FileRouteTypes {
     | '/owner'
     | '/book/$hotelId'
     | '/hotels/$hotelId'
+    | '/invoice/$id'
+    | '/manage/$id'
     | '/hotels'
     | '/api/auth/$'
     | '/api/razorpay/callback'
@@ -163,6 +185,8 @@ export interface FileRouteTypes {
     | '/owner'
     | '/book/$hotelId'
     | '/hotels/$hotelId'
+    | '/invoice/$id'
+    | '/manage/$id'
     | '/hotels/'
     | '/api/auth/$'
     | '/api/razorpay/callback'
@@ -177,6 +201,8 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   OwnerRoute: typeof OwnerRoute
   BookHotelIdRoute: typeof BookHotelIdRoute
+  InvoiceIdRoute: typeof InvoiceIdRoute
+  ManageIdRoute: typeof ManageIdRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiRazorpayCallbackRoute: typeof ApiRazorpayCallbackRoute
   ApiRazorpayWebhookRoute: typeof ApiRazorpayWebhookRoute
@@ -247,6 +273,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HotelsHotelIdRouteImport
       parentRoute: typeof HotelsRoute
     }
+    '/invoice/$id': {
+      id: '/invoice/$id'
+      path: '/invoice/$id'
+      fullPath: '/invoice/$id'
+      preLoaderRoute: typeof InvoiceIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/manage/$id': {
+      id: '/manage/$id'
+      path: '/manage/$id'
+      fullPath: '/manage/$id'
+      preLoaderRoute: typeof ManageIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -292,6 +332,8 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   OwnerRoute: OwnerRoute,
   BookHotelIdRoute: BookHotelIdRoute,
+  InvoiceIdRoute: InvoiceIdRoute,
+  ManageIdRoute: ManageIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiRazorpayCallbackRoute: ApiRazorpayCallbackRoute,
   ApiRazorpayWebhookRoute: ApiRazorpayWebhookRoute,

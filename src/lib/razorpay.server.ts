@@ -172,3 +172,30 @@ export async function cancelRemotePaymentLink(linkId: string | null): Promise<vo
     // The stay is still cancelled locally if Razorpay is unreachable.
   }
 }
+
+/** Refund (part of) a captured payment. Amount in rupees. Null when keys are missing or Razorpay refuses. */
+export async function refundPayment(
+  paymentId: string,
+  amountRupees: number,
+  bookingId: string,
+): Promise<{ id: string; status: string } | null> {
+  const creds = keys();
+  if (!creds || !paymentId || amountRupees <= 0) return null;
+  try {
+    const response = await fetch(`https://api.razorpay.com/v1/payments/${encodeURIComponent(paymentId)}/refund`, {
+      method: "POST",
+      headers: { Authorization: authHeader(creds.keyId, creds.keySecret), "Content-Type": "application/json" },
+      body: JSON.stringify({
+        amount: Math.round(amountRupees * 100),
+        speed: "normal",
+        receipt: `refund-${bookingId}`.slice(0, 40),
+        notes: { booking_id: bookingId },
+      }),
+    });
+    if (!response.ok) return null;
+    const data = (await response.json()) as { id?: string; status?: string };
+    return data.id ? { id: data.id, status: data.status ?? "pending" } : null;
+  } catch {
+    return null;
+  }
+}

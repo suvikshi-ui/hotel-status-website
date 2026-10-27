@@ -2,9 +2,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { authMiddleware } from "@/lib/auth/middleware";
 import {
-  cancelBookingForPhone,
-  cancelBookingRow,
   collectBalanceRow,
+  findBookingById,
+  findBookingByToken,
   findBookingRow,
   insertBooking,
   listBookingRows,
@@ -23,6 +23,9 @@ import {
   syncPaymentStatus,
 } from "@/lib/razorpay.server";
 import { onBookingChanged, onBookingCreated } from "@/lib/booking-events.server";
+import { cancelPolicy, cancelWithRefund, refundPreview } from "@/lib/cancellation.server";
+import { policyText } from "@/lib/cancel-policy";
+import { gstBreakdown, type GstBreakdown } from "@/lib/gst";
 
 export type { BookingRow, RoomsLeft, TakenStay };
 import { HOTEL } from "@/lib/hotels";
@@ -135,10 +138,8 @@ export const cancelGuestBooking = createServerFn({ method: "POST" })
   .validator(lookupInput)
   .handler(async ({ data }): Promise<BookingRow | null> => {
     await noStore();
-    const row = await cancelBookingForPhone(data.id.trim().toUpperCase(), phoneDigits(data.phone));
-    if (row?.payment_status === "unpaid") await cancelRemotePaymentLink(row?.payment_link_id ?? null);
-    await onBookingChanged(row);
-    return row;
+    const found = await findBookingRow(data.id.trim().toUpperCase(), phoneDigits(data.phone));
+    return cancelWithRefund(found);
   });
 
 export const listOwnerBookings = createServerFn({ method: "GET" })
@@ -155,10 +156,7 @@ export const cancelOwnerBooking = createServerFn({ method: "POST" })
   .handler(async ({ context, data }): Promise<BookingRow | null> => {
     await noStore();
     await assertOwner(context.userId);
-    const row = await cancelBookingRow(data.id);
-    if (row?.payment_status === "unpaid") await cancelRemotePaymentLink(row?.payment_link_id ?? null);
-    await onBookingChanged(row);
-    return row;
+    return cancelWithRefund(await findBookingById(data.id), true);
   });
 
 export const collectBalance = createServerFn({ method: "POST" })
@@ -178,4 +176,53 @@ export const paymentSetup = createServerFn({ method: "GET" })
     await noStore();
     await assertOwner(context.userId);
     return { links: razorpayConfigured() };
+  });
+
+const tokenInput = z.object({
+  id: z.string().trim().min(1).max(40),
+  token: z.string().trim().min(1).max(64),
+});
+
+export type ManageView = { row: BookingRow; refundIfCancelled: number; policy: string };
+
+/** Guest self-service via the link in their confirmation (no phone needed). */
+export const getManagedBooking = createServerFn({ method: "POST" })
+  .validator(tokenInput)
+  .handler(async ({ data }): Promise<ManageView | null> => {
+    await noStore();
+    const row = await findBookingByToken(data.id.toUpperCase(), data.token.toLowerCase());
+    if (!row) return null;
+    return { row, refundIfCancelled: refundPreview(row), policy: policyText(cancelPolicy()) };
+  });
+
+export const cancelManagedBooking = createServerFn({ method: "POST" })
+  .validator(tokenInput)
+  .handler(async ({ data }): Promise<BookingRow | null> => {
+    await noStore();
+    return cancelWithRefund(await findBookingByToken(data.id.toUpperCase(), data.token.toLowerCase()));
+  });
+
+export type InvoiceView = {
+  row: BookingRow;
+  gstin: string | null;
+  nights: number;
+  gst: GstBreakdown;
+  hotel: { name: string; address: string; phones: string[]; email: string };
+};
+
+/** Printable GST invoice. Only for bookings that have an invoice number. */
+export const getInvoice = createServerFn({ method: "POST" })
+  .validator(tokenInput)
+  .handler(async ({ data }): Promise<InvoiceView | null> => {
+    await noStore();
+    const row = await findBookingByToken(data.id.toUpperCase(), data.token.toLowerCase());
+    if (!row?.invoice_number) return null;
+    const c = bookingConfig();
+    return {
+      row,
+      gstin: process.env.HOTEL_GSTIN?.trim() || null,
+      nights: nightsBetween(row.check_in, row.check_out),
+      gst: gstBreakdown(row.total_amount, c.gstPercent, c.pricesIncludeGst),
+      hotel: { name: HOTEL.name, address: HOTEL.address, phones: HOTEL.phones, email: HOTEL.email },
+    };
   });
