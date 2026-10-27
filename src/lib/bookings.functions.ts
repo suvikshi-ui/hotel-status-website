@@ -22,7 +22,7 @@ import {
   razorpayConfigured,
   syncPaymentStatus,
 } from "@/lib/razorpay.server";
-import { onBookingCreated } from "@/lib/booking-events.server";
+import { onBookingChanged, onBookingCreated } from "@/lib/booking-events.server";
 
 export type { BookingRow, RoomsLeft, TakenStay };
 import { HOTEL } from "@/lib/hotels";
@@ -137,6 +137,7 @@ export const cancelGuestBooking = createServerFn({ method: "POST" })
     await noStore();
     const row = await cancelBookingForPhone(data.id.trim().toUpperCase(), phoneDigits(data.phone));
     if (row?.payment_status === "unpaid") await cancelRemotePaymentLink(row?.payment_link_id ?? null);
+    await onBookingChanged(row);
     return row;
   });
 
@@ -156,6 +157,7 @@ export const cancelOwnerBooking = createServerFn({ method: "POST" })
     await assertOwner(context.userId);
     const row = await cancelBookingRow(data.id);
     if (row?.payment_status === "unpaid") await cancelRemotePaymentLink(row?.payment_link_id ?? null);
+    await onBookingChanged(row);
     return row;
   });
 
@@ -165,7 +167,9 @@ export const collectBalance = createServerFn({ method: "POST" })
   .handler(async ({ context, data }): Promise<BookingRow | null> => {
     await noStore();
     await assertOwner(context.userId);
-    return collectBalanceRow(data.id);
+    const row = await collectBalanceRow(data.id);
+    await onBookingChanged(row);
+    return row;
   });
 
 export const paymentSetup = createServerFn({ method: "GET" })
