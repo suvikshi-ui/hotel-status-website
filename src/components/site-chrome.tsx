@@ -9,8 +9,8 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-ink/10 bg-paper">
-      <div className="mx-auto flex h-20 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-        <Link to="/" className="flex min-w-0 items-center gap-3 text-ink" onClick={() => setOpen(false)}>
+      <div className="mx-auto flex min-h-20 max-w-6xl items-center justify-between gap-4 px-4 py-2 sm:px-6">
+        <Link to="/" className="flex min-w-0 items-center gap-3 text-ink lg:shrink-0" onClick={() => setOpen(false)}>
           <video
             src="/hotels/logo-digital.webm?v=4"
             poster="/hotels/logo-digital.png?v=4"
@@ -22,14 +22,14 @@ export function SiteHeader() {
             className="size-14 shrink-0 object-contain sm:size-16"
           />
           <span className="min-w-0">
-            <span className="block truncate font-display text-xl font-semibold tracking-tight sm:text-2xl">
+            <span className="block font-display text-lg leading-tight font-semibold tracking-tight text-balance sm:text-2xl lg:text-xl lg:whitespace-nowrap xl:text-2xl">
               Hotel Status Residency
             </span>
             <span className="block text-[0.65rem] tracking-[0.22em] text-muted uppercase">Mahape</span>
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav className="hidden min-w-0 items-center gap-1 lg:flex">
           <Link
             to="/"
             hash="stay"
@@ -78,7 +78,7 @@ export function SiteHeader() {
           </Button>
         </nav>
 
-        <div className="flex shrink-0 items-center md:hidden">
+        <div className="flex shrink-0 items-center lg:hidden">
           <Button asChild size="sm" variant="ink" className="rounded-none px-3 tracking-[0.14em] uppercase">
             <Link to="/book/$hotelId" params={{ hotelId: HOTEL.id }}>
               Book
@@ -96,7 +96,7 @@ export function SiteHeader() {
       </div>
 
       {open ? (
-        <div className="border-t border-ink/10 bg-paper px-4 py-3 md:hidden">
+        <div className="border-t border-ink/10 bg-paper px-4 py-3 lg:hidden">
           <div className="flex flex-col">
             <Link to="/" hash="stay" className="flex h-11 items-center text-sm tracking-[0.16em] text-ink uppercase" onClick={() => setOpen(false)}>
               Stay

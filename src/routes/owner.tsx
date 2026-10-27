@@ -235,7 +235,7 @@ function OwnerShell({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-dvh flex-col bg-paper text-ink">
       <header className="border-b border-ink/10">
         <div className="mx-auto flex h-20 max-w-3xl items-center justify-between gap-4 px-4">
-          <Link to="/" className="font-display text-2xl font-semibold">
+          <Link to="/" className="font-display text-xl leading-tight font-semibold sm:text-2xl">
             Hotel Status Residency
           </Link>
           <p className="text-xs tracking-[0.18em] text-gold uppercase">Owner desk</p>
