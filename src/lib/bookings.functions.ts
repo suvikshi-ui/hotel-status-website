@@ -22,7 +22,7 @@ import {
   razorpayConfigured,
   syncPaymentStatus,
 } from "@/lib/razorpay.server";
-import { notifyOwnerOfBooking } from "@/lib/owner-notify.server";
+import { onBookingCreated } from "@/lib/booking-events.server";
 
 export type { BookingRow, RoomsLeft, TakenStay };
 import { HOTEL } from "@/lib/hotels";
@@ -111,11 +111,7 @@ export const createBooking = createServerFn({ method: "POST" })
       holdMinutes: config.holdMinutes,
     });
     const saved = await attachPaymentLink(row);
-    try {
-      await notifyOwnerOfBooking(saved);
-    } catch {
-      // The stay is already saved. A missed alert must not undo it.
-    }
+    await onBookingCreated(saved);
     return saved;
   });
 

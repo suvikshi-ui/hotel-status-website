@@ -1,8 +1,9 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { getSql } from "@/lib/db";
 import { BOOKING_SELECT, type BookingRow } from "@/lib/bookings.server";
+import { onPaymentRecorded } from "@/lib/booking-events.server";
 
-const SITE = "https://hotel-status-website.vercel.app";
+const SITE = "https://www.hotelstatusresidency.com";
 
 const ROOM_NAMES: Record<string, string> = {
   deluxe: "Deluxe",
@@ -44,7 +45,7 @@ export async function attachPaymentLink(row: BookingRow): Promise<BookingRow> {
   const creds = keys();
   if (!creds) return row;
 
-  const origin = (process.env.BETTER_AUTH_URL || SITE).replace(/\/$/, "");
+  const origin = (process.env.SITE_URL || process.env.BETTER_AUTH_URL || SITE).replace(/\/$/, "");
   const body: Record<string, unknown> = {
     amount: row.amount_due_now * 100,
     currency: "INR",
@@ -119,7 +120,10 @@ export async function syncPaymentStatus(row: BookingRow): Promise<BookingRow> {
 
 /** Record an online payment; confirms a pending booking. Null if already recorded. */
 export async function recordPayment(id: string, amountRupees: number, paymentId: string | null): Promise<BookingRow | null> {
-  return returningRow(`select ${BOOKING_SELECT} from record_payment($1, $2, $3)`, [id, amountRupees, paymentId]);
+  const row = await returningRow(`select ${BOOKING_SELECT} from record_payment($1, $2, $3)`, [id, amountRupees, paymentId]);
+  // Only the first record of a payment notifies (replays return null).
+  if (row) await onPaymentRecorded(row);
+  return row;
 }
 
 /** Webhook path: only accept the exact amount the link asked for. */
