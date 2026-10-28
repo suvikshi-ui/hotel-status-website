@@ -41,7 +41,7 @@ export async function cancelWithRefund(row: BookingRow | null, byHotel = false):
         HOTEL.email,
         `Refund needed by hand: ${saved.id}`,
         `Booking ${saved.id} (${saved.guest_name}, ${saved.phone}) was cancelled. ₹${refund} is owed back but the Razorpay refund did not go through. Refund it from the Razorpay dashboard (payment ${saved.payment_id ?? "unknown"}).`,
-      );
+      ).catch(() => {}) /* logged as [mail] */;
     }
   }
 
@@ -59,6 +59,6 @@ export async function cancelWithRefund(row: BookingRow | null, byHotel = false):
       "",
       `${HOTEL.name} · ${HOTEL.phones.join(" / ")}`,
     ].join("\n"),
-  );
+  ).catch(() => {}) /* logged as [mail] */;
   return saved;
 }

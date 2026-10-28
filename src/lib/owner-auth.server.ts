@@ -45,6 +45,7 @@ async function isOwnerEmail(email: string): Promise<boolean> {
 export async function sendOwnerCode(rawEmail: string): Promise<void> {
   const email = rawEmail.trim().toLowerCase();
   const ip = clientIp();
+  console.log("[otp] send requested", { ipPresent: Boolean(ip) });
   const sql = await getSql();
   // Per-IP limit applies to every address so the limit itself reveals nothing.
   if (ip) {
@@ -52,16 +53,25 @@ export async function sendOwnerCode(rawEmail: string): Promise<void> {
       `select count(*)::int as n from owner_login_codes where ip = $1 and created_at > now() - interval '1 hour'`,
       [ip],
     );
-    if (Number(perIp[0]?.n ?? 0) >= 10) return;
+    if (Number(perIp[0]?.n ?? 0) >= 10) {
+      console.log("[otp] not sent: per-IP rate limit (10/hour)");
+      return;
+    }
   }
-  if (!(await isOwnerEmail(email))) return;
+  if (!(await isOwnerEmail(email))) {
+    console.log("[otp] not sent: email is not an owner account", { domain: email.split("@")[1] ?? "" });
+    return;
+  }
   const recent = await sql.query<{ last_min: number; last_hour: number }>(
     `select count(*) filter (where created_at > now() - interval '60 seconds')::int as last_min,
             count(*) filter (where created_at > now() - interval '1 hour')::int as last_hour
      from owner_login_codes where email = $1`,
     [email],
   );
-  if (Number(recent[0]?.last_min ?? 0) >= 1 || Number(recent[0]?.last_hour ?? 0) >= 5) return;
+  if (Number(recent[0]?.last_min ?? 0) >= 1 || Number(recent[0]?.last_hour ?? 0) >= 5) {
+    console.log("[otp] not sent: per-email rate limit", { lastMinute: recent[0]?.last_min, lastHour: recent[0]?.last_hour });
+    return;
+  }
 
   const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
   // Older unused codes stop working once a new one is sent.
@@ -70,6 +80,7 @@ export async function sendOwnerCode(rawEmail: string): Promise<void> {
     `insert into owner_login_codes (email, code_hash, expires_at, ip) values ($1, $2, now() + interval '${CODE_MINUTES} minutes', $3)`,
     [email, sha256(`${email}:${code}`), ip],
   );
+  console.log("[otp] code created, sending email", { email });
   try {
     await sendMail(
       email,
@@ -77,7 +88,8 @@ export async function sendOwnerCode(rawEmail: string): Promise<void> {
       `Your Hotel Status Residency owner desk sign-in code is ${code}.\n\nIt works once and expires in ${CODE_MINUTES} minutes. If you did not ask for it, ignore this email.`,
     );
   } catch (caught) {
-    console.error("[owner-auth] could not send code", caught instanceof Error ? caught.message : caught);
+    const e = (caught ?? {}) as { code?: string; responseCode?: number; response?: string; command?: string; message?: string };
+    console.error("[otp] could not send code", { code: e.code, responseCode: e.responseCode, response: e.response, command: e.command, message: e.message });
   }
 }
 
