@@ -34,7 +34,15 @@ async function sendWhatsApp(to: string, row: BookingRow, text: string): Promise<
   await sendWhatsAppTemplate(
     to,
     process.env.WHATSAPP_TEMPLATE?.trim() || "booking_confirmed",
-    [row.guest_name, row.id, room, row.check_in, row.check_out, String(row.guests), `₹${row.total_amount}`],
+    [
+      row.guest_name,
+      row.id,
+      room,
+      row.check_in,
+      row.check_out,
+      String(row.guests),
+      `₹${row.total_amount}`,
+    ],
     text,
   );
 }
@@ -95,20 +103,64 @@ async function sendEmail(subject: string, text: string): Promise<void> {
   await sendMail(HOTEL.email, subject, text);
 }
 
-/** Gmail SMTP (app password). No-op without GMAIL_USER / GMAIL_APP_PASSWORD. */
-export async function sendMail(to: string, subject: string, text: string, html?: string): Promise<void> {
-  const user = process.env.GMAIL_USER?.trim();
-  const pass = process.env.GMAIL_APP_PASSWORD?.trim();
-  if (!user || !pass) return;
+/** SMTP config: generic SMTP_* (e.g. GoDaddy) first, then legacy GMAIL_* fallback. */
+function smtpConfig(): {
+  host: string;
+  port: number;
+  secure: boolean;
+  user: string;
+  pass: string;
+  from: string;
+} | null {
+  const host = process.env.SMTP_HOST?.trim();
+  const user = process.env.SMTP_USER?.trim();
+  const pass = process.env.SMTP_PASS?.trim();
+  if (host && user && pass) {
+    const port = Number(process.env.SMTP_PORT?.trim() || 465) || 465;
+    const fromAddr = process.env.MAIL_FROM?.trim() || user;
+    return {
+      host,
+      port,
+      secure: port === 465,
+      user,
+      pass,
+      from: `"Hotel Status Residency" <${fromAddr}>`,
+    };
+  }
+  const gUser = process.env.GMAIL_USER?.trim();
+  const gPass = process.env.GMAIL_APP_PASSWORD?.trim();
+  if (gUser && gPass) {
+    return {
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      user: gUser,
+      pass: gPass,
+      from: `"Hotel Status Residency" <${gUser}>`,
+    };
+  }
+  return null;
+}
+
+/** Sends mail via SMTP_* or GMAIL_* settings. No-op when neither is configured. */
+export async function sendMail(
+  to: string,
+  subject: string,
+  text: string,
+  html?: string,
+): Promise<void> {
+  const cfg = smtpConfig();
+  if (!cfg) return;
   const nodemailer = await import("nodemailer");
   const transport = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
-    auth: { user, pass },
+    host: cfg.host,
+    port: cfg.port,
+    secure: cfg.secure,
+    requireTLS: !cfg.secure,
+    auth: { user: cfg.user, pass: cfg.pass },
   });
   await transport.sendMail({
-    from: `"Hotel Status Residency" <${user}>`,
+    from: cfg.from,
     to,
     replyTo: HOTEL.email,
     subject,
@@ -133,7 +185,9 @@ export async function notifyOwnerOfPayment(row: BookingRow): Promise<void> {
     `Payment received for ${row.id}.`,
     `Guest: ${row.guest_name}`,
     `Paid: ₹${row.amount_paid} of ₹${row.total_amount}`,
-    row.total_amount > row.amount_paid ? `Balance at hotel: ₹${row.total_amount - row.amount_paid}` : "Fully paid",
+    row.total_amount > row.amount_paid
+      ? `Balance at hotel: ₹${row.total_amount - row.amount_paid}`
+      : "Fully paid",
   ].join("\n");
   await Promise.allSettled([sendMail(HOTEL.email, `Payment ${row.id}`, text)]);
 }
