@@ -46,6 +46,8 @@ const bookingInput = z.object({
   rooms: z.number().int().min(1).max(8),
   totalAmount: z.number().int().min(0).max(10_000_000),
   paymentMode: z.enum(["full", "advance", "pay_at_hotel"]).default("full"),
+  // TEMP-TEST-AMOUNT: remove later — guest-chosen online payment (whole rupees, min ₹1)
+  customAmount: z.number().int().min(1).max(10_000_000).optional(),
 });
 
 const lookupInput = z.object({
@@ -110,11 +112,21 @@ export const createBooking = createServerFn({ method: "POST" })
       throw new Error("Pay at hotel is not available. Choose an online payment.");
     }
     const totalAmount = stayTotal(data.roomType, data.checkIn, data.checkOut, data.rooms);
+    let dueNow = amountDueNow(totalAmount, data.paymentMode, config.advancePercent);
+    // TEMP-TEST-AMOUNT: remove later — custom amount replaces the advance, validated against the server total
+    if (data.customAmount !== undefined) {
+      if (data.paymentMode !== "advance") throw new Error("Custom amount is only for online advance payments.");
+      if (data.customAmount < 1 || data.customAmount > totalAmount) {
+        throw new Error("Custom amount must be at least ₹1 and at most the booking total.");
+      }
+      dueNow = data.customAmount;
+    }
+    const { customAmount: _customAmount, ...bookingData } = data; // TEMP-TEST-AMOUNT: remove later
     const row = await insertBooking({
-      ...data,
+      ...bookingData,
       totalAmount,
       phone: phoneDigits(data.phone),
-      amountDueNow: amountDueNow(totalAmount, data.paymentMode, config.advancePercent),
+      amountDueNow: dueNow,
       holdMinutes: config.holdMinutes,
     });
     const saved = await attachPaymentLink(row);

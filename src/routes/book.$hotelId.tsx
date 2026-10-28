@@ -79,7 +79,9 @@ function BookPage() {
   const add = useBookings((s) => s.add);
   const [left, setLeft] = useState<RoomsLeft>({});
   const [options, setOptions] = useState<BookingOptions>({ advancePercent: 30, payAtHotel: true, holdMinutes: 30 });
-  const [paymentMode, setPaymentMode] = useState<"full" | "advance" | "pay_at_hotel">("full");
+  // TEMP-TEST-AMOUNT: remove later — "custom" is a UI-only choice sent to the server as an advance with customAmount
+  const [paymentMode, setPaymentMode] = useState<"full" | "advance" | "custom" | "pay_at_hotel">("full");
+  const [customAmount, setCustomAmount] = useState("1"); // TEMP-TEST-AMOUNT: remove later
 
   useEffect(() => {
     bookingOptions()
@@ -150,6 +152,12 @@ function BookPage() {
       setError(`${room.name} sleeps ${room.occupancy} guests per room. Add a room, or choose another type.`);
       return;
     }
+    // TEMP-TEST-AMOUNT: remove later
+    const custom = Math.round(Number(customAmount));
+    if (paymentMode === "custom" && (!Number.isFinite(custom) || custom < 1 || custom > total)) {
+      setError(`Enter a custom amount between ₹1 and ${formatInr(total)}.`);
+      return;
+    }
     setPending(true);
     try {
       const booking = await add({
@@ -167,7 +175,8 @@ function BookPage() {
         subtotal: total,
         tax: 0,
         total,
-        paymentMode,
+        paymentMode: paymentMode === "custom" ? "advance" : paymentMode, // TEMP-TEST-AMOUNT: remove later
+        customAmount: paymentMode === "custom" ? custom : undefined, // TEMP-TEST-AMOUNT: remove later
       });
       setDone(booking);
     } catch (caught) {
@@ -319,7 +328,7 @@ function BookPage() {
 
             <fieldset className="mt-8">
               <legend className="text-xs tracking-[0.18em] text-muted uppercase">Payment</legend>
-              <div className="mt-4 grid gap-2 text-sm">
+              <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
                 {(
                   [
                     ["full", `Pay the full amount online${datesOk ? ` (${formatInr(total)})` : ""}`],
@@ -329,6 +338,8 @@ function BookPage() {
                         datesOk ? ` (${formatInr(Math.ceil((total * options.advancePercent) / 100))})` : ""
                       }, the rest at the hotel`,
                     ],
+                    // TEMP-TEST-AMOUNT: remove later
+                    ["custom", "Custom amount online, the rest at the hotel"],
                     ...(options.payAtHotel ? [["pay_at_hotel", "Pay at the hotel at check-in"] as const] : []),
                   ] as const
                 ).map(([value, label]) => (
@@ -344,6 +355,23 @@ function BookPage() {
                   </label>
                 ))}
               </div>
+              {/* TEMP-TEST-AMOUNT: remove later */}
+              {paymentMode === "custom" ? (
+                <label className="mt-4 flex max-w-xs flex-col gap-1">
+                  <span className="text-xs tracking-[0.18em] text-muted uppercase">Amount to pay online (₹)</span>
+                  <input
+                    id="custom-amount"
+                    type="number"
+                    min={1}
+                    max={total || undefined}
+                    step={1}
+                    inputMode="numeric"
+                    className={field}
+                    value={customAmount}
+                    onChange={(event) => setCustomAmount(event.target.value)}
+                  />
+                </label>
+              ) : null}
               {paymentMode !== "pay_at_hotel" ? (
                 <p className="mt-2 text-xs text-muted">
                   Rooms are held for {options.holdMinutes} minutes while you pay on Razorpay.
