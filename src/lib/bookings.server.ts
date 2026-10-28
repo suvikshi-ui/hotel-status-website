@@ -30,6 +30,9 @@ export type BookingRow = {
   invoice_number: string | null;
   invoiced_at: string | null;
   created_at: string;
+  stay_status: "none" | "checked_in" | "checked_out";
+  checked_in_at: string | null;
+  checked_out_at: string | null;
 };
 
 export type NewBooking = {
@@ -78,7 +81,12 @@ const BOOKING_SELECT = `
   greatest(total_amount - amount_paid, 0) as balance,
   case when hold_expires_at is null then null
     else to_char(hold_expires_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') end as hold_expires_at,
-  to_char(created_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') as created_at
+  to_char(created_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') as created_at,
+  stay_status,
+  case when checked_in_at is null then null
+    else to_char(checked_in_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') end as checked_in_at,
+  case when checked_out_at is null then null
+    else to_char(checked_out_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') end as checked_out_at
 `;
 
 export { BOOKING_SELECT };
@@ -230,7 +238,7 @@ export async function markCancelled(id: string, refundAmount: number): Promise<B
     `update bookings
      set status = 'cancelled', cancelled_at = now(), refund_amount = $2,
          refund_status = case when $2 > 0 then 'pending' else null end
-     where id = $1 and status in ('confirmed', 'pending_payment')
+     where id = $1 and status in ('confirmed', 'pending_payment') and stay_status = 'none'
      returning ${BOOKING_SELECT}`,
     [id, refundAmount],
   );
@@ -288,4 +296,42 @@ export async function addDateBlock(input: Omit<DateBlock, "id">): Promise<void> 
 export async function deleteDateBlock(id: number): Promise<void> {
   const sql = await getSql();
   await sql.query(`delete from date_blocks where id = $1`, [id]);
+}
+
+export type RoomStatus = { room_type: string; capacity: number; booked: number; blocked: number; available: number };
+
+export async function roomStatusFor(date: string): Promise<RoomStatus[]> {
+  const sql = await getSql();
+  const rows = await sql.query<{ room_type: string; capacity: number; booked: number; blocked: number }>(
+    `select i.room_type, i.rooms as capacity,
+       coalesce((select sum(b.rooms) from bookings b where b.room_type = i.room_type and booking_active(b)
+                 and b.check_in <= $1::date and b.check_out > $1::date), 0)::int as booked,
+       coalesce((select sum(d.rooms) from date_blocks d where d.room_type = i.room_type
+                 and d.start_date <= $1::date and d.end_date > $1::date), 0)::int as blocked
+     from room_inventory i order by i.rooms desc`,
+    [date],
+  );
+  return rows.map((r) => {
+    const capacity = Number(r.capacity);
+    const booked = Number(r.booked);
+    const blocked = Number(r.blocked);
+    return { room_type: r.room_type, capacity, booked, blocked, available: Math.max(0, capacity - booked - blocked) };
+  });
+}
+
+export async function setStayStatus(id: string, to: "checked_in" | "checked_out"): Promise<BookingRow | null> {
+  const sql = await getSql();
+  const rows =
+    to === "checked_in"
+      ? await sql.query<BookingRow>(
+          `update bookings set stay_status = 'checked_in', checked_in_at = now()
+           where id = $1 and status = 'confirmed' and stay_status = 'none' returning ${BOOKING_SELECT}`,
+          [id],
+        )
+      : await sql.query<BookingRow>(
+          `update bookings set stay_status = 'checked_out', checked_out_at = now()
+           where id = $1 and status = 'confirmed' and stay_status = 'checked_in' returning ${BOOKING_SELECT}`,
+          [id],
+        );
+  return rows[0] ?? null;
 }
