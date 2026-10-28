@@ -156,7 +156,7 @@ export function SiteFooter() {
         </div>
         <div className="text-sm text-cream/70">
           <p className="text-xs tracking-[0.18em] text-gold uppercase">The stay</p>
-          <p className="mt-3">Deluxe, Super Deluxe and Suite rooms. Wi-Fi, parking, and a 24-hour front desk.</p>
+          <p className="mt-3">Deluxe and Suite rooms. Wi-Fi, parking, and a 24-hour front desk.</p>
           <p className="mt-4 flex flex-col gap-2">
             <Link to="/book/$hotelId" params={{ hotelId: HOTEL.id }} className="text-cream">
               Book a stay

@@ -14,6 +14,7 @@ import {
   type RoomStatus,
 } from "@/lib/bookings.functions";
 import { ownerSession, signOutOwnerDesk } from "@/lib/owner-auth.functions";
+import { ownerCommissionPaid, ownerRoomSettings, ownerUpdateRoomSetting, type RoomSetting } from "@/lib/referrals.functions";
 import { formatInr, formatLongDate, formatShortDate, nightsBetween, todayIso } from "@/lib/format";
 import { paymentLabel, ROOM_LABELS } from "@/lib/booking-labels";
 import { cn } from "@/lib/utils";
@@ -101,6 +102,22 @@ function OwnerPage() {
     checkIn: (id) => act(id, () => ownerStayStatus({ data: { id, to: "checked_in" } })),
     checkOut: (id) => act(id, () => ownerStayStatus({ data: { id, to: "checked_out" } })),
     open: setOpenId,
+    commission: async (id, paid) => {
+      setBusyId(id);
+      setError(null);
+      try {
+        await ownerCommissionPaid({ data: { bookingId: id, paid } });
+        setRows((list) =>
+          list?.map((item) =>
+            item.id === id ? { ...item, agent_commission_paid_at: paid ? new Date().toISOString() : null } : item,
+          ) ?? null,
+        );
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : "That did not work.");
+      } finally {
+        setBusyId(null);
+      }
+    },
   };
 
   const openRow = rows?.find((row) => row.id === openId) ?? null;
@@ -140,6 +157,12 @@ function OwnerPage() {
               {item.label}
             </button>
           ))}
+          <Link
+            to="/owner/referrals"
+            className="border-b-2 border-transparent px-3 py-3 text-xs tracking-[0.14em] whitespace-nowrap text-muted uppercase hover:text-ink"
+          >
+            Referrals
+          </Link>
         </nav>
       </header>
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
@@ -171,6 +194,7 @@ type Actions = {
   checkIn: (id: string) => void;
   checkOut: (id: string) => void;
   open: (id: string) => void;
+  commission: (id: string, paid: boolean) => void;
 };
 
 function Stat({ label, value }: { label: string; value: string | number }) {
@@ -535,6 +559,7 @@ function Rooms() {
       <p className="mt-2 text-xs text-muted">
         Booked counts confirmed stays and unexpired payment holds for that night. Blocked counts the blocks below.
       </p>
+      <RoomSettings />
       <DateBlocks />
     </>
   );
@@ -608,6 +633,32 @@ function BookingDrawer({ row, actions, onClose }: { row: BookingRow; actions: Ac
             ? line("Pay link", <a className="underline" href={row.payment_url} target="_blank" rel="noreferrer">Razorpay link</a>)
             : null}
         </dl>
+        {row.referral_code_id ? (
+          <>
+            <h3 className="mt-6 text-xs tracking-[0.16em] text-gold uppercase">Referral</h3>
+            <dl>
+              {line(
+                "Code",
+                <Link to="/owner/referrals" search={{ id: row.referral_code_id }} className="underline">
+                  {row.referral_code ?? `#${row.referral_code_id}`}
+                </Link>,
+              )}
+              {row.list_amount !== null ? line("Price before discount", formatInr(row.list_amount)) : null}
+              {line("Guest discount", `− ${formatInr(row.guest_discount_amount)}`)}
+              {line("Agent commission", formatInr(row.agent_commission_amount))}
+              {line("Agent commission paid", row.agent_commission_paid_at ? `Yes · ${format(new Date(row.agent_commission_paid_at), "d MMM yyyy")}` : "No")}
+            </dl>
+            <Button
+              size="sm"
+              variant="outline"
+              className="mt-2"
+              disabled={busy}
+              onClick={() => actions.commission(row.id, !row.agent_commission_paid_at)}
+            >
+              {row.agent_commission_paid_at ? "Mark agent commission unpaid" : "Mark agent commission paid"}
+            </Button>
+          </>
+        ) : null}
         <div className="mt-6 flex flex-wrap gap-2">
           <StayButtons row={row} actions={actions} />
           {row.status === "confirmed" && row.balance > 0 ? (
@@ -623,5 +674,80 @@ function BookingDrawer({ row, actions, onClose }: { row: BookingRow; actions: Ac
         </div>
       </aside>
     </div>
+  );
+}
+
+function RoomSettings() {
+  const [list, setList] = useState<RoomSetting[] | null>(null);
+  const [draft, setDraft] = useState<Record<string, string>>({});
+  const [msg, setMsg] = useState<string | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  useEffect(() => {
+    ownerRoomSettings().then(setList, (e: unknown) => setMsg(e instanceof Error ? e.message : "Could not load room types."));
+  }, []);
+  async function save(r: RoomSetting, isActive: boolean) {
+    const price = Math.round(Number(draft[r.room_type] ?? r.price));
+    if (!Number.isFinite(price) || price < 1) {
+      setMsg("Enter a nightly price of at least ₹1.");
+      return;
+    }
+    setBusy(r.room_type);
+    setMsg(null);
+    try {
+      setList(await ownerUpdateRoomSetting({ data: { room_type: r.room_type as "deluxe" | "super-deluxe" | "suite", price, is_active: isActive } }));
+      setDraft((d) => {
+        const { [r.room_type]: _gone, ...rest } = d;
+        return rest;
+      });
+      setMsg(`${roomName(r.room_type)} saved.`);
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Could not save.");
+    } finally {
+      setBusy(null);
+    }
+  }
+  return (
+    <section className="mt-10 border-t border-ink/10 pt-8">
+      <h2 className="font-display text-3xl font-semibold">Room types and prices</h2>
+      <p className="mt-2 text-sm text-ink-soft">
+        Nightly price guests pay (before any referral discount). Hidden types are not shown or bookable on the website;
+        their bookings and blocks are kept.
+      </p>
+      {msg ? <p className="mt-3 text-sm text-ink-soft">{msg}</p> : null}
+      <div className="mt-4 grid gap-3 md:grid-cols-3">
+        {list
+          ? list.map((r) => (
+              <div key={r.room_type} className="border border-ink/15 bg-cream p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-display text-2xl font-semibold">{roomName(r.room_type)}</p>
+                  <span className={cn("border px-2 py-0.5 text-xs", r.is_active ? "border-success/50 text-success" : "border-ink/20 text-muted")}>
+                    {r.is_active ? "Shown on website" : "Hidden"}
+                  </span>
+                </div>
+                <label className="mt-3 flex flex-col text-[11px] text-muted uppercase">
+                  Price per night (₹)
+                  <input
+                    type="number"
+                    min={1}
+                    step={1}
+                    inputMode="numeric"
+                    className="h-10 border border-ink/20 bg-transparent px-2 text-sm text-ink"
+                    value={draft[r.room_type] ?? String(r.price)}
+                    onChange={(e) => setDraft((d) => ({ ...d, [r.room_type]: e.target.value }))}
+                  />
+                </label>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button size="sm" variant="ink" disabled={busy === r.room_type} onClick={() => save(r, r.is_active)}>
+                    Save price
+                  </Button>
+                  <Button size="sm" variant="outline" disabled={busy === r.room_type} onClick={() => save(r, !r.is_active)}>
+                    {r.is_active ? "Hide from website" : "Show on website"}
+                  </Button>
+                </div>
+              </div>
+            ))
+          : <div className="glass h-28 md:col-span-3" />}
+      </div>
+    </section>
   );
 }

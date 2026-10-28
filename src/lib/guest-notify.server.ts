@@ -29,6 +29,16 @@ export function manageLink(row: BookingRow): string {
   return `${siteOrigin()}/manage/${encodeURIComponent(row.id)}?t=${encodeURIComponent(row.manage_token)}`;
 }
 
+/** Price before discount and the referral discount, only when a code was used. */
+function discountLines(row: BookingRow): string[] {
+  if (!row.guest_discount_amount || row.guest_discount_amount <= 0) return [];
+  const before = row.list_amount ?? row.total_amount + row.guest_discount_amount;
+  return [
+    `Price before discount: ${rupees(before)}`,
+    `Referral discount${row.referral_code ? ` (${row.referral_code})` : ""}: −${rupees(row.guest_discount_amount)}`,
+  ];
+}
+
 export function bookingText(row: BookingRow): string {
   const room = ROOM_NAMES[row.room_type] ?? row.room_type;
   return [
@@ -41,6 +51,7 @@ export function bookingText(row: BookingRow): string {
     `Room: ${room} × ${row.rooms}`,
     `Check-in: ${row.check_in} · Check-out: ${row.check_out}`,
     `Guests: ${row.guests}`,
+    ...discountLines(row),
     `Total: ${rupees(row.total_amount)}`,
     paymentLine(row),
     "",
@@ -54,6 +65,7 @@ export function receiptText(row: BookingRow): string {
     `Dear ${row.guest_name},`,
     "",
     `Payment received for booking ${row.id} at ${HOTEL.name}. Thank you.`,
+    ...discountLines(row),
     `Amount received: ${rupees(row.amount_paid)} of ${rupees(row.total_amount)}`,
     row.total_amount > row.amount_paid
       ? `Balance at the hotel: ${rupees(row.total_amount - row.amount_paid)}`

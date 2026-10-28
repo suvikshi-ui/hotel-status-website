@@ -23,6 +23,7 @@ import { Route as HotelsIndexRouteImport } from './routes/hotels.index'
 import { Route as HotelsHotelIdRouteImport } from './routes/hotels.$hotelId'
 import { Route as InvoiceIdRouteImport } from './routes/invoice.$id'
 import { Route as ManageIdRouteImport } from './routes/manage.$id'
+import { Route as OwnerReferralsRouteImport } from './routes/owner_.referrals'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiRazorpayCallbackRouteImport } from './routes/api/razorpay/callback'
 import { Route as ApiRazorpayWebhookRouteImport } from './routes/api/razorpay/webhook'
@@ -97,6 +98,11 @@ const ManageIdRoute = ManageIdRouteImport.update({
   path: '/manage/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OwnerReferralsRoute = OwnerReferralsRouteImport.update({
+  id: '/owner_/referrals',
+  path: '/owner/referrals',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -127,6 +133,7 @@ export interface FileRoutesByFullPath {
   '/hotels/$hotelId': typeof HotelsHotelIdRoute
   '/invoice/$id': typeof InvoiceIdRoute
   '/manage/$id': typeof ManageIdRoute
+  '/owner/referrals': typeof OwnerReferralsRoute
   '/hotels/': typeof HotelsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/razorpay/callback': typeof ApiRazorpayCallbackRoute
@@ -145,6 +152,7 @@ export interface FileRoutesByTo {
   '/hotels/$hotelId': typeof HotelsHotelIdRoute
   '/invoice/$id': typeof InvoiceIdRoute
   '/manage/$id': typeof ManageIdRoute
+  '/owner/referrals': typeof OwnerReferralsRoute
   '/hotels': typeof HotelsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/razorpay/callback': typeof ApiRazorpayCallbackRoute
@@ -165,6 +173,7 @@ export interface FileRoutesById {
   '/hotels/$hotelId': typeof HotelsHotelIdRoute
   '/invoice/$id': typeof InvoiceIdRoute
   '/manage/$id': typeof ManageIdRoute
+  '/owner_/referrals': typeof OwnerReferralsRoute
   '/hotels/': typeof HotelsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/razorpay/callback': typeof ApiRazorpayCallbackRoute
@@ -186,6 +195,7 @@ export interface FileRouteTypes {
     | '/hotels/$hotelId'
     | '/invoice/$id'
     | '/manage/$id'
+    | '/owner/referrals'
     | '/hotels/'
     | '/api/auth/$'
     | '/api/razorpay/callback'
@@ -204,6 +214,7 @@ export interface FileRouteTypes {
     | '/hotels/$hotelId'
     | '/invoice/$id'
     | '/manage/$id'
+    | '/owner/referrals'
     | '/hotels'
     | '/api/auth/$'
     | '/api/razorpay/callback'
@@ -223,6 +234,7 @@ export interface FileRouteTypes {
     | '/hotels/$hotelId'
     | '/invoice/$id'
     | '/manage/$id'
+    | '/owner_/referrals'
     | '/hotels/'
     | '/api/auth/$'
     | '/api/razorpay/callback'
@@ -242,6 +254,7 @@ export interface RootRouteChildren {
   BookHotelIdRoute: typeof BookHotelIdRoute
   InvoiceIdRoute: typeof InvoiceIdRoute
   ManageIdRoute: typeof ManageIdRoute
+  OwnerReferralsRoute: typeof OwnerReferralsRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiRazorpayCallbackRoute: typeof ApiRazorpayCallbackRoute
   ApiRazorpayWebhookRoute: typeof ApiRazorpayWebhookRoute
@@ -347,6 +360,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ManageIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/owner_/referrals': {
+      id: '/owner_/referrals'
+      path: '/owner/referrals'
+      fullPath: '/owner/referrals'
+      preLoaderRoute: typeof OwnerReferralsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -397,6 +417,7 @@ const rootRouteChildren: RootRouteChildren = {
   BookHotelIdRoute: BookHotelIdRoute,
   InvoiceIdRoute: InvoiceIdRoute,
   ManageIdRoute: ManageIdRoute,
+  OwnerReferralsRoute: OwnerReferralsRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiRazorpayCallbackRoute: ApiRazorpayCallbackRoute,
   ApiRazorpayWebhookRoute: ApiRazorpayWebhookRoute,
