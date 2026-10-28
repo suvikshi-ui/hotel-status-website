@@ -1,9 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { authMiddleware } from "@/lib/auth/middleware";
 import {
   addDateBlock,
   collectBalanceRow,
+  roomStatusFor,
+  setStayStatus,
+  type RoomStatus,
   deleteDateBlock,
   listDateBlocks,
   type DateBlock,
@@ -18,7 +20,7 @@ import {
   type BookingRow,
   type TakenStay,
 } from "@/lib/bookings.server";
-import { assertOwner } from "@/lib/owner.server";
+import { ownerMiddleware } from "@/lib/owner-auth.functions";
 import { amountDueNow, bookingConfig } from "@/lib/booking-config.server";
 import {
   attachPaymentLink,
@@ -159,38 +161,34 @@ export const cancelGuestBooking = createServerFn({ method: "POST" })
   });
 
 export const listOwnerBookings = createServerFn({ method: "GET" })
-  .middleware([authMiddleware])
-  .handler(async ({ context }): Promise<BookingRow[]> => {
+  .middleware([ownerMiddleware])
+  .handler(async (): Promise<BookingRow[]> => {
     await noStore();
-    await assertOwner(context.userId);
     return listBookingRows();
   });
 
 export const cancelOwnerBooking = createServerFn({ method: "POST" })
-  .middleware([authMiddleware])
+  .middleware([ownerMiddleware])
   .validator(z.object({ id: z.string().trim().min(1).max(40) }))
-  .handler(async ({ context, data }): Promise<BookingRow | null> => {
+  .handler(async ({ data }): Promise<BookingRow | null> => {
     await noStore();
-    await assertOwner(context.userId);
     return cancelWithRefund(await findBookingById(data.id), true);
   });
 
 export const collectBalance = createServerFn({ method: "POST" })
-  .middleware([authMiddleware])
+  .middleware([ownerMiddleware])
   .validator(z.object({ id: z.string().trim().min(1).max(40) }))
-  .handler(async ({ context, data }): Promise<BookingRow | null> => {
+  .handler(async ({ data }): Promise<BookingRow | null> => {
     await noStore();
-    await assertOwner(context.userId);
     const row = await collectBalanceRow(data.id);
     await onBookingChanged(row);
     return row;
   });
 
 export const paymentSetup = createServerFn({ method: "GET" })
-  .middleware([authMiddleware])
-  .handler(async ({ context }): Promise<{ links: boolean }> => {
+  .middleware([ownerMiddleware])
+  .handler(async (): Promise<{ links: boolean }> => {
     await noStore();
-    await assertOwner(context.userId);
     return { links: razorpayConfigured() };
   });
 
@@ -244,15 +242,14 @@ export const getInvoice = createServerFn({ method: "POST" })
   });
 
 export const listBlocks = createServerFn({ method: "GET" })
-  .middleware([authMiddleware])
-  .handler(async ({ context }): Promise<DateBlock[]> => {
+  .middleware([ownerMiddleware])
+  .handler(async (): Promise<DateBlock[]> => {
     await noStore();
-    await assertOwner(context.userId);
     return listDateBlocks();
   });
 
 export const addBlock = createServerFn({ method: "POST" })
-  .middleware([authMiddleware])
+  .middleware([ownerMiddleware])
   .validator(
     z
       .object({
@@ -265,19 +262,46 @@ export const addBlock = createServerFn({ method: "POST" })
       })
       .refine((v) => v.end_date > v.start_date, { message: "End date must be after start date." }),
   )
-  .handler(async ({ context, data }): Promise<DateBlock[]> => {
+  .handler(async ({ data }): Promise<DateBlock[]> => {
     await noStore();
-    await assertOwner(context.userId);
     await addDateBlock(data);
     return listDateBlocks();
   });
 
 export const removeBlock = createServerFn({ method: "POST" })
-  .middleware([authMiddleware])
+  .middleware([ownerMiddleware])
   .validator(z.object({ id: z.number().int().positive() }))
-  .handler(async ({ context, data }): Promise<DateBlock[]> => {
+  .handler(async ({ data }): Promise<DateBlock[]> => {
     await noStore();
-    await assertOwner(context.userId);
     await deleteDateBlock(data.id);
     return listDateBlocks();
+  });
+
+export type { RoomStatus };
+
+/** Per room type: capacity, booked, blocked and free for one night. */
+export const ownerRoomStatus = createServerFn({ method: "POST" })
+  .middleware([ownerMiddleware])
+  .validator(z.object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) }))
+  .handler(async ({ data }): Promise<RoomStatus[]> => {
+    await noStore();
+    return roomStatusFor(data.date);
+  });
+
+/** Confirmed -> checked in -> checked out. Validated in SQL. */
+export const ownerStayStatus = createServerFn({ method: "POST" })
+  .middleware([ownerMiddleware])
+  .validator(z.object({ id: z.string().trim().min(1).max(40), to: z.enum(["checked_in", "checked_out"]) }))
+  .handler(async ({ data }): Promise<BookingRow> => {
+    await noStore();
+    const row = await setStayStatus(data.id, data.to);
+    if (!row) {
+      throw new Error(
+        data.to === "checked_in"
+          ? "Only a confirmed booking that is not checked in yet can be checked in."
+          : "Only a checked-in booking can be checked out.",
+      );
+    }
+    await onBookingChanged(row);
+    return row;
   });
