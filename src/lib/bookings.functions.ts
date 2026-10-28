@@ -15,7 +15,11 @@ import {
   insertBooking,
   listBookingRows,
   listTakenStays,
-  roomsLeft,
+  publicAvailability,
+  publicRoomTypes,
+  roomPrice,
+  type PublicAvailability,
+  type PublicRoomType,
   type RoomsLeft,
   type BookingRow,
   type TakenStay,
@@ -36,6 +40,7 @@ import { gstBreakdown, type GstBreakdown } from "@/lib/gst";
 export type { BookingRow, DateBlock, RoomsLeft, TakenStay };
 import { HOTEL } from "@/lib/hotels";
 import { nightsBetween } from "@/lib/format";
+import { attachReferral, referralAmounts, resolveReferral } from "@/lib/referrals.server";
 
 const bookingInput = z.object({
   guestName: z.string().trim().min(1).max(120),
@@ -50,6 +55,7 @@ const bookingInput = z.object({
   paymentMode: z.enum(["full", "advance", "pay_at_hotel"]).default("full"),
   // TEMP-TEST-AMOUNT: remove later — guest-chosen online payment (whole rupees, min ₹1)
   customAmount: z.number().int().min(1).max(10_000_000).optional(),
+  referralCode: z.string().trim().max(40).optional(),
 });
 
 const lookupInput = z.object({
@@ -87,18 +93,40 @@ export const bookingOptions = createServerFn({ method: "GET" }).handler(async ()
   return { advancePercent: config.advancePercent, payAtHotel: config.payAtHotel, holdMinutes: config.holdMinutes };
 });
 
-export const checkRoomsLeft = createServerFn({ method: "POST" })
-  .validator(datesInput)
-  .handler(async ({ data }): Promise<RoomsLeft> => {
+export type { PublicAvailability, PublicRoomType };
+export type AvailabilityLevel = PublicAvailability[string]["level"];
+
+/** Public availability without room counts: available / few left / sold out. */
+export const checkAvailability = createServerFn({ method: "POST" })
+  .validator(datesInput.extend({ rooms: z.number().int().min(1).max(8).default(1) }))
+  .handler(async ({ data }): Promise<PublicAvailability> => {
     await noStore();
     if (data.checkOut <= data.checkIn) return {};
-    return roomsLeft(data.checkIn, data.checkOut);
+    return publicAvailability(data.checkIn, data.checkOut, data.rooms);
   });
 
-/** The server prices the stay; the browser total is only a preview. */
-export function stayTotal(roomType: string, checkIn: string, checkOut: string, rooms: number): number {
-  const room = HOTEL.rooms.find((item) => item.id === roomType);
-  if (!room) throw new Error("Unknown room type.");
+/** Room types guests can see and book, with the owner-set nightly price. */
+export const listPublicRooms = createServerFn({ method: "GET" }).handler(async (): Promise<PublicRoomType[]> => {
+  return publicRoomTypes();
+});
+
+/** Guest-side check of a referral code: only the guest discount is revealed. */
+export const checkReferralCode = createServerFn({ method: "POST" })
+  .validator(z.object({ code: z.string().trim().min(1).max(40) }))
+  .handler(async ({ data }): Promise<{ ok: true; code: string; guestPercent: number } | { ok: false; message: string }> => {
+    await noStore();
+    try {
+      const ref = await resolveReferral(data.code);
+      return { ok: true, code: ref.code, guestPercent: ref.guestPercent };
+    } catch (error) {
+      return { ok: false, message: error instanceof Error ? error.message : "That referral code is not valid." };
+    }
+  });
+
+/** The server prices the stay from the owner-set price; the browser total is only a preview. */
+async function stayTotal(roomType: string, checkIn: string, checkOut: string, rooms: number): Promise<number> {
+  const room = await roomPrice(roomType);
+  if (!room || !room.active) throw new Error("That room type is not available to book.");
   return room.price * rooms * nightsBetween(checkIn, checkOut);
 }
 
@@ -113,7 +141,12 @@ export const createBooking = createServerFn({ method: "POST" })
     if (data.paymentMode === "pay_at_hotel" && !config.payAtHotel) {
       throw new Error("Pay at hotel is not available. Choose an online payment.");
     }
-    const totalAmount = stayTotal(data.roomType, data.checkIn, data.checkOut, data.rooms);
+    const listAmount = await stayTotal(data.roomType, data.checkIn, data.checkOut, data.rooms);
+    const referral = data.referralCode ? await resolveReferral(data.referralCode) : null;
+    const amounts = referral
+      ? referralAmounts(listAmount, referral.guestPercent, referral.agentPercent)
+      : { discount: 0, commission: 0, total: listAmount };
+    const totalAmount = amounts.total;
     let dueNow = amountDueNow(totalAmount, data.paymentMode, config.advancePercent);
     // TEMP-TEST-AMOUNT: remove later — custom amount replaces the advance, validated against the server total
     if (data.customAmount !== undefined) {
@@ -123,14 +156,19 @@ export const createBooking = createServerFn({ method: "POST" })
       }
       dueNow = data.customAmount;
     }
-    const { customAmount: _customAmount, ...bookingData } = data; // TEMP-TEST-AMOUNT: remove later
-    const row = await insertBooking({
+    const { referralCode: _referralCode, ...withoutReferral } = data;
+    const { customAmount: _customAmount, ...bookingData } = withoutReferral; // TEMP-TEST-AMOUNT: remove later
+    let row = await insertBooking({
       ...bookingData,
       totalAmount,
       phone: phoneDigits(data.phone),
       amountDueNow: dueNow,
       holdMinutes: config.holdMinutes,
     });
+    if (referral) {
+      await attachReferral(row.id, referral, listAmount, amounts.discount, amounts.commission);
+      row = (await findBookingById(row.id)) ?? row;
+    }
     const saved = await attachPaymentLink(row);
     await onBookingCreated(saved);
     return saved;

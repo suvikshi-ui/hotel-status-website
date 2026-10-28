@@ -33,6 +33,12 @@ export type BookingRow = {
   stay_status: "none" | "checked_in" | "checked_out";
   checked_in_at: string | null;
   checked_out_at: string | null;
+  referral_code_id: number | null;
+  referral_code: string | null;
+  list_amount: number | null;
+  guest_discount_amount: number;
+  agent_commission_amount: number;
+  agent_commission_paid_at: string | null;
 };
 
 export type NewBooking = {
@@ -86,7 +92,14 @@ const BOOKING_SELECT = `
   case when checked_in_at is null then null
     else to_char(checked_in_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') end as checked_in_at,
   case when checked_out_at is null then null
-    else to_char(checked_out_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') end as checked_out_at
+    else to_char(checked_out_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') end as checked_out_at,
+  referral_code_id::int as referral_code_id,
+  (select r.code from referral_codes r where r.id = referral_code_id) as referral_code,
+  list_amount,
+  guest_discount_amount,
+  agent_commission_amount,
+  case when agent_commission_paid_at is null then null
+    else to_char(agent_commission_paid_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') end as agent_commission_paid_at
 `;
 
 export { BOOKING_SELECT };
@@ -149,6 +162,54 @@ export async function cancelBookingRow(id: string): Promise<BookingRow | null> {
 }
 
 export type RoomsLeft = Record<string, { capacity: number; left: number }>;
+
+export type AvailabilityLevel = "available" | "few" | "sold_out";
+/** Public, count-free availability for one room type and the requested rooms. */
+export type PublicAvailability = Record<string, { level: AvailabilityLevel; fits: boolean }>;
+
+/** Honest threshold: "few" once at most 20% of the type (or 3 rooms) is left. */
+export function availabilityLevel(left: number, capacity: number): AvailabilityLevel {
+  if (left <= 0) return "sold_out";
+  if (left <= 3 || left <= Math.ceil(capacity * 0.2)) return "few";
+  return "available";
+}
+
+export async function publicAvailability(checkIn: string, checkOut: string, rooms: number): Promise<PublicAvailability> {
+  const sql = await getSql();
+  const rows = await sql.query<{ room_type: string; capacity: number; taken: number }>(
+    `select room_type, rooms as capacity, rooms_taken(room_type, $1::date, $2::date) as taken
+     from room_inventory where is_active`,
+    [checkIn, checkOut],
+  );
+  const out: PublicAvailability = {};
+  for (const row of rows) {
+    const capacity = Number(row.capacity);
+    const left = Math.max(0, capacity - Number(row.taken));
+    out[row.room_type] = { level: availabilityLevel(left, capacity), fits: left >= rooms };
+  }
+  return out;
+}
+
+export type PublicRoomType = { id: string; price: number };
+
+/** Room types guests may see and book, in display order. */
+export async function publicRoomTypes(): Promise<PublicRoomType[]> {
+  const sql = await getSql();
+  const rows = await sql.query<{ room_type: string; price: number }>(
+    `select room_type, price from room_inventory where is_active order by sort_order, room_type`,
+  );
+  return rows.map((r) => ({ id: r.room_type, price: Number(r.price) }));
+}
+
+export async function roomPrice(roomType: string): Promise<{ price: number; active: boolean } | null> {
+  const sql = await getSql();
+  const rows = await sql.query<{ price: number; is_active: boolean }>(
+    `select price, is_active from room_inventory where room_type = $1`,
+    [roomType],
+  );
+  const r = rows[0];
+  return r ? { price: Number(r.price), active: Boolean(r.is_active) } : null;
+}
 
 /** Rooms still free for every night of [checkIn, checkOut), per room type. */
 export async function roomsLeft(checkIn: string, checkOut: string): Promise<RoomsLeft> {

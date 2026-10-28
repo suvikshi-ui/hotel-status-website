@@ -5,7 +5,15 @@ import { PageShell } from "@/components/site-chrome";
 import { PayStay } from "@/components/pay-stay";
 import { Button } from "@/components/ui/button";
 import { useBookings, type Booking } from "@/lib/bookings";
-import { bookingOptions, checkRoomsLeft, type BookingOptions, type RoomsLeft } from "@/lib/bookings.functions";
+import {
+  bookingOptions,
+  checkAvailability,
+  checkReferralCode,
+  listPublicRooms,
+  type AvailabilityLevel,
+  type BookingOptions,
+  type PublicAvailability,
+} from "@/lib/bookings.functions";
 import { formatInr, formatLongDate, nightsBetween, todayIso, tomorrowIso } from "@/lib/format";
 import { getHotel, HOTEL, type RoomType } from "@/lib/hotels";
 import { cn } from "@/lib/utils";
@@ -77,11 +85,22 @@ const field =
 function BookPage() {
   const search = Route.useSearch();
   const add = useBookings((s) => s.add);
-  const [left, setLeft] = useState<RoomsLeft>({});
+  const [avail, setAvail] = useState<PublicAvailability>({});
+  const [prices, setPrices] = useState<Record<string, number> | null>(null);
+  const [refInput, setRefInput] = useState("");
+  const [referral, setReferral] = useState<{ code: string; guestPercent: number } | null>(null);
+  const [refMessage, setRefMessage] = useState<string | null>(null);
+  const [refChecking, setRefChecking] = useState(false);
   const [options, setOptions] = useState<BookingOptions>({ advancePercent: 30, payAtHotel: true, holdMinutes: 30 });
   // TEMP-TEST-AMOUNT: remove later — "custom" is a UI-only choice sent to the server as an advance with customAmount
   const [paymentMode, setPaymentMode] = useState<"full" | "advance" | "custom" | "pay_at_hotel">("full");
   const [customAmount, setCustomAmount] = useState("1"); // TEMP-TEST-AMOUNT: remove later
+
+  useEffect(() => {
+    listPublicRooms()
+      .then((list) => setPrices(Object.fromEntries(list.map((item) => [item.id, item.price]))))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     bookingOptions()
@@ -104,22 +123,53 @@ function BookPage() {
   useEffect(() => {
     let live = true;
     if (checkOut <= checkIn) return;
-    checkRoomsLeft({ data: { checkIn, checkOut } })
+    checkAvailability({ data: { checkIn, checkOut, rooms } })
       .then((rows) => {
-        if (live) setLeft(rows);
+        if (live) setAvail(rows);
       })
       .catch(() => {});
     return () => {
       live = false;
     };
-  }, [done, checkIn, checkOut]);
+  }, [done, checkIn, checkOut, rooms]);
 
-  const room = HOTEL.rooms.find((item) => item.id === roomId) ?? HOTEL.rooms[0];
+  // Only the room types the owner shows on the website, at the owner-set price.
+  const visibleRooms = HOTEL.rooms
+    .filter((item) => (prices ? item.id in prices : item.id !== "super-deluxe"))
+    .map((item) => ({ ...item, price: prices?.[item.id] ?? item.price }));
+  const room = visibleRooms.find((item) => item.id === roomId) ?? visibleRooms[0];
   const datesOk = checkOut > checkIn;
   const nights = datesOk ? nightsBetween(checkIn, checkOut) : 0;
-  const total = nights * room.price * rooms;
-  const free = left[room.id]?.left;
-  const clash = datesOk && free !== undefined && free < rooms;
+  const listTotal = nights * room.price * rooms;
+  const discount = referral ? Math.floor((listTotal * referral.guestPercent) / 100) : 0;
+  const total = listTotal - discount;
+  const level = datesOk ? avail[room.id] : undefined;
+  const clash = Boolean(level && !level.fits);
+
+  async function applyReferral() {
+    const code = refInput.trim();
+    setRefMessage(null);
+    if (!code) {
+      setReferral(null);
+      return;
+    }
+    setRefChecking(true);
+    try {
+      const res = await checkReferralCode({ data: { code } });
+      if (res.ok) {
+        setReferral({ code: res.code, guestPercent: res.guestPercent });
+        setRefInput(res.code);
+      } else {
+        setReferral(null);
+        setRefMessage(res.message);
+      }
+    } catch {
+      setReferral(null);
+      setRefMessage("Could not check that code. Please try again.");
+    } finally {
+      setRefChecking(false);
+    }
+  }
 
   function onCheckIn(value: string) {
     setCheckIn(value);
@@ -175,6 +225,7 @@ function BookPage() {
         subtotal: total,
         tax: 0,
         total,
+        referralCode: referral?.code,
         paymentMode: paymentMode === "custom" ? "advance" : paymentMode, // TEMP-TEST-AMOUNT: remove later
         customAmount: paymentMode === "custom" ? custom : undefined, // TEMP-TEST-AMOUNT: remove later
       });
@@ -202,10 +253,11 @@ function BookPage() {
             <fieldset>
               <legend className="text-xs tracking-[0.18em] text-muted uppercase">Room</legend>
               <div className="mt-4 grid gap-3">
-                {HOTEL.rooms.map((item) => (
+                {visibleRooms.map((item) => (
                   <RoomChoice
                     key={item.id}
                     room={item}
+                    level={datesOk ? avail[item.id]?.level : undefined}
                     selected={item.id === room.id}
                     onSelect={() => setRoomId(item.id as RoomId)}
                   />
@@ -274,16 +326,51 @@ function BookPage() {
 
             {clash ? (
               <p className="mt-4 text-sm text-terracotta">
-                {free === 0
+                {level?.level === "sold_out"
                   ? `${room.name} is sold out for those dates.`
-                  : `Only ${free} ${room.name} room${free === 1 ? "" : "s"} left for those dates.`}{" "}
+                  : `Not enough ${room.name} rooms are free for those dates.`}{" "}
                 Pick other dates, fewer rooms, or another room type.
               </p>
-            ) : datesOk && free !== undefined && free <= 3 ? (
-              <p className="mt-4 text-sm text-ink-soft">
-                {free} {room.name} room{free === 1 ? "" : "s"} left for those dates.
+            ) : level ? (
+              <p className="mt-4 text-sm">
+                {room.name}, {formatLongDate(checkIn)} – {formatLongDate(checkOut)}: <AvailabilityBadge level={level.level} />
               </p>
             ) : null}
+
+            <div className="mt-8">
+              <span className="text-xs tracking-[0.18em] text-muted uppercase">Referral code (optional)</span>
+              <div className="mt-1 flex items-end gap-3">
+                <input
+                  id="referral-code"
+                  maxLength={40}
+                  autoComplete="off"
+                  className={cn(field, "uppercase")}
+                  value={refInput}
+                  onChange={(event) => {
+                    setRefInput(event.target.value.toUpperCase());
+                    if (referral) setReferral(null);
+                    setRefMessage(null);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      void applyReferral();
+                    }
+                  }}
+                />
+                <Button type="button" variant="outline" disabled={refChecking || !refInput.trim()} onClick={applyReferral}>
+                  {refChecking ? "Checking…" : "Apply"}
+                </Button>
+              </div>
+              {referral ? (
+                <p className="mt-2 text-sm text-success">
+                  {referral.code} applied: {referral.guestPercent}% off the stay
+                  {datesOk ? ` (−${formatInr(discount)})` : ""}.
+                </p>
+              ) : refMessage ? (
+                <p className="mt-2 text-sm text-terracotta">{refMessage}</p>
+              ) : null}
+            </div>
 
             <div className="mt-8 grid gap-6">
               <label className="flex flex-col gap-1">
@@ -386,6 +473,11 @@ function BookPage() {
                     ? `${nights} night${nights === 1 ? "" : "s"} · ${rooms} room${rooms === 1 ? "" : "s"}`
                     : "Choose your dates"}
                 </p>
+                {datesOk && discount > 0 ? (
+                  <p className="text-sm text-muted tabular-nums">
+                    <s>{formatInr(listTotal)}</s> · referral discount −{formatInr(discount)}
+                  </p>
+                ) : null}
                 <p className="font-display text-4xl font-semibold tabular-nums">
                   {datesOk ? formatInr(total) : "—"}
                 </p>
@@ -409,12 +501,28 @@ function BookPage() {
   );
 }
 
+function AvailabilityBadge({ level }: { level: AvailabilityLevel }) {
+  const look =
+    level === "available"
+      ? { text: "Available", cls: "border-success/50 text-success" }
+      : level === "few"
+        ? { text: "Almost full — few rooms left", cls: "border-amber-600/60 text-amber-700" }
+        : { text: "Sold out", cls: "border-terracotta/60 text-terracotta" };
+  return (
+    <span className={cn("inline-block border px-2 py-0.5 text-xs tracking-[0.08em] whitespace-nowrap", look.cls)}>
+      {look.text}
+    </span>
+  );
+}
+
 function RoomChoice({
   room,
+  level,
   selected,
   onSelect,
 }: {
   room: RoomType;
+  level?: AvailabilityLevel;
   selected: boolean;
   onSelect: () => void;
 }) {
@@ -435,6 +543,11 @@ function RoomChoice({
         <span className="block text-sm text-muted">
           {room.size} · up to {room.occupancy} guests
         </span>
+        {level ? (
+          <span className="mt-1 block">
+            <AvailabilityBadge level={level} />
+          </span>
+        ) : null}
       </span>
       <span className="text-sm tabular-nums">{formatInr(room.price)}</span>
     </button>
@@ -454,6 +567,13 @@ function Confirmed({ booking, onAnother }: { booking: Booking; onAnother: () => 
         <br />
         {formatLongDate(booking.checkIn)} — {formatLongDate(booking.checkOut)} · {booking.nights} night
         {booking.nights === 1 ? "" : "s"} · {formatInr(booking.total)}
+        {booking.row.guest_discount_amount > 0 ? (
+          <>
+            <br />
+            Referral discount {booking.row.referral_code ? `(${booking.row.referral_code}) ` : ""}−
+            {formatInr(booking.row.guest_discount_amount)} included
+          </>
+        ) : null}
       </p>
       <p className="mt-3 text-sm leading-relaxed text-ink-soft">
         Keep this number. The hotel sees the same stay. Find it later with this number and the phone used here.

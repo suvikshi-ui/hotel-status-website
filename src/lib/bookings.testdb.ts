@@ -7,7 +7,7 @@ const dir = new URL("../../migrations/", import.meta.url);
 export async function freshDb(): Promise<PGlite> {
   const pg = new PGlite();
   const files = readdirSync(dir)
-    .filter((name) => name.endsWith(".sql") && name !== "0001_auth.sql")
+    .filter((name) => name.endsWith(".sql"))
     .sort();
   for (const name of files) await pg.exec(readFileSync(new URL(name, dir), "utf8"));
   return pg;

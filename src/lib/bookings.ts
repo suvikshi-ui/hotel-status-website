@@ -26,7 +26,9 @@ export type Booking = {
   row: BookingRow;
 };
 
-type BookingInput = Omit<Booking, "id" | "createdAt" | "status" | "paymentStatus" | "paymentUrl" | "row">;
+type BookingInput = Omit<Booking, "id" | "createdAt" | "status" | "paymentStatus" | "paymentUrl" | "row"> & {
+  referralCode?: string;
+};
 
 type BookingState = {
   bookings: Booking[];
@@ -74,6 +76,7 @@ export const useBookings = create<BookingState>()((set, get) => ({
         rooms: input.rooms,
         totalAmount: input.total,
         paymentMode: input.paymentMode,
+        referralCode: input.referralCode || undefined,
         customAmount: input.customAmount, // TEMP-TEST-AMOUNT: remove later
       },
     });

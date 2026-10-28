@@ -103,7 +103,7 @@ export const HOTEL: Hotel = {
   tagline: "A residency in Mahape, Navi Mumbai.",
   description:
     "Hotel Status Residency stands in Mahape, beside the TTC Industrial Area. The LTIMindtree gate is about 500 to 600 metres on foot. Millennium Business Park is beside the hotel. Reliance Corporate Park in Rabale is a few minutes by auto. Ghansoli and Kopar Khairane stations are each about 3 km away. Navi Mumbai International Airport, in Ulwe, is about 20 km.",
-  price: 2499,
+  price: 2500,
   inventory: 18,
   amenities: [
     "ac",
@@ -149,7 +149,7 @@ export const HOTEL: Hotel = {
       name: "Deluxe",
       occupancy: 2,
       size: "18 m²",
-      price: 2499,
+      price: 2500,
       photos: [
         { src: "/hotels/gallery/deluxe-1.jpg", alt: "Deluxe room with a gold runner and patterned wallpaper" },
         { src: "/hotels/gallery/deluxe-2.jpg", alt: "Deluxe room from the foot of the bed" },
@@ -172,7 +172,7 @@ export const HOTEL: Hotel = {
       name: "Suite",
       occupancy: 4,
       size: "32 m²",
-      price: 4499,
+      price: 6000,
       photos: [
         { src: "/hotels/gallery/suite-1.jpg", alt: "Suite with a large bed and a second bed beyond" },
         { src: "/hotels/gallery/suite-2.jpg", alt: "Suite with a sitting chair and television" },
