@@ -30,7 +30,7 @@ type BookingInput = Omit<Booking, "id" | "createdAt" | "status" | "paymentStatus
 
 type BookingState = {
   bookings: Booking[];
-  add: (input: BookingInput) => Promise<Booking>;
+  add: (input: BookingInput & { customAmount?: number }) => Promise<Booking>; // TEMP-TEST-AMOUNT: remove later
 };
 
 export function rowToBooking(row: BookingRow): Booking {
@@ -74,6 +74,7 @@ export const useBookings = create<BookingState>()((set, get) => ({
         rooms: input.rooms,
         totalAmount: input.total,
         paymentMode: input.paymentMode,
+        customAmount: input.customAmount, // TEMP-TEST-AMOUNT: remove later
       },
     });
     const booking = rowToBooking(row);
