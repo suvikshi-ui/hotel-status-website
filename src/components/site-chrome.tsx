@@ -15,16 +15,16 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[#c6a15a]/40 bg-[#12263d] text-cream">
+    <header className="sticky top-0 z-40 border-b border-[#c6a15a]/70 bg-[#12263d] text-cream shadow-[0_16px_40px_rgba(0,0,0,0.28)]">
       <div className="mx-auto flex min-h-20 max-w-7xl items-center justify-between gap-6 px-4 py-2 sm:px-6 lg:px-8">
         <Link to="/" className="flex min-w-0 items-center gap-3 text-cream lg:shrink-0" onClick={() => setOpen(false)}>
           <img
-            src="/hotels/logo-digital.png?v=6"
+            src="/hotels/logo-digital.png?v=7"
             alt="Hotel Status Residency logo"
-            className="size-14 shrink-0 object-contain sm:size-16 xl:size-20"
+            className="size-14 shrink-0 object-contain drop-shadow-[0_10px_14px_rgba(0,0,0,0.55)] sm:size-16 xl:size-20"
           />
           <span className="min-w-0">
-            <span className="block font-display text-lg leading-tight font-semibold tracking-tight text-balance sm:text-2xl lg:text-xl lg:whitespace-nowrap xl:text-2xl">
+            <span className="block font-display text-lg leading-tight font-medium tracking-[0.04em] text-balance sm:text-2xl lg:text-xl lg:whitespace-nowrap xl:text-2xl">
               Hotel Status Residency
             </span>
             <span className="block text-[0.65rem] tracking-[0.22em] text-[#c6a15a] uppercase">Mahape</span>
@@ -106,7 +106,7 @@ export function SiteFooter() {
     <footer className="border-t border-[#c6a15a]/50 bg-[#0b1626] text-cream">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 md:grid-cols-3 lg:px-8">
         <div>
-          <img src="/hotels/logo-digital.png?v=6" alt="" className="mb-4 h-16 w-16 object-contain" />
+          <img src="/hotels/logo-digital.png?v=7" alt="" className="mb-4 h-16 w-16 object-contain drop-shadow-[0_10px_14px_rgba(0,0,0,0.55)]" />
           <p className="font-display text-3xl font-semibold tracking-tight">Hotel Status Residency</p>
           <p className="mt-3 text-sm text-cream/70">Mahape, Navi Mumbai · PIN {HOTEL.pins[0]}</p>
         </div>
