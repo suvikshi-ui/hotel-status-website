@@ -21,7 +21,7 @@ export function SiteHeader() {
           <img
             src="/hotels/logo-digital.png?v=5"
             alt="Hotel Status Residency logo"
-            className="size-14 shrink-0 object-contain sm:size-16 xl:size-20"
+            className="size-14 shrink-0 bg-[#f6f0e4] object-contain p-1 ring-1 ring-[#c6a15a] sm:size-16 xl:size-20"
           />
           <span className="min-w-0">
             <span className="block font-display text-lg leading-tight font-semibold tracking-tight text-balance sm:text-2xl lg:text-xl lg:whitespace-nowrap xl:text-2xl">
@@ -106,6 +106,7 @@ export function SiteFooter() {
     <footer className="border-t border-[#c6a15a]/50 bg-[#0b1626] text-cream">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 md:grid-cols-3 lg:px-8">
         <div>
+          <img src="/hotels/logo-digital.png?v=5" alt="" className="mb-4 h-16 w-16 bg-[#f6f0e4] object-contain p-1 ring-1 ring-[#c6a15a]" />
           <p className="font-display text-3xl font-semibold tracking-tight">Hotel Status Residency</p>
           <p className="mt-3 text-sm text-cream/70">Mahape, Navi Mumbai · PIN {HOTEL.pins[0]}</p>
         </div>
