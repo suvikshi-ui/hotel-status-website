@@ -9,12 +9,12 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-[#c6a15a]/40 bg-[#100e0c] text-cream">
-      <div className="mx-auto flex min-h-20 max-w-6xl items-center justify-between gap-4 px-4 py-2 sm:px-6">
+      <div className="mx-auto flex min-h-20 max-w-7xl items-center justify-between gap-6 px-4 py-2 sm:px-6 lg:px-8">
         <Link to="/" className="flex min-w-0 items-center gap-3 text-cream lg:shrink-0" onClick={() => setOpen(false)}>
           <img
             src="/hotels/logo-digital.png?v=5"
             alt="Hotel Status Residency logo"
-            className="size-14 shrink-0 object-contain sm:size-16"
+            className="size-14 shrink-0 object-contain sm:size-16 xl:size-20"
           />
           <span className="min-w-0">
             <span className="block font-display text-lg leading-tight font-semibold tracking-tight text-balance sm:text-2xl lg:text-xl lg:whitespace-nowrap xl:text-2xl">
@@ -24,7 +24,7 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <nav className="hidden min-w-0 items-center gap-1 lg:flex">
+        <nav className="hidden min-w-0 items-center gap-1 xl:flex">
           <Link
             to="/"
             hash="stay"
@@ -73,7 +73,7 @@ export function SiteHeader() {
           </Button>
         </nav>
 
-        <div className="flex shrink-0 items-center lg:hidden">
+        <div className="flex shrink-0 items-center xl:hidden">
           <Button asChild size="sm" variant="gold" className="rounded-none px-3 tracking-[0.14em] uppercase">
             <Link to="/book/$hotelId" params={{ hotelId: HOTEL.id }}>
               Book
@@ -91,7 +91,7 @@ export function SiteHeader() {
       </div>
 
       {open ? (
-        <div className="border-t border-[#c6a15a]/30 bg-[#100e0c] px-4 py-3 lg:hidden">
+        <div className="border-t border-[#c6a15a]/30 bg-[#100e0c] px-4 py-3 xl:hidden">
           <div className="flex flex-col">
             <Link to="/" hash="stay" className="flex h-11 items-center text-sm tracking-[0.16em] text-cream uppercase" onClick={() => setOpen(false)}>
               Stay
@@ -126,7 +126,7 @@ export function SiteHeader() {
 export function SiteFooter() {
   return (
     <footer className="border-t border-[#c6a15a]/50 bg-[#0c0b0a] text-cream">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-3">
+      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 md:grid-cols-3 lg:px-8">
         <div>
           <p className="font-display text-3xl font-semibold tracking-tight">Hotel Status Residency</p>
           <p className="mt-3 text-sm text-cream/70">Mahape, Navi Mumbai · PIN {HOTEL.pins[0]}</p>
@@ -166,7 +166,7 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="border-t border-cream/10">
-        <nav aria-label="Legal" className="mx-auto flex max-w-6xl flex-wrap gap-x-6 gap-y-2 px-4 py-5 text-xs text-cream/70 sm:px-6">
+        <nav aria-label="Legal" className="mx-auto flex max-w-7xl flex-wrap gap-x-6 gap-y-2 px-4 py-5 text-xs text-cream/70 sm:px-6 lg:px-8">
           <Link to="/terms" className="text-cream">Terms of Service</Link>
           <Link to="/privacy" className="text-cream">Privacy Policy</Link>
           <Link to="/refund" className="text-cream">Refund &amp; Cancellation Policy</Link>

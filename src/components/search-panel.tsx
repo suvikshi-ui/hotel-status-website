@@ -44,7 +44,7 @@ export function SearchPanel({ value, variant = "bar" }: Props) {
     <form
       onSubmit={submit}
       className={cn(
-        "grid w-full gap-4 bg-paper px-5 py-5 shadow-[0_16px_40px_rgba(26,22,18,0.12)] md:grid-cols-[1fr_1fr_0.7fr_auto] md:items-end md:px-8 md:py-6",
+        "grid w-full gap-4 bg-paper px-5 py-5 md:grid-cols-[1fr_1fr_0.7fr_auto] md:items-end md:px-8 md:py-6 lg:gap-8 lg:px-10 lg:py-8",
         variant === "hero" ? "" : "border border-ink/10",
       )}
     >
@@ -87,7 +87,7 @@ export function SearchPanel({ value, variant = "bar" }: Props) {
         </select>
       </label>
 
-      <Button type="submit" variant="ink" className="w-full rounded-none tracking-[0.16em] uppercase md:w-auto">
+      <Button type="submit" variant="gold" className="w-full rounded-none tracking-[0.16em] uppercase md:w-auto md:min-w-40">
         Book a stay
       </Button>
     </form>
