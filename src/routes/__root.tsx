@@ -16,7 +16,7 @@ export const Route = createRootRoute({
         name: "description",
         content: "Hotel Status Residency in Mahape, Navi Mumbai. Rooms, amenities and contact.",
       },
-      { name: "theme-color", content: "#F3EEE4" },
+      { name: "theme-color", content: "#3c1620" },
     ],
     links: [
       { rel: "canonical", href: "https://hotelstatusresidency.com/" },
@@ -28,7 +28,7 @@ export const Route = createRootRoute({
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Figtree:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400;1,8..60,500&display=swap",
       },
     ],
   }),

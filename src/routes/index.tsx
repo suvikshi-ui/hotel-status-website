@@ -89,14 +89,14 @@ function Home() {
   return (
     <PageShell>
       <main>
-        <section className="relative bg-[#0c0b0a]">
+        <section className="relative bg-[#2a1016]">
           <div className="relative">
             <img
               src={HOTEL.hero.src}
               alt={HOTEL.hero.alt}
               className="block h-auto w-full lg:h-[78vh] lg:object-cover lg:object-[center_42%]"
             />
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0c0b0a] via-black/40 to-black/15" />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#2a1016] via-[#2a1016]/55 to-black/20" />
             <div className="absolute inset-x-0 bottom-0 px-4 pb-8 sm:px-6 sm:pb-14 lg:pb-24">
               <div className="mx-auto max-w-7xl lg:px-2">
                 <p className="text-[0.7rem] tracking-[0.32em] text-[#e4c98a] uppercase">Mahape · Navi Mumbai</p>
@@ -110,7 +110,7 @@ function Home() {
         </section>
 
         <section id="stay" className="mx-auto max-w-7xl px-4 pt-8 pb-16 sm:px-6 lg:px-8 lg:pt-0">
-          <div className="border border-[#c6a15a]/50 bg-[#fbf7ef] shadow-[0_28px_70px_rgba(12,11,10,0.22)] lg:-mt-12 lg:relative lg:z-10">
+          <div className="border border-[#c6a15a]/50 bg-[#fbf7ef] shadow-[0_28px_70px_rgba(42,16,22,0.22)] lg:-mt-12 lg:relative lg:z-10">
             <SearchPanel
               variant="hero"
               value={{
@@ -147,7 +147,7 @@ function Home() {
               ["Front desk", "24 hours"],
               ["From", formatInr(fromPrice)],
             ].map(([label, value]) => (
-              <div key={label} className="border border-[#c6a15a]/40 bg-[#141210] px-4 py-5 text-[#f6f0e4]">
+              <div key={label} className="border border-[#c6a15a]/40 bg-[#4a1c28] px-4 py-5 text-[#f6f0e4]">
                 <dt className="text-[0.65rem] tracking-[0.22em] text-[#c6a15a] uppercase">{label}</dt>
                 <dd className="mt-2 font-display text-2xl">{value}</dd>
               </div>
@@ -167,7 +167,7 @@ function Home() {
           </div>
         </section>
 
-        <section id="amenities" className="bg-[#100e0c] text-[#f6f0e4]">
+        <section id="amenities" className="bg-[#3c1620] text-[#f6f0e4]">
           <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
             <p className="text-xs tracking-[0.22em] text-[#c6a15a] uppercase">Amenities</p>
             <h2 className="mt-3 font-display text-4xl font-medium lg:text-6xl">What the residency offers</h2>
@@ -176,7 +176,7 @@ function Home() {
           </div>
         </section>
 
-        <section className="bg-[#0c0b0a] text-[#f6f0e4]">
+        <section className="bg-[#2a1016] text-[#f6f0e4]">
           <div className="grid md:grid-cols-2 lg:min-h-[560px]">
             <img
               src="/hotels/gallery/exterior.jpg"
@@ -604,14 +604,14 @@ function RoomCard({ room }: { room: RoomType }) {
   const cover = room.photos[0];
 
   return (
-    <article className="flex flex-col border border-[#c6a15a]/40 bg-[#141210] text-[#f6f0e4] shadow-[0_18px_40px_rgba(12,11,10,0.18)]">
+    <article className="flex flex-col border border-[#c6a15a]/40 bg-[#4a1c28] text-[#f6f0e4] shadow-[0_18px_40px_rgba(42,16,22,0.2)]">
       <button type="button" className="group relative aspect-[3/2] w-full overflow-hidden lg:aspect-[16/10]" onClick={() => setOpen(0)}>
         <img
           src={cover.src}
           alt={cover.alt}
           className="size-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
         />
-        <span className="absolute right-0 bottom-0 bg-[#0c0b0a]/80 px-4 py-2 font-display text-2xl text-[#e4c98a] tabular-nums">
+        <span className="absolute right-0 bottom-0 bg-[#2a1016]/80 px-4 py-2 font-display text-2xl text-[#e4c98a] tabular-nums">
           {formatInr(room.price)}
         </span>
       </button>
