@@ -18,17 +18,21 @@ export type Booking = {
   subtotal: number;
   tax: number;
   total: number;
-  status: "confirmed" | "cancelled";
-  paymentStatus: "unpaid" | "paid";
+  status: BookingRow["status"];
+  paymentStatus: BookingRow["payment_status"];
+  paymentMode: BookingRow["payment_mode"];
   paymentUrl: string | null;
   createdAt: string;
+  row: BookingRow;
 };
 
-type BookingInput = Omit<Booking, "id" | "createdAt" | "status" | "paymentStatus" | "paymentUrl">;
+type BookingInput = Omit<Booking, "id" | "createdAt" | "status" | "paymentStatus" | "paymentUrl" | "row"> & {
+  referralCode?: string;
+};
 
 type BookingState = {
   bookings: Booking[];
-  add: (input: BookingInput) => Promise<Booking>;
+  add: (input: BookingInput & { customAmount?: number }) => Promise<Booking>; // TEMP-TEST-AMOUNT: remove later
 };
 
 export function rowToBooking(row: BookingRow): Booking {
@@ -50,8 +54,10 @@ export function rowToBooking(row: BookingRow): Booking {
     total: row.total_amount,
     status: row.status,
     paymentStatus: row.payment_status,
+    paymentMode: row.payment_mode,
     paymentUrl: row.payment_url,
     createdAt: row.created_at,
+    row,
   };
 }
 
@@ -69,6 +75,9 @@ export const useBookings = create<BookingState>()((set, get) => ({
         guests: input.guests,
         rooms: input.rooms,
         totalAmount: input.total,
+        paymentMode: input.paymentMode,
+        referralCode: input.referralCode || undefined,
+        customAmount: input.customAmount, // TEMP-TEST-AMOUNT: remove later
       },
     });
     const booking = rowToBooking(row);

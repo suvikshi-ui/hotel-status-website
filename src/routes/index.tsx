@@ -28,6 +28,7 @@ import { SearchPanel } from "@/components/search-panel";
 import { PageShell } from "@/components/site-chrome";
 import { Button } from "@/components/ui/button";
 import { formatInr, todayIso, tomorrowIso } from "@/lib/format";
+import { listPublicRooms } from "@/lib/bookings.functions";
 import { AMENITIES, GALLERY, HOTEL, type AmenityId, type RoomType } from "@/lib/hotels";
 
 const AMENITY_ICON: Record<AmenityId, typeof Wifi> = {
@@ -60,12 +61,30 @@ const AMENITY_ICON: Record<AmenityId, typeof Wifi> = {
 };
 
 export const Route = createFileRoute("/")({
+  loader: async () => {
+    try {
+      return { prices: Object.fromEntries((await listPublicRooms()).map((room) => [room.id, room.price])) };
+    } catch {
+      return { prices: null as Record<string, number> | null };
+    }
+  },
   component: Home,
 });
+
+const COUNT_WORDS = ["No", "One", "Two", "Three", "Four", "Five"];
 
 function Home() {
   const roomItems = HOTEL.amenities.filter((id) => AMENITIES[id].group === "Room");
   const hotelItems = HOTEL.amenities.filter((id) => AMENITIES[id].group === "Hotel");
+  const { prices } = Route.useLoaderData();
+  // Only the room types the owner shows on the website, at the owner-set price.
+  const rooms = HOTEL.rooms
+    .filter((room) => (prices ? room.id in prices : room.id !== "super-deluxe"))
+    .map((room) => ({ ...room, price: prices?.[room.id] ?? room.price }));
+  const fromPrice = rooms.length ? Math.min(...rooms.map((room) => room.price)) : HOTEL.price;
+  const countWord = COUNT_WORDS[rooms.length] ?? String(rooms.length);
+  const shown = new Set(rooms.map((room) => room.name));
+  const gallery = GALLERY.filter((group) => !HOTEL.rooms.some((room) => room.name === group.title) || shown.has(group.title));
 
   return (
     <PageShell>
@@ -117,7 +136,7 @@ function Home() {
             </div>
             <div>
               <dt className="text-xs tracking-[0.18em] text-muted uppercase">Rooms</dt>
-              <dd className="mt-2 font-display text-2xl">Three types</dd>
+              <dd className="mt-2 font-display text-2xl">{countWord} types</dd>
             </div>
             <div>
               <dt className="text-xs tracking-[0.18em] text-muted uppercase">Front desk</dt>
@@ -125,16 +144,16 @@ function Home() {
             </div>
             <div>
               <dt className="text-xs tracking-[0.18em] text-muted uppercase">From</dt>
-              <dd className="mt-2 font-display text-2xl tabular-nums">{formatInr(HOTEL.price)}</dd>
+              <dd className="mt-2 font-display text-2xl tabular-nums">{formatInr(fromPrice)}</dd>
             </div>
           </dl>
         </section>
 
         <section id="rooms" className="mx-auto max-w-6xl px-4 pb-6 sm:px-6">
           <p className="text-xs tracking-[0.22em] text-gold uppercase">Rooms</p>
-          <h2 className="mt-3 font-display text-4xl font-semibold">Three ways to stay</h2>
-          <div className="mt-8 grid gap-8 md:grid-cols-3">
-            {HOTEL.rooms.map((room) => (
+          <h2 className="mt-3 font-display text-4xl font-semibold">{countWord} ways to stay</h2>
+          <div className={`mt-8 grid gap-8 ${rooms.length === 2 ? "md:grid-cols-2" : "md:grid-cols-3"}`}>
+            {rooms.map((room) => (
               <RoomCard key={room.id} room={room} />
             ))}
           </div>
@@ -168,7 +187,7 @@ function Home() {
           <p className="text-xs tracking-[0.22em] text-gold uppercase">Gallery</p>
           <h2 className="mt-3 font-display text-4xl font-semibold">The hotel, as it is</h2>
           <p className="mt-3 max-w-lg text-sm text-ink-soft">Tap a photograph to open it.</p>
-          {GALLERY.map((group) => (
+          {gallery.map((group) => (
             <div key={group.id} className="mt-10">
               <h3 className="font-display text-2xl font-semibold">{group.title}</h3>
               <div className="mt-4">

@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { getSql } from "@/lib/db";
 import { BOOKING_SELECT, type BookingRow } from "@/lib/bookings.server";
+import { onPaymentRecorded } from "@/lib/booking-events.server";
 
 const SITE = "https://www.hotelstatusresidency.com";
 
@@ -39,14 +40,14 @@ async function returningRow(text: string, params: unknown[]): Promise<BookingRow
 }
 
 export async function attachPaymentLink(row: BookingRow): Promise<BookingRow> {
-  if (row.status !== "confirmed" || row.payment_status === "paid" || row.payment_url) return row;
-  if (!Number.isInteger(row.total_amount) || row.total_amount <= 0) return row;
+  if (row.status !== "pending_payment" || row.payment_status !== "unpaid" || row.payment_url) return row;
+  if (!Number.isInteger(row.amount_due_now) || row.amount_due_now <= 0) return row;
   const creds = keys();
   if (!creds) return row;
 
-  const origin = (process.env.BETTER_AUTH_URL || SITE).replace(/\/$/, "");
+  const origin = (process.env.SITE_URL || process.env.BETTER_AUTH_URL || SITE).replace(/\/$/, "");
   const body: Record<string, unknown> = {
-    amount: row.total_amount * 100,
+    amount: row.amount_due_now * 100,
     currency: "INR",
     accept_partial: false,
     description: `Hotel Status Residency · ${row.id} · ${ROOM_NAMES[row.room_type] ?? "Stay"}`,
@@ -58,8 +59,13 @@ export async function attachPaymentLink(row: BookingRow): Promise<BookingRow> {
     },
     notify: { sms: false, email: false },
     reminder_enable: false,
-    notes: { booking_id: row.id },
+    notes: { booking_id: row.id, payment_mode: row.payment_mode },
   };
+  if (row.hold_expires_at) {
+    // Razorpay needs expire_by at least 15 minutes ahead.
+    const expire = Math.floor(new Date(row.hold_expires_at).getTime() / 1000);
+    if (expire > Date.now() / 1000 + 16 * 60) body.expire_by = expire;
+  }
   if (origin.startsWith("https://")) {
     body.callback_url = `${origin}/api/razorpay/callback`;
     body.callback_method = "get";
@@ -89,7 +95,7 @@ export async function attachPaymentLink(row: BookingRow): Promise<BookingRow> {
 }
 
 export async function syncPaymentStatus(row: BookingRow): Promise<BookingRow> {
-  if (row.payment_status === "paid" || !row.payment_link_id) return row;
+  if (row.payment_status !== "unpaid" || !row.payment_link_id) return row;
   const creds = keys();
   if (!creds) return row;
   try {
@@ -104,33 +110,32 @@ export async function syncPaymentStatus(row: BookingRow): Promise<BookingRow> {
       payments?: { payment_id?: string; status?: string }[];
     };
     if (payload.status !== "paid") return row;
-    if (payload.amount_paid !== undefined && payload.amount_paid !== row.total_amount * 100) return row;
+    if (payload.amount_paid !== row.amount_due_now * 100) return row;
     const paymentId = payload.payments?.find((item) => item.status === "captured")?.payment_id ?? null;
-    return (await markPaid(row.id, paymentId)) ?? row;
+    return (await recordPayment(row.id, row.amount_due_now, paymentId)) ?? row;
   } catch {
     return row;
   }
 }
 
-export async function markPaid(id: string, paymentId: string | null): Promise<BookingRow | null> {
-  return returningRow(
-    `update bookings
-     set payment_status = 'paid', payment_id = coalesce($2, payment_id)
-     where id = $1
-     returning ${BOOKING_SELECT}`,
-    [id, paymentId],
-  );
+/** Record an online payment; confirms a pending booking. Null if already recorded. */
+export async function recordPayment(id: string, amountRupees: number, paymentId: string | null): Promise<BookingRow | null> {
+  const row = await returningRow(`select ${BOOKING_SELECT} from record_payment($1, $2, $3)`, [id, amountRupees, paymentId]);
+  // Only the first record of a payment notifies (replays return null).
+  if (row) await onPaymentRecorded(row);
+  return row;
 }
 
-export async function markPaidIfAmount(
+/** Webhook path: only accept the exact amount the link asked for. */
+export async function recordPaymentIfAmount(
   id: string,
   amountPaise: number,
   paymentId: string | null,
 ): Promise<BookingRow | null> {
   const sql = await getSql();
-  const rows = await sql.query<{ total_amount: number }>(`select total_amount from bookings where id = $1`, [id]);
-  if (!rows[0] || rows[0].total_amount * 100 !== amountPaise) return null;
-  return markPaid(id, paymentId);
+  const rows = await sql.query<{ amount_due_now: number }>(`select amount_due_now from bookings where id = $1`, [id]);
+  if (!rows[0] || rows[0].amount_due_now * 100 !== amountPaise) return null;
+  return recordPayment(id, rows[0].amount_due_now, paymentId);
 }
 
 export function paymentLinkSignature(input: {
@@ -165,5 +170,32 @@ export async function cancelRemotePaymentLink(linkId: string | null): Promise<vo
     });
   } catch {
     // The stay is still cancelled locally if Razorpay is unreachable.
+  }
+}
+
+/** Refund (part of) a captured payment. Amount in rupees. Null when keys are missing or Razorpay refuses. */
+export async function refundPayment(
+  paymentId: string,
+  amountRupees: number,
+  bookingId: string,
+): Promise<{ id: string; status: string } | null> {
+  const creds = keys();
+  if (!creds || !paymentId || amountRupees <= 0) return null;
+  try {
+    const response = await fetch(`https://api.razorpay.com/v1/payments/${encodeURIComponent(paymentId)}/refund`, {
+      method: "POST",
+      headers: { Authorization: authHeader(creds.keyId, creds.keySecret), "Content-Type": "application/json" },
+      body: JSON.stringify({
+        amount: Math.round(amountRupees * 100),
+        speed: "normal",
+        receipt: `refund-${bookingId}`.slice(0, 40),
+        notes: { booking_id: bookingId },
+      }),
+    });
+    if (!response.ok) return null;
+    const data = (await response.json()) as { id?: string; status?: string };
+    return data.id ? { id: data.id, status: data.status ?? "pending" } : null;
+  } catch {
+    return null;
   }
 }

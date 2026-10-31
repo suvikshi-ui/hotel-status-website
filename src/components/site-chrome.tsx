@@ -9,22 +9,22 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-ink/10 bg-paper">
-      <div className="mx-auto flex h-20 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-        <Link to="/" className="flex min-w-0 items-center gap-3 text-ink" onClick={() => setOpen(false)}>
+      <div className="mx-auto flex min-h-20 max-w-6xl items-center justify-between gap-4 px-4 py-2 sm:px-6">
+        <Link to="/" className="flex min-w-0 items-center gap-3 text-ink lg:shrink-0" onClick={() => setOpen(false)}>
           <img
             src="/hotels/logo-digital.png?v=5"
             alt="Hotel Status Residency logo"
             className="size-14 shrink-0 object-contain sm:size-16"
           />
           <span className="min-w-0">
-            <span className="block truncate font-display text-xl font-semibold tracking-tight sm:text-2xl">
+            <span className="block font-display text-lg leading-tight font-semibold tracking-tight text-balance sm:text-2xl lg:text-xl lg:whitespace-nowrap xl:text-2xl">
               Hotel Status Residency
             </span>
             <span className="block text-[0.65rem] tracking-[0.22em] text-muted uppercase">Mahape</span>
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav className="hidden min-w-0 items-center gap-1 lg:flex">
           <Link
             to="/"
             hash="stay"
@@ -73,7 +73,7 @@ export function SiteHeader() {
           </Button>
         </nav>
 
-        <div className="flex shrink-0 items-center md:hidden">
+        <div className="flex shrink-0 items-center lg:hidden">
           <Button asChild size="sm" variant="ink" className="rounded-none px-3 tracking-[0.14em] uppercase">
             <Link to="/book/$hotelId" params={{ hotelId: HOTEL.id }}>
               Book
@@ -91,7 +91,7 @@ export function SiteHeader() {
       </div>
 
       {open ? (
-        <div className="border-t border-ink/10 bg-paper px-4 py-3 md:hidden">
+        <div className="border-t border-ink/10 bg-paper px-4 py-3 lg:hidden">
           <div className="flex flex-col">
             <Link to="/" hash="stay" className="flex h-11 items-center text-sm tracking-[0.16em] text-ink uppercase" onClick={() => setOpen(false)}>
               Stay
@@ -151,7 +151,7 @@ export function SiteFooter() {
         </div>
         <div className="text-sm text-cream/70">
           <p className="text-xs tracking-[0.18em] text-gold uppercase">The stay</p>
-          <p className="mt-3">Deluxe, Super Deluxe and Suite rooms. Wi-Fi, parking, and a 24-hour front desk.</p>
+          <p className="mt-3">Deluxe and Suite rooms. Wi-Fi, parking, and a 24-hour front desk.</p>
           <p className="mt-4 flex flex-col gap-2">
             <Link to="/book/$hotelId" params={{ hotelId: HOTEL.id }} className="text-cream">
               Book a stay
@@ -164,6 +164,14 @@ export function SiteFooter() {
             </Link>
           </p>
         </div>
+      </div>
+      <div className="border-t border-cream/10">
+        <nav aria-label="Legal" className="mx-auto flex max-w-6xl flex-wrap gap-x-6 gap-y-2 px-4 py-5 text-xs text-cream/70 sm:px-6">
+          <Link to="/terms" className="text-cream">Terms of Service</Link>
+          <Link to="/privacy" className="text-cream">Privacy Policy</Link>
+          <Link to="/refund" className="text-cream">Refund &amp; Cancellation Policy</Link>
+          <span>GSTIN 27ATAPP6184D2ZL</span>
+        </nav>
       </div>
     </footer>
   );
