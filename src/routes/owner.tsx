@@ -3,6 +3,7 @@ import { addDays, format, parseISO } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DateBlocks } from "@/components/date-blocks";
+import { CommissionSheet } from "@/components/commission-sheet";
 import {
   cancelOwnerBooking,
   collectBalance,
@@ -31,13 +32,14 @@ export const Route = createFileRoute("/owner")({
   }),
 });
 
-type Tab = "dashboard" | "bookings" | "arrivals" | "rooms" | "rates";
+type Tab = "dashboard" | "bookings" | "arrivals" | "rooms" | "rates" | "commission";
 const TABS: { id: Tab; label: string }[] = [
   { id: "dashboard", label: "Dashboard" },
   { id: "bookings", label: "Bookings" },
   { id: "arrivals", label: "Arrivals / Departures" },
   { id: "rooms", label: "Rooms" },
   { id: "rates", label: "Room rates" },
+  { id: "commission", label: "Commission" },
 ];
 
 const roomName = (id: string) => ROOM_LABELS[id] ?? id;
@@ -181,8 +183,10 @@ function OwnerPage() {
           <ArrivalsDepartures rows={rows} actions={actions} />
         ) : tab === "rooms" ? (
           <Rooms />
-        ) : (
+        ) : tab === "rates" ? (
           <RoomRates />
+        ) : (
+          <CommissionSheet />
         )}
       </main>
       {openRow ? <BookingDrawer row={openRow} actions={actions} onClose={() => setOpenId(null)} /> : null}

@@ -224,6 +224,105 @@ export async function setCommissionPaid(bookingId: string, paid: boolean): Promi
   );
 }
 
+export type CommissionStay = {
+  id: string;
+  guest_name: string;
+  phone: string;
+  room_type: string;
+  rooms: number;
+  guests: number;
+  nights: number;
+  check_in: string;
+  check_out: string;
+  status: string;
+  total_amount: number;
+  list_amount: number | null;
+  guest_discount_amount: number;
+  agent_commission_amount: number;
+  agent_commission_paid_at: string | null;
+};
+
+export type CommissionAgent = {
+  id: number;
+  label: string;
+  code: string;
+  agent_name: string;
+  agent_phone: string;
+  agent_email: string;
+  agent_percent: number;
+  stays: CommissionStay[];
+};
+
+type CommissionRow = CommissionStay & Omit<CommissionAgent, "stays">;
+
+/** Stays that fall in the month and came through an agent. Cancelled and expired are left out. */
+export async function commissionSheet(month: string): Promise<CommissionAgent[]> {
+  const sql = await getSql();
+  const rows = await sql.query<CommissionRow>(
+    `select c.id::int as id, c.label, c.code, c.agent_name, c.agent_phone, c.agent_email,
+       c.agent_percent::float8 as agent_percent,
+       b.id as booking_id, b.guest_name, b.phone, b.room_type, b.rooms::int as rooms, b.guests::int as guests,
+       (b.check_out - b.check_in)::int as nights,
+       b.check_in::text as check_in, b.check_out::text as check_out, b.status,
+       b.total_amount, b.list_amount, b.guest_discount_amount, b.agent_commission_amount,
+       case when b.agent_commission_paid_at is null then null
+         else to_char(b.agent_commission_paid_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') end as agent_commission_paid_at
+     from referral_codes c
+     join bookings b on b.referral_code_id = c.id
+     where b.status not in ('cancelled', 'expired')
+       and b.check_in < (to_date($1, 'YYYY-MM') + interval '1 month')::date
+       and b.check_out > to_date($1, 'YYYY-MM')
+     order by c.agent_name, b.check_in, b.id`,
+    [month],
+  );
+  const byAgent = new Map<number, CommissionAgent>();
+  for (const row of rows) {
+    const stay: CommissionStay = {
+      id: String((row as CommissionRow & { booking_id: string }).booking_id),
+      guest_name: row.guest_name,
+      phone: row.phone,
+      room_type: row.room_type,
+      rooms: num(row.rooms),
+      guests: num(row.guests),
+      nights: num(row.nights),
+      check_in: row.check_in,
+      check_out: row.check_out,
+      status: row.status,
+      total_amount: num(row.total_amount),
+      list_amount: row.list_amount === null ? null : num(row.list_amount),
+      guest_discount_amount: num(row.guest_discount_amount),
+      agent_commission_amount: num(row.agent_commission_amount),
+      agent_commission_paid_at: row.agent_commission_paid_at,
+    };
+    const agentId = Number(row.id);
+    const existing = byAgent.get(agentId);
+    if (existing) existing.stays.push(stay);
+    else {
+      byAgent.set(agentId, {
+        id: agentId,
+        label: row.label,
+        code: row.code,
+        agent_name: row.agent_name,
+        agent_phone: row.agent_phone,
+        agent_email: row.agent_email,
+        agent_percent: num(row.agent_percent),
+        stays: [stay],
+      });
+    }
+  }
+  return [...byAgent.values()];
+}
+
+export async function setCommissionPaidMany(bookingIds: string[], paid: boolean): Promise<void> {
+  if (!bookingIds.length) return;
+  const sql = await getSql();
+  await sql.query(
+    `update bookings set agent_commission_paid_at = case when $2 then coalesce(agent_commission_paid_at, now()) else null end
+     where referral_code_id is not null and id = any($1::text[])`,
+    [bookingIds, paid],
+  );
+}
+
 /** Room types: owner settings (price, visibility). */
 export type RoomSetting = { room_type: string; price: number; is_active: boolean; rooms: number; sort_order: number };
 
