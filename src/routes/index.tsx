@@ -91,22 +91,26 @@ function Home() {
       <main>
         <section className="relative bg-[#0c0b0a]">
           <div className="relative">
-            <img src={HOTEL.hero.src} alt={HOTEL.hero.alt} className="block h-auto w-full" />
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0c0b0a] via-black/35 to-black/10" />
-            <div className="absolute inset-x-0 bottom-0 px-4 pb-8 sm:px-6 sm:pb-12">
-              <div className="mx-auto max-w-6xl">
+            <img
+              src={HOTEL.hero.src}
+              alt={HOTEL.hero.alt}
+              className="block h-auto w-full lg:h-[78vh] lg:object-cover lg:object-[center_42%]"
+            />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0c0b0a] via-black/40 to-black/15" />
+            <div className="absolute inset-x-0 bottom-0 px-4 pb-8 sm:px-6 sm:pb-14 lg:pb-24">
+              <div className="mx-auto max-w-7xl lg:px-2">
                 <p className="text-[0.7rem] tracking-[0.32em] text-[#e4c98a] uppercase">Mahape · Navi Mumbai</p>
-                <h1 className="mt-2 max-w-4xl font-display text-5xl font-medium text-[#f6f0e4] sm:text-7xl">
+                <h1 className="mt-2 max-w-4xl font-display text-5xl font-medium text-[#f6f0e4] sm:text-7xl lg:text-8xl">
                   Hotel Status Residency
                 </h1>
-                <div className="mt-4 h-px w-24 bg-[#c6a15a]" />
+                <div className="mt-5 h-px w-24 bg-[#c6a15a] lg:w-40" />
               </div>
             </div>
           </div>
         </section>
 
-        <section id="stay" className="mx-auto max-w-6xl px-4 pt-8 pb-14 sm:px-6">
-          <div className="-mt-2 border border-[#c6a15a]/50 bg-[#fbf7ef] shadow-[0_24px_60px_rgba(12,11,10,0.18)]">
+        <section id="stay" className="mx-auto max-w-7xl px-4 pt-8 pb-16 sm:px-6 lg:px-8 lg:pt-0">
+          <div className="border border-[#c6a15a]/50 bg-[#fbf7ef] shadow-[0_28px_70px_rgba(12,11,10,0.22)] lg:-mt-12 lg:relative lg:z-10">
             <SearchPanel
               variant="hero"
               value={{
@@ -119,14 +123,24 @@ function Home() {
               }}
             />
           </div>
-          <p className="mt-8 max-w-2xl text-base leading-relaxed text-ink-soft">{HOTEL.description}</p>
-          <p className="mt-4 text-sm text-ink-soft">
-            Already booked?{" "}
-            <Link to="/bookings" className="underline decoration-[#c6a15a] underline-offset-4">
-              Find your stay
-            </Link>
-          </p>
-          <dl className="mt-10 grid gap-3 sm:grid-cols-4">
+          <div className="mt-10 grid gap-8 lg:mt-14 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:gap-14">
+            <div>
+              <p className="text-xs tracking-[0.22em] text-[#8a6a2f] uppercase">The residency</p>
+              <p className="mt-4 max-w-2xl text-base leading-relaxed text-ink-soft lg:text-lg">{HOTEL.description}</p>
+              <p className="mt-4 text-sm text-ink-soft">
+                Already booked?{" "}
+                <Link to="/bookings" className="underline decoration-[#c6a15a] underline-offset-4">
+                  Find your stay
+                </Link>
+              </p>
+            </div>
+            <img
+              src="/hotels/gallery/reception.jpg"
+              alt="Reception at Hotel Status Residency"
+              className="hidden h-80 w-full object-cover lg:block"
+            />
+          </div>
+          <dl className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {[
               ["Locality", HOTEL.locality],
               ["Rooms", `${countWord} types`],
@@ -142,9 +156,9 @@ function Home() {
         </section>
 
         <section id="rooms" className="bg-[#f6f0e4]">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
             <p className="text-xs tracking-[0.22em] text-[#8a6a2f] uppercase">Rooms</p>
-            <h2 className="mt-3 font-display text-4xl font-medium">{countWord} ways to stay</h2>
+            <h2 className="mt-3 font-display text-4xl font-medium lg:text-6xl">{countWord} ways to stay</h2>
             <div className={`mt-8 grid gap-6 ${rooms.length === 2 ? "md:grid-cols-2" : "md:grid-cols-3"}`}>
               {rooms.map((room) => (
                 <RoomCard key={room.id} room={room} />
@@ -154,24 +168,24 @@ function Home() {
         </section>
 
         <section id="amenities" className="bg-[#100e0c] text-[#f6f0e4]">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
             <p className="text-xs tracking-[0.22em] text-[#c6a15a] uppercase">Amenities</p>
-            <h2 className="mt-3 font-display text-4xl font-medium">What the residency offers</h2>
+            <h2 className="mt-3 font-display text-4xl font-medium lg:text-6xl">What the residency offers</h2>
             <AmenityGroup title="In the room" ids={roomItems} />
             <AmenityGroup title="In the hotel" ids={hotelItems} />
           </div>
         </section>
 
         <section className="bg-[#0c0b0a] text-[#f6f0e4]">
-          <div className="mx-auto grid max-w-6xl md:grid-cols-2">
+          <div className="grid md:grid-cols-2 lg:min-h-[560px]">
             <img
               src="/hotels/gallery/exterior.jpg"
               alt="Hotel Status Residency from the road"
-              className="h-72 w-full object-cover md:h-full"
+              className="h-72 w-full object-cover md:h-full lg:min-h-[560px]"
             />
-            <div className="flex flex-col justify-center px-6 py-12 sm:px-10">
+            <div className="flex flex-col justify-center px-6 py-12 sm:px-10 lg:px-16">
               <p className="text-xs tracking-[0.22em] text-[#c6a15a] uppercase">Location</p>
-              <h2 className="mt-3 font-display text-4xl font-medium">Mahape, on the MIDC road</h2>
+              <h2 className="mt-3 font-display text-4xl font-medium lg:text-6xl">Mahape, on the MIDC road</h2>
               <p className="mt-4 max-w-md leading-relaxed text-[#f6f0e4]/75">{HOTEL.address}</p>
               <ul className="mt-8 grid gap-3 sm:grid-cols-2">
                 {["Mahape Bus Stop", "TTC Industrial Area", "Millennium Business Park", "Ghansoli and Rabale"].map(
@@ -189,7 +203,7 @@ function Home() {
         <AroundSection />
 
         <section id="gallery" className="bg-[#f6f0e4]">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
           <p className="text-xs tracking-[0.22em] text-[#8a6a2f] uppercase">Gallery</p>
           <h2 className="mt-3 font-display text-4xl font-medium">The hotel, as it is</h2>
           <p className="mt-3 max-w-lg text-sm text-ink-soft">Tap a photograph to open it.</p>
@@ -493,7 +507,7 @@ function AroundSection() {
   const current = AROUND.find((item) => item.id === tab) ?? AROUND[0];
 
   return (
-    <section id="around" className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+    <section id="around" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
       <p className="text-xs tracking-[0.22em] text-gold uppercase">Surroundings</p>
       <h2 className="mt-3 max-w-2xl font-display text-4xl font-semibold">From the hotel</h2>
       <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
@@ -570,7 +584,7 @@ function AmenityGroup({ title, ids }: { title: string; ids: AmenityId[] }) {
   return (
     <div className="mt-10">
       <h3 className="text-xs tracking-[0.18em] text-[#c6a15a] uppercase">{title}</h3>
-      <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {ids.map((id) => {
           const Icon = AMENITY_ICON[id];
           return (
@@ -591,7 +605,7 @@ function RoomCard({ room }: { room: RoomType }) {
 
   return (
     <article className="flex flex-col border border-[#c6a15a]/40 bg-[#141210] text-[#f6f0e4] shadow-[0_18px_40px_rgba(12,11,10,0.18)]">
-      <button type="button" className="group relative aspect-[3/2] w-full overflow-hidden" onClick={() => setOpen(0)}>
+      <button type="button" className="group relative aspect-[3/2] w-full overflow-hidden lg:aspect-[16/10]" onClick={() => setOpen(0)}>
         <img
           src={cover.src}
           alt={cover.alt}
