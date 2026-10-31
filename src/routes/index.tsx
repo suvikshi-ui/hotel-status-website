@@ -103,14 +103,19 @@ function Home() {
                 <h1 className="mt-2 max-w-4xl font-display text-5xl font-medium text-[#f6f0e4] sm:text-7xl lg:text-8xl">
                   Hotel Status Residency
                 </h1>
-                <div className="mt-5 h-px w-24 bg-[#c6a15a] lg:w-40" />
+                <div className="mt-5 flex items-center gap-3">
+                  <span className="h-px w-16 bg-[#c6a15a] lg:w-24" />
+                  <span className="size-1.5 rotate-45 bg-[#e4c98a]" />
+                  <span className="h-px w-8 bg-[#c6a15a]/60" />
+                </div>
               </div>
             </div>
           </div>
         </section>
 
         <section id="stay" className="mx-auto max-w-7xl px-4 pt-8 pb-16 sm:px-6 lg:px-8 lg:pt-0">
-          <div className="border border-[#c6a15a]/50 bg-[#fbf7ef] shadow-[0_28px_70px_rgba(11,22,38,0.22)] lg:-mt-12 lg:relative lg:z-10">
+          <div className="border border-[#c6a15a] bg-[#fbf7ef] p-1.5 shadow-[0_28px_70px_rgba(11,22,38,0.22)] lg:-mt-12 lg:relative lg:z-10">
+            <div className="border border-[#0b1626]/10">
             <SearchPanel
               variant="hero"
               value={{
@@ -122,6 +127,7 @@ function Home() {
                 sort: "status",
               }}
             />
+            </div>
           </div>
           <div className="mt-10 grid gap-8 lg:mt-14 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:gap-14">
             <div>
@@ -134,11 +140,13 @@ function Home() {
                 </Link>
               </p>
             </div>
-            <img
-              src="/hotels/gallery/reception.jpg"
-              alt="Reception at Hotel Status Residency"
-              className="hidden h-80 w-full object-cover lg:block"
-            />
+            <div className="hidden border border-[#c6a15a]/70 bg-[#0b1626] p-2 lg:block">
+              <img
+                src="/hotels/gallery/reception.jpg"
+                alt="Reception at Hotel Status Residency"
+                className="h-80 w-full object-cover"
+              />
+            </div>
           </div>
           <dl className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {[
@@ -147,8 +155,11 @@ function Home() {
               ["Front desk", "24 hours"],
               ["From", formatInr(fromPrice)],
             ].map(([label, value]) => (
-              <div key={label} className="border border-[#c6a15a]/40 bg-[#17324f] px-4 py-5 text-[#f6f0e4]">
-                <dt className="text-[0.65rem] tracking-[0.22em] text-[#c6a15a] uppercase">{label}</dt>
+              <div key={label} className="border border-[#c6a15a]/30 bg-[#12263d] px-5 py-6 text-[#f6f0e4]">
+                <dt className="flex items-center gap-2 text-[0.65rem] tracking-[0.22em] text-[#c6a15a] uppercase">
+                  <span className="size-1 rotate-45 bg-[#c6a15a]" />
+                  {label}
+                </dt>
                 <dd className="mt-2 font-display text-2xl">{value}</dd>
               </div>
             ))}
@@ -209,7 +220,7 @@ function Home() {
           <p className="mt-3 max-w-lg text-sm text-ink-soft">Tap a photograph to open it.</p>
           {gallery.map((group) => (
             <div key={group.id} className="mt-10">
-              <h3 className="font-display text-2xl font-semibold">{group.title}</h3>
+              <h3 className="border-b border-[#c6a15a]/40 pb-2 font-display text-3xl font-medium">{group.title}</h3>
               <div className="mt-4">
                 <PhotoGallery photos={group.photos} />
               </div>
@@ -604,24 +615,22 @@ function RoomCard({ room }: { room: RoomType }) {
   const cover = room.photos[0];
 
   return (
-    <article className="flex flex-col border border-[#c6a15a]/40 bg-[#17324f] text-[#f6f0e4] shadow-[0_18px_40px_rgba(11,22,38,0.2)]">
+    <article className="flex flex-col bg-[#12263d] text-[#f6f0e4] shadow-[0_22px_50px_rgba(11,22,38,0.18)] ring-1 ring-[#c6a15a]/50">
       <button type="button" className="group relative aspect-[3/2] w-full overflow-hidden lg:aspect-[16/10]" onClick={() => setOpen(0)}>
         <img
           src={cover.src}
           alt={cover.alt}
           className="size-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
         />
-        <span className="absolute right-0 bottom-0 bg-[#0b1626]/80 px-4 py-2 font-display text-2xl text-[#e4c98a] tabular-nums">
-          {formatInr(room.price)}
-        </span>
       </button>
-      <div className="flex flex-1 flex-col px-5 py-5">
-        <h3 className="font-display text-3xl font-medium">{room.name}</h3>
+      <div className="flex flex-1 flex-col px-6 py-6">
+        <p className="text-[0.65rem] tracking-[0.22em] text-[#c6a15a] uppercase">Per night</p>
+        <p className="mt-1 font-display text-3xl text-[#e4c98a] tabular-nums">{formatInr(room.price)}</p>
+        <h3 className="mt-4 font-display text-3xl font-medium">{room.name}</h3>
         <p className="mt-1 text-sm text-[#f6f0e4]/65">
           {room.size} · {room.occupancy} guests
         </p>
-        <p className="mt-3 text-xs tracking-[0.14em] text-[#c6a15a] uppercase">per night</p>
-        <Button asChild variant="gold" className="mt-5 w-full rounded-none tracking-[0.14em] uppercase">
+        <Button asChild variant="gold" className="mt-6 w-full rounded-none tracking-[0.16em] uppercase">
           <Link
             to="/book/$hotelId"
             params={{ hotelId: HOTEL.id }}
