@@ -17,7 +17,7 @@ export function PhotoGallery({ photos, featured }: { photos: RoomPhoto[]; featur
               type="button"
               onClick={() => setOpen(index)}
               className={cn(
-                "group relative overflow-hidden rounded-lg bg-paper-2",
+                "group relative overflow-hidden bg-[#1a1612]",
                 wide ? "col-span-2 row-span-2 min-h-56 md:min-h-80" : "min-h-32 md:min-h-40",
               )}
             >

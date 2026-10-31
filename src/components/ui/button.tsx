@@ -12,7 +12,7 @@ const buttonVariants = cva(
         ink: "bg-ink text-cream hover:bg-ink-soft",
         outline: "border border-border bg-ivory text-ink hover:bg-paper",
         ghost: "bg-transparent text-current hover:bg-cream/10",
-        cream: "bg-cream text-ink hover:bg-paper-2",
+        gold: "bg-[#c6a15a] text-[#1a140c] hover:bg-[#e4c98a]",
       },
       size: {
         sm: "h-11 min-h-11 px-4 text-sm",

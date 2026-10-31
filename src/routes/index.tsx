@@ -89,30 +89,26 @@ function Home() {
   return (
     <PageShell>
       <main>
-        <section className="group relative overflow-hidden">
-          <div className="relative transition-transform duration-700 ease-out group-hover:scale-105">
+        <section className="relative bg-[#0c0b0a]">
+          <div className="relative">
             <img src={HOTEL.hero.src} alt={HOTEL.hero.alt} className="block h-auto w-full" />
-            <img
-              src="/hotels/logo-digital.png?v=5"
-              alt=""
-              className="pointer-events-none absolute w-[5.6%] origin-center object-contain"
-              style={{
-                left: "31.2%",
-                top: "7%",
-                transform: "perspective(1200px) rotateX(6deg) rotateY(2deg)",
-              }}
-            />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0c0b0a] via-black/35 to-black/10" />
+            <div className="absolute inset-x-0 bottom-0 px-4 pb-8 sm:px-6 sm:pb-12">
+              <div className="mx-auto max-w-6xl">
+                <p className="text-[0.7rem] tracking-[0.32em] text-[#e4c98a] uppercase">Mahape · Navi Mumbai</p>
+                <h1 className="mt-2 max-w-4xl font-display text-5xl font-medium text-[#f6f0e4] sm:text-7xl">
+                  Hotel Status Residency
+                </h1>
+                <div className="mt-4 h-px w-24 bg-[#c6a15a]" />
+              </div>
+            </div>
           </div>
         </section>
 
-        <section id="stay" className="mx-auto max-w-6xl px-4 pt-12 pb-14 sm:px-6">
-          <p className="text-xs tracking-[0.22em] text-muted uppercase">Mahape, Navi Mumbai</p>
-          <h1 className="mt-2 max-w-3xl font-display text-4xl font-semibold text-ink sm:text-6xl">
-            Hotel Status Residency
-          </h1>
-          <p className="mt-5 max-w-2xl text-base leading-relaxed text-ink-soft">{HOTEL.description}</p>
-          <div className="mt-8 max-w-4xl">
+        <section id="stay" className="mx-auto max-w-6xl px-4 pt-8 pb-14 sm:px-6">
+          <div className="-mt-2 border border-[#c6a15a]/50 bg-[#fbf7ef] shadow-[0_24px_60px_rgba(12,11,10,0.18)]">
             <SearchPanel
+              variant="hero"
               value={{
                 area: "",
                 checkIn: todayIso(),
@@ -123,69 +119,79 @@ function Home() {
               }}
             />
           </div>
+          <p className="mt-8 max-w-2xl text-base leading-relaxed text-ink-soft">{HOTEL.description}</p>
           <p className="mt-4 text-sm text-ink-soft">
             Already booked?{" "}
-            <Link to="/bookings" className="underline decoration-ink/30 underline-offset-4">
+            <Link to="/bookings" className="underline decoration-[#c6a15a] underline-offset-4">
               Find your stay
             </Link>
           </p>
-          <dl className="mt-12 grid gap-6 border-t border-ink/10 pt-8 sm:grid-cols-4">
-            <div>
-              <dt className="text-xs tracking-[0.18em] text-muted uppercase">Locality</dt>
-              <dd className="mt-2 font-display text-2xl">{HOTEL.locality}</dd>
-            </div>
-            <div>
-              <dt className="text-xs tracking-[0.18em] text-muted uppercase">Rooms</dt>
-              <dd className="mt-2 font-display text-2xl">{countWord} types</dd>
-            </div>
-            <div>
-              <dt className="text-xs tracking-[0.18em] text-muted uppercase">Front desk</dt>
-              <dd className="mt-2 font-display text-2xl">24 hours</dd>
-            </div>
-            <div>
-              <dt className="text-xs tracking-[0.18em] text-muted uppercase">From</dt>
-              <dd className="mt-2 font-display text-2xl tabular-nums">{formatInr(fromPrice)}</dd>
-            </div>
+          <dl className="mt-10 grid gap-3 sm:grid-cols-4">
+            {[
+              ["Locality", HOTEL.locality],
+              ["Rooms", `${countWord} types`],
+              ["Front desk", "24 hours"],
+              ["From", formatInr(fromPrice)],
+            ].map(([label, value]) => (
+              <div key={label} className="border border-[#c6a15a]/40 bg-[#141210] px-4 py-5 text-[#f6f0e4]">
+                <dt className="text-[0.65rem] tracking-[0.22em] text-[#c6a15a] uppercase">{label}</dt>
+                <dd className="mt-2 font-display text-2xl">{value}</dd>
+              </div>
+            ))}
           </dl>
         </section>
 
-        <section id="rooms" className="mx-auto max-w-6xl px-4 pb-6 sm:px-6">
-          <p className="text-xs tracking-[0.22em] text-gold uppercase">Rooms</p>
-          <h2 className="mt-3 font-display text-4xl font-semibold">{countWord} ways to stay</h2>
-          <div className={`mt-8 grid gap-8 ${rooms.length === 2 ? "md:grid-cols-2" : "md:grid-cols-3"}`}>
-            {rooms.map((room) => (
-              <RoomCard key={room.id} room={room} />
-            ))}
+        <section id="rooms" className="bg-[#f6f0e4]">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+            <p className="text-xs tracking-[0.22em] text-[#8a6a2f] uppercase">Rooms</p>
+            <h2 className="mt-3 font-display text-4xl font-medium">{countWord} ways to stay</h2>
+            <div className={`mt-8 grid gap-6 ${rooms.length === 2 ? "md:grid-cols-2" : "md:grid-cols-3"}`}>
+              {rooms.map((room) => (
+                <RoomCard key={room.id} room={room} />
+              ))}
+            </div>
           </div>
         </section>
 
-        <section id="amenities" className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-          <p className="text-xs tracking-[0.22em] text-gold uppercase">Amenities</p>
-          <h2 className="mt-3 font-display text-4xl font-semibold">What the residency offers</h2>
-          <AmenityGroup title="In the room" ids={roomItems} />
-          <AmenityGroup title="In the hotel" ids={hotelItems} />
+        <section id="amenities" className="bg-[#100e0c] text-[#f6f0e4]">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+            <p className="text-xs tracking-[0.22em] text-[#c6a15a] uppercase">Amenities</p>
+            <h2 className="mt-3 font-display text-4xl font-medium">What the residency offers</h2>
+            <AmenityGroup title="In the room" ids={roomItems} />
+            <AmenityGroup title="In the hotel" ids={hotelItems} />
+          </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6">
-          <p className="text-xs tracking-[0.22em] text-gold uppercase">Location</p>
-          <h2 className="mt-3 font-display text-4xl font-semibold">Mahape, on the MIDC road</h2>
-          <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">{HOTEL.address}</p>
-          <ul className="mt-8 grid gap-4 sm:grid-cols-2">
-            {["Mahape Bus Stop", "TTC Industrial Area", "Millennium Business Park", "Ghansoli and Rabale"].map(
-              (place) => (
-                <li key={place} className="border-t border-ink/10 pt-3 text-sm">
-                  {place}
-                </li>
-              ),
-            )}
-          </ul>
+        <section className="bg-[#0c0b0a] text-[#f6f0e4]">
+          <div className="mx-auto grid max-w-6xl md:grid-cols-2">
+            <img
+              src="/hotels/gallery/exterior.jpg"
+              alt="Hotel Status Residency from the road"
+              className="h-72 w-full object-cover md:h-full"
+            />
+            <div className="flex flex-col justify-center px-6 py-12 sm:px-10">
+              <p className="text-xs tracking-[0.22em] text-[#c6a15a] uppercase">Location</p>
+              <h2 className="mt-3 font-display text-4xl font-medium">Mahape, on the MIDC road</h2>
+              <p className="mt-4 max-w-md leading-relaxed text-[#f6f0e4]/75">{HOTEL.address}</p>
+              <ul className="mt-8 grid gap-3 sm:grid-cols-2">
+                {["Mahape Bus Stop", "TTC Industrial Area", "Millennium Business Park", "Ghansoli and Rabale"].map(
+                  (place) => (
+                    <li key={place} className="border-t border-[#c6a15a]/40 pt-3 text-sm">
+                      {place}
+                    </li>
+                  ),
+                )}
+              </ul>
+            </div>
+          </div>
         </section>
 
         <AroundSection />
 
-        <section id="gallery" className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
-          <p className="text-xs tracking-[0.22em] text-gold uppercase">Gallery</p>
-          <h2 className="mt-3 font-display text-4xl font-semibold">The hotel, as it is</h2>
+        <section id="gallery" className="bg-[#f6f0e4]">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+          <p className="text-xs tracking-[0.22em] text-[#8a6a2f] uppercase">Gallery</p>
+          <h2 className="mt-3 font-display text-4xl font-medium">The hotel, as it is</h2>
           <p className="mt-3 max-w-lg text-sm text-ink-soft">Tap a photograph to open it.</p>
           {gallery.map((group) => (
             <div key={group.id} className="mt-10">
@@ -195,6 +201,7 @@ function Home() {
               </div>
             </div>
           ))}
+          </div>
         </section>
       </main>
     </PageShell>
@@ -486,7 +493,7 @@ function AroundSection() {
   const current = AROUND.find((item) => item.id === tab) ?? AROUND[0];
 
   return (
-    <section id="around" className="mx-auto max-w-6xl px-4 pb-16 sm:px-6">
+    <section id="around" className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
       <p className="text-xs tracking-[0.22em] text-gold uppercase">Surroundings</p>
       <h2 className="mt-3 max-w-2xl font-display text-4xl font-semibold">From the hotel</h2>
       <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
@@ -503,7 +510,7 @@ function AroundSection() {
               aria-selected={on}
               className={
                 on
-                  ? "h-11 shrink-0 border-b-2 border-ink px-4 text-xs tracking-[0.16em] text-ink uppercase"
+                  ? "h-11 shrink-0 border-b-2 border-[#c6a15a] px-4 text-xs tracking-[0.16em] text-ink uppercase"
                   : "h-11 shrink-0 border-b-2 border-transparent px-4 text-xs tracking-[0.16em] text-muted uppercase"
               }
               onClick={() => setTab(item.id)}
@@ -515,7 +522,7 @@ function AroundSection() {
       </div>
       <ul className={current.id === "mumbai" ? "mt-6 grid gap-4" : "mt-6 grid gap-4 sm:grid-cols-2"}>
         {current.places.map((place) => (
-          <li key={place.name} className="border border-ink/10 p-5">
+          <li key={place.name} className="border border-[#c6a15a]/35 bg-[#fbf7ef] p-5">
             <p className="text-xs tracking-[0.16em] text-gold uppercase">{place.km}</p>
             <h3 className="mt-2 font-display text-2xl font-semibold">{place.name}</h3>
             <p className="mt-2 text-sm leading-relaxed whitespace-pre-line text-ink-soft">{place.note}</p>
@@ -562,13 +569,13 @@ function AroundSection() {
 function AmenityGroup({ title, ids }: { title: string; ids: AmenityId[] }) {
   return (
     <div className="mt-10">
-      <h3 className="text-xs tracking-[0.18em] text-muted uppercase">{title}</h3>
-      <ul className="mt-4 grid grid-cols-2 border-t border-ink/10 sm:grid-cols-3">
+      <h3 className="text-xs tracking-[0.18em] text-[#c6a15a] uppercase">{title}</h3>
+      <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
         {ids.map((id) => {
           const Icon = AMENITY_ICON[id];
           return (
-            <li key={id} className="flex h-14 items-center gap-2 border-b border-ink/10 pr-3 text-sm">
-              <Icon className="size-4 shrink-0" />
+            <li key={id} className="flex h-14 items-center gap-3 border border-[#c6a15a]/30 bg-white/5 px-3 text-sm">
+              <Icon className="size-4 shrink-0 text-[#e4c98a]" />
               {AMENITIES[id].label}
             </li>
           );
@@ -583,22 +590,24 @@ function RoomCard({ room }: { room: RoomType }) {
   const cover = room.photos[0];
 
   return (
-    <article className="flex flex-col">
+    <article className="flex flex-col border border-[#c6a15a]/40 bg-[#141210] text-[#f6f0e4] shadow-[0_18px_40px_rgba(12,11,10,0.18)]">
       <button type="button" className="group relative aspect-[3/2] w-full overflow-hidden" onClick={() => setOpen(0)}>
         <img
           src={cover.src}
           alt={cover.alt}
-          className="size-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+          className="size-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
         />
+        <span className="absolute right-0 bottom-0 bg-[#0c0b0a]/80 px-4 py-2 font-display text-2xl text-[#e4c98a] tabular-nums">
+          {formatInr(room.price)}
+        </span>
       </button>
-      <div className="flex flex-1 flex-col border-b border-ink/10 py-5">
-        <h3 className="font-display text-3xl font-semibold">{room.name}</h3>
-        <p className="mt-1 text-sm text-muted">
+      <div className="flex flex-1 flex-col px-5 py-5">
+        <h3 className="font-display text-3xl font-medium">{room.name}</h3>
+        <p className="mt-1 text-sm text-[#f6f0e4]/65">
           {room.size} · {room.occupancy} guests
         </p>
-        <p className="mt-4 font-display text-2xl tabular-nums">{formatInr(room.price)}</p>
-        <p className="text-xs tracking-[0.14em] text-muted uppercase">per night</p>
-        <Button asChild variant="outline" className="mt-5 w-full rounded-none tracking-[0.14em] uppercase">
+        <p className="mt-3 text-xs tracking-[0.14em] text-[#c6a15a] uppercase">per night</p>
+        <Button asChild variant="gold" className="mt-5 w-full rounded-none tracking-[0.14em] uppercase">
           <Link
             to="/book/$hotelId"
             params={{ hotelId: HOTEL.id }}

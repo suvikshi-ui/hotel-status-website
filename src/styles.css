@@ -12,7 +12,8 @@
   --color-subtle: #8a8175;
   --color-terracotta: #9c4034;
   --color-terracotta-dark: #7a3128;
-  --color-gold: #c6a34d;
+  --color-gold: #c6a15a;
+  --color-gold-bright: #e4c98a;
   --color-charcoal-white: #e8e2d6;
   --color-canvas: #1e2b26;
   --color-canvas-deep: #141c19;
@@ -113,15 +114,10 @@
 
 a {
   transition:
-    transform 700ms ease-out,
     color 200ms ease-out,
     background-color 200ms ease-out,
     border-color 200ms ease-out,
     opacity 200ms ease-out;
-}
-
-a:hover {
-  transform: scale(1.06);
 }
 
 @media (prefers-reduced-motion: reduce) {
