@@ -92,14 +92,9 @@ function Home() {
         <section className="group relative overflow-hidden">
           <div className="relative transition-transform duration-700 ease-out group-hover:scale-105">
             <img src={HOTEL.hero.src} alt={HOTEL.hero.alt} className="block h-auto w-full" />
-            <video
-              src="/hotels/logo-digital.webm?v=4"
-              poster="/hotels/logo-digital.png?v=4"
-              autoPlay
-              loop
-              muted
-              playsInline
-              aria-hidden
+            <img
+              src="/hotels/logo-digital.png?v=5"
+              alt=""
               className="pointer-events-none absolute w-[5.6%] origin-center object-contain"
               style={{
                 left: "31.2%",

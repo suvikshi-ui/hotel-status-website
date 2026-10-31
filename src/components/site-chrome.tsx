@@ -11,14 +11,9 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-ink/10 bg-paper">
       <div className="mx-auto flex min-h-20 max-w-6xl items-center justify-between gap-4 px-4 py-2 sm:px-6">
         <Link to="/" className="flex min-w-0 items-center gap-3 text-ink lg:shrink-0" onClick={() => setOpen(false)}>
-          <video
-            src="/hotels/logo-digital.webm?v=4"
-            poster="/hotels/logo-digital.png?v=4"
-            autoPlay
-            loop
-            muted
-            playsInline
-            aria-label="Hotel Status Residency logo"
+          <img
+            src="/hotels/logo-digital.png?v=5"
+            alt="Hotel Status Residency logo"
             className="size-14 shrink-0 object-contain sm:size-16"
           />
           <span className="min-w-0">
