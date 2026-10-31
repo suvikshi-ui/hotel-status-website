@@ -8,16 +8,19 @@ import {
   listReferrals,
   referralBookings,
   roomSettings,
+  commissionSheet,
   setCommissionPaid,
+  setCommissionPaidMany,
   setReferralActive,
   updateReferral,
   updateRoomSetting,
+  type CommissionAgent,
   type ReferralBooking,
   type ReferralSummary,
   type RoomSetting,
 } from "@/lib/referrals.server";
 
-export type { ReferralBooking, ReferralSummary, RoomSetting };
+export type { ReferralBooking, ReferralSummary, RoomSetting, CommissionAgent };
 
 async function noStore() {
   const { setResponseHeader } = await import("@tanstack/react-start/server");
@@ -107,6 +110,23 @@ export const ownerSuggestCode = createServerFn({ method: "POST" })
       if (!(await codeExists(code))) return { code };
     }
     return { code: `HSR${Date.now().toString(36).toUpperCase()}` };
+  });
+
+export const ownerCommissionSheet = createServerFn({ method: "POST" })
+  .middleware([ownerMiddleware])
+  .validator(z.object({ month: month }))
+  .handler(async ({ data }): Promise<CommissionAgent[]> => {
+    await noStore();
+    return commissionSheet(data.month);
+  });
+
+export const ownerCommissionPaidMany = createServerFn({ method: "POST" })
+  .middleware([ownerMiddleware])
+  .validator(z.object({ bookingIds: z.array(z.string().trim().min(1).max(40)).max(200), paid: z.boolean() }))
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    await noStore();
+    await setCommissionPaidMany(data.bookingIds, data.paid);
+    return { ok: true };
   });
 
 export const ownerCommissionPaid = createServerFn({ method: "POST" })
