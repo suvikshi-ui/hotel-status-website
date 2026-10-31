@@ -4,6 +4,13 @@ import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { HOTEL } from "@/lib/hotels";
 
+const NAV = [
+  { label: "Rooms", hash: "rooms" },
+  { label: "Gallery", hash: "gallery" },
+  { label: "Amenities", hash: "amenities" },
+  { label: "Around", hash: "around" },
+] as const;
+
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
 
@@ -25,41 +32,16 @@ export function SiteHeader() {
         </Link>
 
         <nav className="hidden min-w-0 items-center gap-1 xl:flex">
-          <Link
-            to="/"
-            hash="stay"
-            className="flex h-11 items-center px-3 text-xs tracking-[0.18em] text-cream/80 uppercase hover:text-[#e4c98a]"
-          >
-            Stay
-          </Link>
-          <Link
-            to="/"
-            hash="rooms"
-            className="flex h-11 items-center px-3 text-xs tracking-[0.18em] text-cream/80 uppercase hover:text-[#e4c98a]"
-          >
-            Rooms
-          </Link>
-          <Link
-            to="/"
-            hash="amenities"
-            className="flex h-11 items-center px-3 text-xs tracking-[0.18em] text-cream/80 uppercase hover:text-[#e4c98a]"
-          >
-            Amenities
-          </Link>
-          <Link
-            to="/"
-            hash="around"
-            className="flex h-11 items-center px-3 text-xs tracking-[0.18em] text-cream/80 uppercase hover:text-[#e4c98a]"
-          >
-            Around
-          </Link>
-          <Link
-            to="/"
-            hash="gallery"
-            className="flex h-11 items-center px-3 text-xs tracking-[0.18em] text-cream/80 uppercase hover:text-[#e4c98a]"
-          >
-            Gallery
-          </Link>
+          {NAV.map((item) => (
+            <Link
+              key={item.hash}
+              to="/"
+              hash={item.hash}
+              className="flex h-11 items-center px-3 text-xs tracking-[0.18em] text-cream/80 uppercase hover:text-[#e4c98a]"
+            >
+              {item.label}
+            </Link>
+          ))}
           <Link
             to="/bookings"
             className="flex h-11 items-center px-3 text-xs tracking-[0.18em] text-cream/80 uppercase hover:text-[#e4c98a]"
@@ -93,21 +75,17 @@ export function SiteHeader() {
       {open ? (
         <div className="border-t border-[#c6a15a]/30 bg-[#12263d] px-4 py-3 xl:hidden">
           <div className="flex flex-col">
-            <Link to="/" hash="stay" className="flex h-11 items-center text-sm tracking-[0.16em] text-cream uppercase" onClick={() => setOpen(false)}>
-              Stay
-            </Link>
-            <Link to="/" hash="rooms" className="flex h-11 items-center text-sm tracking-[0.16em] text-cream uppercase" onClick={() => setOpen(false)}>
-              Rooms
-            </Link>
-            <Link to="/" hash="amenities" className="flex h-11 items-center text-sm tracking-[0.16em] text-cream uppercase" onClick={() => setOpen(false)}>
-              Amenities
-            </Link>
-            <Link to="/" hash="around" className="flex h-11 items-center text-sm tracking-[0.16em] text-cream uppercase" onClick={() => setOpen(false)}>
-              Around
-            </Link>
-            <Link to="/" hash="gallery" className="flex h-11 items-center text-sm tracking-[0.16em] text-cream uppercase" onClick={() => setOpen(false)}>
-              Gallery
-            </Link>
+            {NAV.map((item) => (
+              <Link
+                key={item.hash}
+                to="/"
+                hash={item.hash}
+                className="flex h-11 items-center text-sm tracking-[0.16em] text-cream uppercase"
+                onClick={() => setOpen(false)}
+              >
+                {item.label}
+              </Link>
+            ))}
             <Link to="/bookings" className="flex h-11 items-center text-sm tracking-[0.16em] text-cream uppercase" onClick={() => setOpen(false)}>
               Your stay
             </Link>
