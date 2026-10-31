@@ -8,9 +8,9 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-ink/10 bg-paper">
+    <header className="sticky top-0 z-40 border-b border-[#c6a15a]/40 bg-[#100e0c] text-cream">
       <div className="mx-auto flex min-h-20 max-w-6xl items-center justify-between gap-4 px-4 py-2 sm:px-6">
-        <Link to="/" className="flex min-w-0 items-center gap-3 text-ink lg:shrink-0" onClick={() => setOpen(false)}>
+        <Link to="/" className="flex min-w-0 items-center gap-3 text-cream lg:shrink-0" onClick={() => setOpen(false)}>
           <img
             src="/hotels/logo-digital.png?v=5"
             alt="Hotel Status Residency logo"
@@ -20,7 +20,7 @@ export function SiteHeader() {
             <span className="block font-display text-lg leading-tight font-semibold tracking-tight text-balance sm:text-2xl lg:text-xl lg:whitespace-nowrap xl:text-2xl">
               Hotel Status Residency
             </span>
-            <span className="block text-[0.65rem] tracking-[0.22em] text-muted uppercase">Mahape</span>
+            <span className="block text-[0.65rem] tracking-[0.22em] text-[#c6a15a] uppercase">Mahape</span>
           </span>
         </Link>
 
@@ -28,45 +28,45 @@ export function SiteHeader() {
           <Link
             to="/"
             hash="stay"
-            className="flex h-11 items-center px-3 text-xs tracking-[0.18em] text-ink uppercase"
+            className="flex h-11 items-center px-3 text-xs tracking-[0.18em] text-cream/80 uppercase hover:text-[#e4c98a]"
           >
             Stay
           </Link>
           <Link
             to="/"
             hash="rooms"
-            className="flex h-11 items-center px-3 text-xs tracking-[0.18em] text-ink uppercase"
+            className="flex h-11 items-center px-3 text-xs tracking-[0.18em] text-cream/80 uppercase hover:text-[#e4c98a]"
           >
             Rooms
           </Link>
           <Link
             to="/"
             hash="amenities"
-            className="flex h-11 items-center px-3 text-xs tracking-[0.18em] text-ink uppercase"
+            className="flex h-11 items-center px-3 text-xs tracking-[0.18em] text-cream/80 uppercase hover:text-[#e4c98a]"
           >
             Amenities
           </Link>
           <Link
             to="/"
             hash="around"
-            className="flex h-11 items-center px-3 text-xs tracking-[0.18em] text-ink uppercase"
+            className="flex h-11 items-center px-3 text-xs tracking-[0.18em] text-cream/80 uppercase hover:text-[#e4c98a]"
           >
             Around
           </Link>
           <Link
             to="/"
             hash="gallery"
-            className="flex h-11 items-center px-3 text-xs tracking-[0.18em] text-ink uppercase"
+            className="flex h-11 items-center px-3 text-xs tracking-[0.18em] text-cream/80 uppercase hover:text-[#e4c98a]"
           >
             Gallery
           </Link>
           <Link
             to="/bookings"
-            className="flex h-11 items-center px-3 text-xs tracking-[0.18em] text-ink uppercase"
+            className="flex h-11 items-center px-3 text-xs tracking-[0.18em] text-cream/80 uppercase hover:text-[#e4c98a]"
           >
             Your stay
           </Link>
-          <Button asChild size="sm" variant="ink" className="ml-3 rounded-none tracking-[0.16em] uppercase">
+          <Button asChild size="sm" variant="gold" className="ml-3 rounded-none tracking-[0.16em] uppercase">
             <Link to="/book/$hotelId" params={{ hotelId: HOTEL.id }}>
               Book a stay
             </Link>
@@ -74,14 +74,14 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex shrink-0 items-center lg:hidden">
-          <Button asChild size="sm" variant="ink" className="rounded-none px-3 tracking-[0.14em] uppercase">
+          <Button asChild size="sm" variant="gold" className="rounded-none px-3 tracking-[0.14em] uppercase">
             <Link to="/book/$hotelId" params={{ hotelId: HOTEL.id }}>
               Book
             </Link>
           </Button>
           <button
             type="button"
-            className="flex size-11 items-center justify-center text-ink"
+            className="flex size-11 items-center justify-center text-cream"
             aria-label={open ? "Close menu" : "Open menu"}
             onClick={() => setOpen((v) => !v)}
           >
@@ -91,27 +91,27 @@ export function SiteHeader() {
       </div>
 
       {open ? (
-        <div className="border-t border-ink/10 bg-paper px-4 py-3 lg:hidden">
+        <div className="border-t border-[#c6a15a]/30 bg-[#100e0c] px-4 py-3 lg:hidden">
           <div className="flex flex-col">
-            <Link to="/" hash="stay" className="flex h-11 items-center text-sm tracking-[0.16em] text-ink uppercase" onClick={() => setOpen(false)}>
+            <Link to="/" hash="stay" className="flex h-11 items-center text-sm tracking-[0.16em] text-cream uppercase" onClick={() => setOpen(false)}>
               Stay
             </Link>
-            <Link to="/" hash="rooms" className="flex h-11 items-center text-sm tracking-[0.16em] text-ink uppercase" onClick={() => setOpen(false)}>
+            <Link to="/" hash="rooms" className="flex h-11 items-center text-sm tracking-[0.16em] text-cream uppercase" onClick={() => setOpen(false)}>
               Rooms
             </Link>
-            <Link to="/" hash="amenities" className="flex h-11 items-center text-sm tracking-[0.16em] text-ink uppercase" onClick={() => setOpen(false)}>
+            <Link to="/" hash="amenities" className="flex h-11 items-center text-sm tracking-[0.16em] text-cream uppercase" onClick={() => setOpen(false)}>
               Amenities
             </Link>
-            <Link to="/" hash="around" className="flex h-11 items-center text-sm tracking-[0.16em] text-ink uppercase" onClick={() => setOpen(false)}>
+            <Link to="/" hash="around" className="flex h-11 items-center text-sm tracking-[0.16em] text-cream uppercase" onClick={() => setOpen(false)}>
               Around
             </Link>
-            <Link to="/" hash="gallery" className="flex h-11 items-center text-sm tracking-[0.16em] text-ink uppercase" onClick={() => setOpen(false)}>
+            <Link to="/" hash="gallery" className="flex h-11 items-center text-sm tracking-[0.16em] text-cream uppercase" onClick={() => setOpen(false)}>
               Gallery
             </Link>
-            <Link to="/bookings" className="flex h-11 items-center text-sm tracking-[0.16em] text-ink uppercase" onClick={() => setOpen(false)}>
+            <Link to="/bookings" className="flex h-11 items-center text-sm tracking-[0.16em] text-cream uppercase" onClick={() => setOpen(false)}>
               Your stay
             </Link>
-            <Button asChild variant="ink" className="mt-2 w-full rounded-none tracking-[0.16em] uppercase">
+            <Button asChild variant="gold" className="mt-2 w-full rounded-none tracking-[0.16em] uppercase">
               <Link to="/book/$hotelId" params={{ hotelId: HOTEL.id }} onClick={() => setOpen(false)}>
                 Book a stay
               </Link>
@@ -125,7 +125,7 @@ export function SiteHeader() {
 
 export function SiteFooter() {
   return (
-    <footer className="bg-ink text-cream">
+    <footer className="border-t border-[#c6a15a]/50 bg-[#0c0b0a] text-cream">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-3">
         <div>
           <p className="font-display text-3xl font-semibold tracking-tight">Hotel Status Residency</p>
