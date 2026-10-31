@@ -171,8 +171,8 @@ export function renderWebManifest(hostHeader) {
       start_url: "/",
       scope: "/",
       display: "standalone",
-      background_color: "#000000",
-      theme_color: "#C4A15A",
+      background_color: "#F3EEE4",
+      theme_color: "#F3EEE4",
       icons: [
         {
           src: "/__grok/icon-180.png",
