@@ -19,6 +19,7 @@ export const Route = createRootRoute({
       { name: "theme-color", content: "#F3EEE4" },
     ],
     links: [
+      { rel: "canonical", href: "https://hotelstatusresidency.com/" },
       { rel: "icon", type: "image/png", href: "/hotels/logo-digital.png?v=4" },
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/__grok/manifest.webmanifest" },
