@@ -100,9 +100,10 @@ function Home() {
             <div className="absolute inset-x-0 bottom-0 px-4 pb-8 sm:px-6 sm:pb-14 lg:pb-24">
               <div className="mx-auto max-w-7xl lg:px-2">
                 <p className="text-[0.7rem] tracking-[0.32em] text-[#e4c98a] uppercase">Mahape · Navi Mumbai</p>
-                <h1 className="mt-2 max-w-4xl font-display text-5xl font-medium text-[#f6f0e4] sm:text-7xl lg:text-8xl">
+                <h1 className="mt-3 max-w-4xl font-display text-5xl leading-none font-medium text-[#f6f0e4] sm:text-7xl lg:text-8xl">
                   Hotel Status Residency
                 </h1>
+                <p className="mt-4 font-display text-2xl text-[#f6f0e4]/80 italic sm:text-3xl">A residency in Mahape</p>
                 <div className="mt-5 flex items-center gap-3">
                   <span className="h-px w-16 bg-[#c6a15a] lg:w-24" />
                   <span className="size-1.5 rotate-45 bg-[#e4c98a]" />
@@ -114,8 +115,7 @@ function Home() {
         </section>
 
         <section id="stay" className="mx-auto max-w-7xl px-4 pt-8 pb-16 sm:px-6 lg:px-8 lg:pt-0">
-          <div className="border border-[#c6a15a] bg-[#fbf7ef] p-1.5 shadow-[0_28px_70px_rgba(11,22,38,0.22)] lg:-mt-12 lg:relative lg:z-10">
-            <div className="border border-[#0b1626]/10">
+          <div className="border border-[#c6a15a]/80 bg-[#fbf7ef] shadow-[0_24px_60px_rgba(11,22,38,0.16)] lg:-mt-16 lg:relative lg:z-10">
             <SearchPanel
               variant="hero"
               value={{
@@ -127,12 +127,12 @@ function Home() {
                 sort: "status",
               }}
             />
-            </div>
           </div>
-          <div className="mt-10 grid gap-8 lg:mt-14 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:gap-14">
+          <div className="mt-16 grid items-start gap-12 lg:grid-cols-[1fr_0.9fr] lg:gap-20">
             <div>
-              <p className="text-xs tracking-[0.22em] text-[#8a6a2f] uppercase">The residency</p>
-              <p className="mt-4 max-w-2xl text-base leading-relaxed text-ink-soft lg:text-lg">{HOTEL.description}</p>
+              <p className="text-[0.7rem] tracking-[0.28em] text-[#8a6a2f] uppercase">The residency</p>
+              <p className="mt-4 max-w-xl font-display text-3xl leading-snug text-ink sm:text-4xl">{HOTEL.tagline}</p>
+              <p className="mt-5 max-w-xl text-base leading-relaxed text-ink-soft">{HOTEL.description}</p>
               <p className="mt-4 text-sm text-ink-soft">
                 Already booked?{" "}
                 <Link to="/bookings" className="underline decoration-[#c6a15a] underline-offset-4">
@@ -140,27 +140,25 @@ function Home() {
                 </Link>
               </p>
             </div>
-            <div className="hidden border border-[#c6a15a]/70 bg-[#0b1626] p-2 lg:block">
+            <div className="hidden lg:block">
               <img
                 src="/hotels/gallery/reception.jpg"
                 alt="Reception at Hotel Status Residency"
-                className="h-80 w-full object-cover"
+                className="h-[28rem] w-full object-cover"
               />
+              <p className="mt-3 text-[0.7rem] tracking-[0.22em] text-[#8a6a2f] uppercase">The front desk</p>
             </div>
           </div>
-          <dl className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <dl className="mt-16 grid border-y border-[#c6a15a]/50 sm:grid-cols-4">
             {[
               ["Locality", HOTEL.locality],
               ["Rooms", `${countWord} types`],
               ["Front desk", "24 hours"],
               ["From", formatInr(fromPrice)],
             ].map(([label, value]) => (
-              <div key={label} className="border border-[#c6a15a]/30 bg-[#12263d] px-5 py-6 text-[#f6f0e4]">
-                <dt className="flex items-center gap-2 text-[0.65rem] tracking-[0.22em] text-[#c6a15a] uppercase">
-                  <span className="size-1 rotate-45 bg-[#c6a15a]" />
-                  {label}
-                </dt>
-                <dd className="mt-2 font-display text-2xl">{value}</dd>
+              <div key={label} className="border-[#c6a15a]/30 px-2 py-6 sm:border-l sm:px-6 sm:first:border-l-0">
+                <dt className="text-[0.65rem] tracking-[0.24em] text-[#8a6a2f] uppercase">{label}</dt>
+                <dd className="mt-2 font-display text-3xl text-ink">{value}</dd>
               </div>
             ))}
           </dl>
@@ -168,9 +166,9 @@ function Home() {
 
         <section id="rooms" className="bg-[#f6f0e4]">
           <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
-            <p className="text-xs tracking-[0.22em] text-[#8a6a2f] uppercase">Rooms</p>
-            <h2 className="mt-3 font-display text-4xl font-medium lg:text-6xl">{countWord} ways to stay</h2>
-            <div className={`mt-8 grid gap-6 ${rooms.length === 2 ? "md:grid-cols-2" : "md:grid-cols-3"}`}>
+            <p className="text-[0.7rem] tracking-[0.28em] text-[#8a6a2f] uppercase">Rooms</p>
+            <h2 className="mt-3 max-w-xl font-display text-4xl font-medium lg:text-6xl">Stay in a quiet room, close to work</h2>
+            <div className="mt-12 flex flex-col gap-16">
               {rooms.map((room) => (
                 <RoomCard key={room.id} room={room} />
               ))}
@@ -180,8 +178,8 @@ function Home() {
 
         <section id="amenities" className="bg-[#12263d] text-[#f6f0e4]">
           <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
-            <p className="text-xs tracking-[0.22em] text-[#c6a15a] uppercase">Amenities</p>
-            <h2 className="mt-3 font-display text-4xl font-medium lg:text-6xl">What the residency offers</h2>
+            <p className="text-[0.7rem] tracking-[0.28em] text-[#c6a15a] uppercase">Amenities</p>
+            <h2 className="mt-3 max-w-xl font-display text-4xl font-medium lg:text-6xl">What is included</h2>
             <AmenityGroup title="In the room" ids={roomItems} />
             <AmenityGroup title="In the hotel" ids={hotelItems} />
           </div>
@@ -212,6 +210,14 @@ function Home() {
         </section>
 
         <AroundSection />
+
+        <section className="bg-[#0b1626]">
+          <img
+            src="/hotels/gallery/lounge.jpg"
+            alt="Lounge at Hotel Status Residency"
+            className="max-h-[70vh] w-full object-cover"
+          />
+        </section>
 
         <section id="gallery" className="bg-[#f6f0e4]">
           <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
@@ -595,11 +601,11 @@ function AmenityGroup({ title, ids }: { title: string; ids: AmenityId[] }) {
   return (
     <div className="mt-10">
       <h3 className="text-xs tracking-[0.18em] text-[#c6a15a] uppercase">{title}</h3>
-      <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      <ul className="mt-6 grid gap-x-10 sm:grid-cols-2 lg:grid-cols-3">
         {ids.map((id) => {
           const Icon = AMENITY_ICON[id];
           return (
-            <li key={id} className="flex h-14 items-center gap-3 border border-[#c6a15a]/30 bg-white/5 px-3 text-sm">
+            <li key={id} className="flex items-center gap-3 border-b border-[#c6a15a]/25 py-3 text-sm">
               <Icon className="size-4 shrink-0 text-[#e4c98a]" />
               {AMENITIES[id].label}
             </li>
@@ -615,22 +621,20 @@ function RoomCard({ room }: { room: RoomType }) {
   const cover = room.photos[0];
 
   return (
-    <article className="flex flex-col bg-[#12263d] text-[#f6f0e4] shadow-[0_22px_50px_rgba(11,22,38,0.18)] ring-1 ring-[#c6a15a]/50">
-      <button type="button" className="group relative aspect-[3/2] w-full overflow-hidden lg:aspect-[16/10]" onClick={() => setOpen(0)}>
+    <article className="grid items-stretch bg-[#101c2e] text-[#f6f0e4] lg:grid-cols-[1.3fr_0.9fr]">
+      <button type="button" className="group relative min-h-72 overflow-hidden lg:min-h-[32rem]" onClick={() => setOpen(0)}>
         <img
           src={cover.src}
           alt={cover.alt}
-          className="size-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+          className="absolute inset-0 size-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
         />
       </button>
-      <div className="flex flex-1 flex-col px-6 py-6">
-        <p className="text-[0.65rem] tracking-[0.22em] text-[#c6a15a] uppercase">Per night</p>
-        <p className="mt-1 font-display text-3xl text-[#e4c98a] tabular-nums">{formatInr(room.price)}</p>
-        <h3 className="mt-4 font-display text-3xl font-medium">{room.name}</h3>
-        <p className="mt-1 text-sm text-[#f6f0e4]/65">
-          {room.size} · {room.occupancy} guests
-        </p>
-        <Button asChild variant="gold" className="mt-6 w-full rounded-none tracking-[0.16em] uppercase">
+      <div className="flex flex-col justify-center px-6 py-8 sm:px-10 lg:py-12">
+        <p className="text-[0.65rem] tracking-[0.24em] text-[#c6a15a] uppercase">{room.size} · {room.occupancy} guests</p>
+        <h3 className="mt-3 font-display text-4xl font-medium sm:text-5xl">{room.name}</h3>
+        <p className="mt-6 font-display text-4xl text-[#e4c98a] tabular-nums">{formatInr(room.price)}</p>
+        <p className="mt-1 text-[0.65rem] tracking-[0.2em] text-[#f6f0e4]/60 uppercase">Per night</p>
+        <Button asChild variant="gold" className="mt-8 w-fit rounded-none px-8 tracking-[0.18em] uppercase">
           <Link
             to="/book/$hotelId"
             params={{ hotelId: HOTEL.id }}
