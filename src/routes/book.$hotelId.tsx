@@ -80,7 +80,8 @@ export const Route = createFileRoute("/book/$hotelId")({
 });
 
 const field =
-  "h-11 w-full border-0 border-b border-ink/20 bg-transparent px-0 text-sm text-ink outline-none focus:border-ink";
+  "h-11 w-full border-0 border-b border-[#c6a15a]/40 bg-transparent px-0 text-sm text-ink outline-none focus:border-[#8a6a2f]";
+const kicker = "text-[0.7rem] tracking-[0.24em] text-[#8a6a2f] uppercase";
 
 function BookPage() {
   const search = Route.useSearch();
@@ -239,10 +240,14 @@ function BookPage() {
 
   return (
     <PageShell>
-      <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
-        <p className="text-xs tracking-[0.22em] text-gold uppercase">Hotel Status Residency</p>
-        <h1 className="mt-3 font-display text-5xl font-semibold">Book a stay</h1>
-        <p className="mt-4 max-w-xl text-base leading-relaxed text-ink-soft">
+      <main className="mx-auto max-w-5xl px-4 py-14 sm:px-6 lg:py-20">
+        <p className={kicker}>Hotel Status Residency</p>
+        <h1 className="mt-3 font-display text-5xl font-medium sm:text-7xl">Book a stay</h1>
+        <div className="mt-5 flex items-center gap-3">
+          <span className="h-px w-16 bg-[#c6a15a]" />
+          <span className="size-1.5 rotate-45 bg-[#c6a15a]" />
+        </div>
+        <p className="mt-5 max-w-xl text-base leading-relaxed text-ink-soft">
           Choose a room, the dates and how to pay: in full or an advance on Razorpay, or at the hotel.
         </p>
 
@@ -251,8 +256,8 @@ function BookPage() {
         ) : (
           <form onSubmit={onSubmit} className="mt-10">
             <fieldset>
-              <legend className="text-xs tracking-[0.18em] text-muted uppercase">Room</legend>
-              <div className="mt-4 grid gap-3">
+              <legend className={kicker}>Room</legend>
+              <div className="mt-5 grid gap-4 md:grid-cols-2">
                 {visibleRooms.map((item) => (
                   <RoomChoice
                     key={item.id}
@@ -267,7 +272,7 @@ function BookPage() {
 
             <div className="mt-8 grid gap-6 sm:grid-cols-2">
               <label className="flex flex-col gap-1">
-                <span className="text-xs tracking-[0.18em] text-muted uppercase">Check-in</span>
+                <span className={kicker}>Check-in</span>
                 <input
                   id="check-in"
                   type="date"
@@ -280,7 +285,7 @@ function BookPage() {
                 />
               </label>
               <label className="flex flex-col gap-1">
-                <span className="text-xs tracking-[0.18em] text-muted uppercase">Check-out</span>
+                <span className={kicker}>Check-out</span>
                 <input
                   id="check-out"
                   type="date"
@@ -293,7 +298,7 @@ function BookPage() {
                 />
               </label>
               <label className="flex flex-col gap-1">
-                <span className="text-xs tracking-[0.18em] text-muted uppercase">Guests</span>
+                <span className={kicker}>Guests</span>
                 <select
                   id="guests"
                   className={cn(field, "appearance-none")}
@@ -308,7 +313,7 @@ function BookPage() {
                 </select>
               </label>
               <label className="flex flex-col gap-1">
-                <span className="text-xs tracking-[0.18em] text-muted uppercase">Rooms</span>
+                <span className={kicker}>Rooms</span>
                 <select
                   id="rooms"
                   className={cn(field, "appearance-none")}
@@ -338,7 +343,7 @@ function BookPage() {
             ) : null}
 
             <div className="mt-8">
-              <span className="text-xs tracking-[0.18em] text-muted uppercase">Referral code (optional)</span>
+              <span className={kicker}>Referral code, if you have one</span>
               <div className="mt-1 flex items-end gap-3">
                 <input
                   id="referral-code"
@@ -374,7 +379,7 @@ function BookPage() {
 
             <div className="mt-8 grid gap-6">
               <label className="flex flex-col gap-1">
-                <span className="text-xs tracking-[0.18em] text-muted uppercase">Guest name</span>
+                <span className={kicker}>Guest name</span>
                 <input
                   id="guest-name"
                   required
@@ -386,7 +391,7 @@ function BookPage() {
                 />
               </label>
               <label className="flex flex-col gap-1">
-                <span className="text-xs tracking-[0.18em] text-muted uppercase">Phone</span>
+                <span className={kicker}>Phone</span>
                 <input
                   id="guest-phone"
                   type="tel"
@@ -400,7 +405,7 @@ function BookPage() {
                 />
               </label>
               <label className="flex flex-col gap-1">
-                <span className="text-xs tracking-[0.18em] text-muted uppercase">Email</span>
+                <span className={kicker}>Email</span>
                 <input
                   id="guest-email"
                   type="email"
@@ -414,8 +419,8 @@ function BookPage() {
             </div>
 
             <fieldset className="mt-8">
-              <legend className="text-xs tracking-[0.18em] text-muted uppercase">Payment</legend>
-              <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+              <legend className={kicker}>Payment</legend>
+              <div className="mt-4 grid gap-2">
                 {(
                   [
                     ["full", `Pay the full amount online${datesOk ? ` (${formatInr(total)})` : ""}`],
@@ -430,7 +435,13 @@ function BookPage() {
                     ...(options.payAtHotel ? [["pay_at_hotel", "Pay at the hotel at check-in"] as const] : []),
                   ] as const
                 ).map(([value, label]) => (
-                  <label key={value} className="flex items-center gap-3">
+                  <label
+                    key={value}
+                    className={cn(
+                      "flex items-center gap-3 border px-4 py-3 text-sm",
+                      paymentMode === value ? "border-[#c6a15a] bg-[#12263d] text-[#f6f0e4]" : "border-[#c6a15a]/30",
+                    )}
+                  >
                     <input
                       type="radio"
                       name="payment-mode"
@@ -445,7 +456,7 @@ function BookPage() {
               {/* TEMP-TEST-AMOUNT: remove later */}
               {paymentMode === "custom" ? (
                 <label className="mt-4 flex max-w-xs flex-col gap-1">
-                  <span className="text-xs tracking-[0.18em] text-muted uppercase">Amount to pay online (₹)</span>
+                  <span className={kicker}>Amount to pay online (₹)</span>
                   <input
                     id="custom-amount"
                     type="number"
@@ -466,9 +477,9 @@ function BookPage() {
               ) : null}
             </fieldset>
 
-            <div className="mt-8 flex flex-wrap items-end justify-between gap-4 border-t border-ink/10 pt-6">
+            <div className="mt-10 flex flex-wrap items-end justify-between gap-4 border-t border-[#c6a15a]/50 pt-6">
               <div>
-                <p className="text-xs tracking-[0.18em] text-muted uppercase">
+                <p className={kicker}>
                   {datesOk
                     ? `${nights} night${nights === 1 ? "" : "s"} · ${rooms} room${rooms === 1 ? "" : "s"}`
                     : "Choose your dates"}
@@ -478,15 +489,15 @@ function BookPage() {
                     <s>{formatInr(listTotal)}</s> · referral discount −{formatInr(discount)}
                   </p>
                 ) : null}
-                <p className="font-display text-4xl font-semibold tabular-nums">
+                <p className="font-display text-5xl font-medium text-[#8a6a2f] tabular-nums">
                   {datesOk ? formatInr(total) : "—"}
                 </p>
               </div>
               <Button
                 type="submit"
-                variant="ink"
+                variant="gold"
                 disabled={pending || !datesOk || clash}
-                className="rounded-none tracking-[0.16em] uppercase"
+                className="rounded-none px-8 tracking-[0.18em] uppercase"
               >
                 {pending ? "Saving…" : paymentMode === "pay_at_hotel" ? "Confirm booking" : "Book and pay"}
               </Button>
@@ -533,23 +544,25 @@ function RoomChoice({
       aria-pressed={selected}
       onClick={onSelect}
       className={cn(
-        "flex items-center gap-4 border p-3 text-left",
-        selected ? "border-ink bg-cream" : "border-ink/15",
+        "overflow-hidden border text-left",
+        selected ? "border-[#c6a15a] bg-[#12263d] text-[#f6f0e4]" : "border-[#c6a15a]/35 bg-[#fbf7ef]",
       )}
     >
-      <img src={cover.src} alt="" className="size-16 shrink-0 object-cover" />
-      <span className="min-w-0 flex-1">
-        <span className="block font-display text-2xl font-semibold">{room.name}</span>
-        <span className="block text-sm text-muted">
-          {room.size} · up to {room.occupancy} guests
-        </span>
-        {level ? (
-          <span className="mt-1 block">
-            <AvailabilityBadge level={level} />
+      <img src={cover.src} alt="" className="h-44 w-full object-cover" />
+      <span className="flex items-end justify-between gap-3 px-4 py-4">
+        <span>
+          <span className="block font-display text-3xl font-medium">{room.name}</span>
+          <span className={cn("mt-1 block text-sm", selected ? "text-[#f6f0e4]/70" : "text-muted")}>
+            {room.size} · up to {room.occupancy} guests
           </span>
-        ) : null}
+          {level ? (
+            <span className="mt-2 block">
+              <AvailabilityBadge level={level} />
+            </span>
+          ) : null}
+        </span>
+        <span className="font-display text-2xl text-[#c6a15a] tabular-nums">{formatInr(room.price)}</span>
       </span>
-      <span className="text-sm tabular-nums">{formatInr(room.price)}</span>
     </button>
   );
 }
@@ -557,11 +570,11 @@ function RoomChoice({
 function Confirmed({ booking, onAnother }: { booking: Booking; onAnother: () => void }) {
   const room = HOTEL.rooms.find((item) => item.id === booking.roomTypeId);
   return (
-    <div className="mt-10 border border-ink/15 bg-cream p-6">
-      <p className="text-xs tracking-[0.18em] text-success uppercase">
+    <div className="mt-10 border border-[#c6a15a]/50 bg-[#12263d] p-6 text-[#f6f0e4] sm:p-8">
+      <p className="text-[0.7rem] tracking-[0.24em] text-[#c6a15a] uppercase">
         {booking.status === "pending_payment" ? "Held — awaiting payment" : "Confirmed"}
       </p>
-      <h2 className="mt-2 font-display text-4xl font-semibold">{booking.id}</h2>
+      <h2 className="mt-2 font-display text-4xl font-medium">{booking.id}</h2>
       <p className="mt-3 text-sm leading-relaxed">
         {room?.name ?? "Room"} · {booking.guestName}
         <br />
@@ -575,12 +588,12 @@ function Confirmed({ booking, onAnother }: { booking: Booking; onAnother: () => 
           </>
         ) : null}
       </p>
-      <p className="mt-3 text-sm leading-relaxed text-ink-soft">
+      <p className="mt-3 text-sm leading-relaxed text-[#f6f0e4]/75">
         Keep this number. The hotel sees the same stay. Find it later with this number and the phone used here.
       </p>
       <PayStay row={booking.row} />
       <div className="mt-6 flex flex-wrap gap-3">
-        <Button asChild variant="ink" className="rounded-none tracking-[0.16em] uppercase">
+        <Button asChild variant="gold" className="rounded-none tracking-[0.16em] uppercase">
           <Link to="/bookings">Find this stay</Link>
         </Button>
         <Button type="button" variant="outline" className="rounded-none tracking-[0.16em] uppercase" onClick={onAnother}>
