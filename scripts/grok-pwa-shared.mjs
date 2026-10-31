@@ -384,13 +384,25 @@ export function grokOgHeadTags({
       : `${ogServiceUrl()}/v1/card.png?host=${encodeURIComponent(publicHost)}&title=${encodeURIComponent(title)}`;
     const color = !custom ? placeholderCardColor(site) : "";
     if (color) image += `&color=${encodeURIComponent(color)}`;
-    if (publicHost === "hotel-status-website.vercel.app" && image.endsWith("/og.jpg")) {
+    if (
+      (publicHost === "hotel-status-website.vercel.app" ||
+        publicHost === "www.hotelstatusresidency.com" ||
+        publicHost === "hotelstatusresidency.com") &&
+      image.endsWith("/og.jpg")
+    ) {
       image += "?v=evening";
     }
     tags.push(`<meta property="og:image" content="${escapeHtml(image)}">`);
     tags.push(`<meta property="og:image:width" content="1200">`);
     tags.push(`<meta property="og:image:height" content="630">`);
     tags.push(`<meta name="twitter:image" content="${escapeHtml(image)}">`);
+    if (
+      publicHost === "hotel-status-website.vercel.app" ||
+      publicHost === "www.hotelstatusresidency.com" ||
+      publicHost === "hotelstatusresidency.com"
+    ) {
+      tags.push(`<meta property="og:url" content="https://hotelstatusresidency.com/">`);
+    }
     const banner = String(site.banner ?? "").trim();
     if (banner) {
       const bannerUrl = `https://${publicHost}${banner.startsWith("/") ? banner : `/${banner}`}`;

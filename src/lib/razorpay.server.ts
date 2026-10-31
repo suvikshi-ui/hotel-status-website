@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { getSql } from "@/lib/db";
 import { BOOKING_SELECT, type BookingRow } from "@/lib/bookings.server";
 
-const SITE = "https://hotel-status-website.vercel.app";
+const SITE = "https://www.hotelstatusresidency.com";
 
 const ROOM_NAMES: Record<string, string> = {
   deluxe: "Deluxe",

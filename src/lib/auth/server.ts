@@ -115,7 +115,11 @@ const LOCAL_DEV_ORIGINS: string[] = [
   "http://[::1]:8080",
 ];
 // The public hotel site. Email sign-in rejects any Origin that is not listed.
-const SITE_HOSTS: string[] = ["hotel-status-website.vercel.app"];
+const SITE_HOSTS: string[] = [
+  "hotelstatusresidency.com",
+  "www.hotelstatusresidency.com",
+  "hotel-status-website.vercel.app",
+];
 const SITE_ORIGINS: string[] = SITE_HOSTS.map((host) => `https://${host}`);
 const baseURL = explicitBaseURL ?? {
   // Include loopback hosts so dynamic baseURL resolves for local email/password
