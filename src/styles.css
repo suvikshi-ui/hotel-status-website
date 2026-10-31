@@ -22,7 +22,7 @@
   --color-success: #3d6b4f;
   --color-warn: #a15c2a;
 
-  --font-sans: "Source Serif 4", ui-serif, Georgia, serif;
+  --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Cormorant Garamond", ui-serif, Georgia, serif;
 
   --radius-xs: 4px;
@@ -55,7 +55,7 @@
     background: var(--color-paper);
     color: var(--color-ink);
     font-family: var(--font-sans);
-    line-height: 1.6;
+    line-height: 1.5;
   }
 
   h1,
