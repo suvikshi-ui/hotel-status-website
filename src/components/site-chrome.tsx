@@ -106,7 +106,7 @@ export function SiteFooter() {
     <footer className="border-t border-[#c6a15a]/50 bg-[#0b1626] text-cream">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 md:grid-cols-3 lg:px-8">
         <div>
-          <img src="/hotels/logo-digital.png?v=blue3d" alt="" className="mb-4 h-16 w-16 object-contain" />
+          <img src="/hotels/logo-footer.png?v=1" alt="" className="mb-4 h-16 w-16 object-contain" />
           <p className="font-display text-3xl font-semibold tracking-tight">Hotel Status Residency</p>
           <p className="mt-3 text-sm text-cream/70">Mahape, Navi Mumbai · PIN {HOTEL.pins[0]}</p>
         </div>
