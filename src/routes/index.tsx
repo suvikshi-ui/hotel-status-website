@@ -629,7 +629,7 @@ function RoomCard({ room }: { room: RoomType }) {
           className="absolute inset-0 size-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
         />
       </button>
-      <div className="flex flex-col justify-center px-6 py-8 sm:px-10 lg:py-12">
+      <div className="flex flex-col justify-center px-6 py-8 sm:px-10 lg:border-l lg:border-[#c6a15a]/50 lg:py-14">
         <p className="text-[0.65rem] tracking-[0.24em] text-[#c6a15a] uppercase">{room.size} · {room.occupancy} guests</p>
         <h3 className="mt-3 font-display text-4xl font-medium sm:text-5xl">{room.name}</h3>
         <p className="mt-6 font-display text-4xl text-[#e4c98a] tabular-nums">{formatInr(room.price)}</p>
