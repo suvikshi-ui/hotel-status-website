@@ -126,6 +126,11 @@ export function SiteFooter() {
               {HOTEL.email}
             </a>
           </p>
+          <p className="mt-1">
+            <a href={`mailto:${HOTEL.contactEmail}`} className="text-cream">
+              {HOTEL.contactEmail}
+            </a>
+          </p>
         </div>
         <div className="text-sm text-cream/70">
           <p className="text-xs tracking-[0.18em] text-gold uppercase">The stay</p>

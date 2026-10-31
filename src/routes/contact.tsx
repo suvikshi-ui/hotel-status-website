@@ -42,8 +42,9 @@ function ContactPage() {
           </div>
           <div className="grid gap-2 py-6 sm:grid-cols-[10rem_1fr]">
             <dt className="text-xs tracking-[0.18em] text-muted uppercase">Email</dt>
-            <dd>
+            <dd className="flex flex-col gap-2">
               <a href={`mailto:${HOTEL.email}`}>{HOTEL.email}</a>
+              <a href={`mailto:${HOTEL.contactEmail}`}>{HOTEL.contactEmail}</a>
             </dd>
           </div>
           <div className="grid gap-2 py-6 sm:grid-cols-[10rem_1fr]">

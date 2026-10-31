@@ -31,12 +31,13 @@ export const Route = createFileRoute("/owner")({
   }),
 });
 
-type Tab = "dashboard" | "bookings" | "arrivals" | "rooms";
+type Tab = "dashboard" | "bookings" | "arrivals" | "rooms" | "rates";
 const TABS: { id: Tab; label: string }[] = [
   { id: "dashboard", label: "Dashboard" },
   { id: "bookings", label: "Bookings" },
   { id: "arrivals", label: "Arrivals / Departures" },
   { id: "rooms", label: "Rooms" },
+  { id: "rates", label: "Room rates" },
 ];
 
 const roomName = (id: string) => ROOM_LABELS[id] ?? id;
@@ -178,8 +179,10 @@ function OwnerPage() {
           <BookingsTable rows={rows} actions={actions} />
         ) : tab === "arrivals" ? (
           <ArrivalsDepartures rows={rows} actions={actions} />
-        ) : (
+        ) : tab === "rooms" ? (
           <Rooms />
+        ) : (
+          <RoomRates />
         )}
       </main>
       {openRow ? <BookingDrawer row={openRow} actions={actions} onClose={() => setOpenId(null)} /> : null}
@@ -559,7 +562,6 @@ function Rooms() {
       <p className="mt-2 text-xs text-muted">
         Booked counts confirmed stays and unexpired payment holds for that night. Blocked counts the blocks below.
       </p>
-      <RoomSettings />
       <DateBlocks />
     </>
   );
@@ -677,7 +679,19 @@ function BookingDrawer({ row, actions, onClose }: { row: BookingRow; actions: Ac
   );
 }
 
-function RoomSettings() {
+function RoomRates() {
+  return (
+    <>
+      <h1 className="font-display text-4xl font-semibold">Room rates</h1>
+      <p className="mt-2 max-w-2xl text-sm text-ink-soft">
+        Set the nightly rent for Deluxe and Suite. The price you save here is the price guests see on the website, and the price used for new bookings.
+      </p>
+      <RoomSettings only={["deluxe", "suite"]} />
+    </>
+  );
+}
+
+function RoomSettings({ only }: { only?: string[] }) {
   const [list, setList] = useState<RoomSetting[] | null>(null);
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [msg, setMsg] = useState<string | null>(null);
@@ -707,16 +721,17 @@ function RoomSettings() {
     }
   }
   return (
-    <section className="mt-10 border-t border-ink/10 pt-8">
-      <h2 className="font-display text-3xl font-semibold">Room types and prices</h2>
+    <section className="mt-8">
+      <h2 className="font-display text-3xl font-semibold">Nightly rent</h2>
       <p className="mt-2 text-sm text-ink-soft">
-        Nightly price guests pay (before any referral discount). Hidden types are not shown or bookable on the website;
-        their bookings and blocks are kept.
+        Enter the rent in rupees and press Save price. Refresh the public site to see the new rate.
       </p>
       {msg ? <p className="mt-3 text-sm text-ink-soft">{msg}</p> : null}
-      <div className="mt-4 grid gap-3 md:grid-cols-3">
+      <div className="mt-4 grid gap-3 md:grid-cols-2">
         {list
-          ? list.map((r) => (
+          ? list
+              .filter((r) => !only || only.includes(r.room_type))
+              .map((r) => (
               <div key={r.room_type} className="border border-ink/15 bg-cream p-4">
                 <div className="flex items-center justify-between gap-2">
                   <p className="font-display text-2xl font-semibold">{roomName(r.room_type)}</p>
