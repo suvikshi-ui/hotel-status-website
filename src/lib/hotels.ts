@@ -172,7 +172,7 @@ export const HOTEL: Hotel = {
     {
       id: "suite",
       name: "Suite",
-      occupancy: 4,
+      occupancy: 3,
       size: "32 m²",
       price: 6000,
       photos: [

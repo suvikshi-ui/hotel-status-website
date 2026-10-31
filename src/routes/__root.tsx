@@ -20,9 +20,9 @@ export const Route = createRootRoute({
     ],
     links: [
       { rel: "canonical", href: "https://hotelstatusresidency.com/" },
-      { rel: "icon", href: "/favicon.ico?v=gold", sizes: "48x48" },
-      { rel: "icon", type: "image/png", href: "/favicon-48.png?v=gold", sizes: "48x48" },
-      { rel: "icon", type: "image/png", href: "/favicon-192.png?v=gold", sizes: "192x192" },
+      { rel: "icon", href: "/favicon.ico?v=sky", sizes: "48x48" },
+      { rel: "icon", type: "image/png", href: "/favicon-48.png?v=sky", sizes: "48x48" },
+      { rel: "icon", type: "image/png", href: "/favicon-192.png?v=sky", sizes: "192x192" },
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/__grok/manifest.webmanifest" },
       { rel: "apple-touch-icon", href: "/__grok/icon-180.png" },
