@@ -185,7 +185,7 @@ function Home() {
           </div>
         </section>
 
-        <section className="bg-[#0b1626] text-[#f6f0e4]">
+        <section className="bg-[#0b1626] text-[#f6f0e4] lg:mt-12">
           <div className="grid md:grid-cols-2 lg:min-h-[560px]">
             <img
               src="/hotels/gallery/exterior.jpg"
