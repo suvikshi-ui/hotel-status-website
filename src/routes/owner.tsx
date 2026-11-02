@@ -137,10 +137,13 @@ function OwnerPage() {
       style={{ fontFamily: "Rubik, Figtree, sans-serif" }}
     >
       <header className="border-b border-[#e4e8ee] bg-white">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
-          <Link to="/" className="leading-tight">
-            <span className="block text-[11px] font-medium tracking-wide text-[#6b7280] uppercase">Owner desk</span>
-            <span className="block text-lg font-semibold text-[#1b2a6b]">Hotel Status Residency</span>
+        <div className="mx-auto flex min-h-[4.5rem] max-w-6xl items-center justify-between gap-4 px-4 py-2">
+          <Link to="/" className="flex min-w-0 items-center gap-3">
+            <img src="/hotels/logo-digital.png?v=blue3d" alt="" className="size-12 shrink-0 sm:size-14" />
+            <span className="min-w-0 leading-tight">
+              <span className="block text-[11px] font-medium tracking-wide text-[#5b7194] uppercase">Owner desk</span>
+              <span className="block text-xl font-semibold text-[#12263d] sm:text-2xl">Hotel Status Residency</span>
+            </span>
           </Link>
           <div className="flex items-center gap-3 text-right">
             <p className="text-sm font-medium text-[#1b2a6b]">{format(new Date(), "EEE, d MMM yyyy")}</p>
@@ -165,7 +168,7 @@ function OwnerPage() {
               onClick={() => setTab(item.id)}
               className={cn(
                 "border-b-2 px-3 py-3 text-sm font-medium whitespace-nowrap",
-                tab === item.id ? "border-[#f5c400] text-[#1b2a6b]" : "border-transparent text-[#6b7280] hover:text-[#1b2a6b]",
+                tab === item.id ? "border-[#12263d] text-[#12263d]" : "border-transparent text-[#5b7194] hover:text-[#12263d]",
               )}
             >
               {item.label}
@@ -483,7 +486,7 @@ function StatusChip({ row }: { row: BookingRow }) {
     row.status === "cancelled" || row.status === "expired"
       ? "border-ink/20 text-muted"
       : row.status === "pending_payment"
-        ? "border-gold text-gold"
+        ? "border-[#12263d]/30 text-[#12263d]"
         : "border-success/50 text-success";
   return <span className={cn("inline-block border px-2 py-0.5 text-xs", tone)}>{text}</span>;
 }
@@ -494,15 +497,15 @@ function ArrivalsDepartures({ rows, actions }: { rows: BookingRow[]; actions: Ac
   const live = rows.filter((row) => row.status === "confirmed" || row.status === "pending_payment");
   return (
     <>
-      <h1 className="font-display text-4xl font-semibold">Arrivals / Departures</h1>
-      <p className="mt-2 text-sm text-ink-soft">Today and the next 7 days. Awaiting-payment holds are shown too.</p>
+      <h1 className="text-2xl font-semibold text-[#12263d]">Arrivals / Departures</h1>
+      <p className="mt-2 text-sm text-[#5c6570]">Today and the next 7 days. Awaiting-payment holds are shown too.</p>
       <div className="mt-6 grid gap-6">
         {days.map((day) => {
           const arriving = live.filter((row) => row.check_in === day);
           const leaving = live.filter((row) => row.check_out === day);
           return (
-            <section key={day} className="border border-ink/15 p-4">
-              <h2 className="font-display text-2xl font-semibold">
+            <section key={day} className="rounded-lg border border-[#e4e8ee] bg-white p-4 shadow-sm">
+              <h2 className="text-lg font-semibold text-[#12263d]">
                 {day === today ? "Today · " : ""}
                 {format(parseISO(day), "EEEE d MMMM")}
               </h2>

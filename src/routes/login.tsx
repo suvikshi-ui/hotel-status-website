@@ -7,11 +7,14 @@ export const Route = createFileRoute("/login")({
   component: OwnerLogin,
   head: () => ({
     meta: [{ title: "Owner desk sign-in · Hotel Status Residency" }, { name: "robots", content: "noindex" }],
+    links: [
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" },
+    ],
   }),
 });
 
 const field =
-  "h-11 w-full border-0 border-b border-ink/20 bg-transparent px-0 text-sm text-ink outline-none focus:border-ink";
+  "h-11 w-full rounded-md border border-[#d5dbe3] bg-white px-3 text-sm text-[#1c2434] outline-none focus:border-[#12263d]";
 
 function OwnerLogin() {
   const navigate = useNavigate();
@@ -56,18 +59,24 @@ function OwnerLogin() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-paper text-ink">
-      <header className="border-b border-ink/10">
-        <div className="mx-auto flex h-20 max-w-3xl items-center justify-between px-4">
-          <Link to="/" className="font-display text-xl font-semibold sm:text-2xl">
-            Hotel Status Residency
+    <div
+      className="flex min-h-dvh flex-col bg-[#f3f5f8] text-[#1c2434]"
+      style={{ fontFamily: "Rubik, Figtree, sans-serif" }}
+    >
+      <header className="border-b border-[#e4e8ee] bg-white">
+        <div className="mx-auto flex min-h-[4.5rem] max-w-3xl items-center px-4 py-2">
+          <Link to="/" className="flex min-w-0 items-center gap-3">
+            <img src="/hotels/logo-digital.png?v=blue3d" alt="" className="size-12 shrink-0 sm:size-14" />
+            <span className="min-w-0 leading-tight">
+              <span className="block text-[11px] font-medium tracking-wide text-[#5b7194] uppercase">Owner desk</span>
+              <span className="block text-xl font-semibold text-[#12263d] sm:text-2xl">Hotel Status Residency</span>
+            </span>
           </Link>
-          <p className="text-xs tracking-[0.18em] text-gold uppercase">Owner desk</p>
         </div>
       </header>
       <main className="mx-auto w-full max-w-md flex-1 px-4 py-16">
-        <h1 className="font-display text-5xl font-semibold">Owner sign-in</h1>
-        <p className="mt-4 text-sm leading-relaxed text-ink-soft">
+        <h1 className="text-3xl font-semibold text-[#12263d]">Owner sign-in</h1>
+        <p className="mt-4 text-sm leading-relaxed text-[#5c6570]">
           Guests book without an account. This desk is only for the hotel. Enter the owner email and we will email a
           6-digit sign-in code. No password needed.
         </p>
@@ -92,7 +101,7 @@ function OwnerLogin() {
           </form>
         ) : (
           <form onSubmit={verify} className="mt-10 grid gap-6">
-            {notice ? <p className="border border-ink/15 bg-cream p-3 text-sm">{notice}</p> : null}
+            {notice ? <p className="rounded-md border border-[#d5dbe3] bg-white p-3 text-sm">{notice}</p> : null}
             <label className="flex flex-col gap-1">
               <span className="text-xs tracking-[0.18em] text-muted uppercase">6-digit code</span>
               <input
