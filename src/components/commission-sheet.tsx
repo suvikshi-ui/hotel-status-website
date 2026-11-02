@@ -26,13 +26,20 @@ function monthOptions(): string[] {
 }
 
 const monthLabel = (m: string) => format(new Date(`${m}-01T00:00:00`), "MMMM yyyy");
-const due = (stay: CommissionStay) => stay.status === "confirmed";
 
-function money(stays: CommissionStay[]) {
-  const counted = stays.filter(due);
+function listPrice(stay: CommissionStay): number {
+  return stay.list_amount ?? stay.total_amount + stay.guest_discount_amount;
+}
+
+function paysThisMonth(stay: CommissionStay, month: string): boolean {
+  return stay.status === "confirmed" && stay.check_in.slice(0, 7) === month;
+}
+
+function money(stays: CommissionStay[], month: string) {
+  const counted = stays.filter((stay) => paysThisMonth(stay, month));
   const earned = counted.reduce((sum, stay) => sum + stay.agent_commission_amount, 0);
   const paid = counted.filter((stay) => stay.agent_commission_paid_at).reduce((sum, stay) => sum + stay.agent_commission_amount, 0);
-  return { earned, paid, toPay: earned - paid, guests: new Set(counted.map((stay) => stay.guest_name + stay.phone)).size, bookings: counted.length };
+  return { earned, paid, toPay: earned - paid, guests: stays.length, bookings: counted.length };
 }
 
 export function CommissionSheet() {
@@ -56,7 +63,7 @@ export function CommissionSheet() {
   }, [load]);
 
   const all = agents?.flatMap((agent) => agent.stays) ?? [];
-  const totals = money(all);
+  const totals = money(all, month);
 
   async function markOne(stay: CommissionStay) {
     setBusy(stay.id);
@@ -72,7 +79,9 @@ export function CommissionSheet() {
   }
 
   async function markAgent(agent: CommissionAgent, paid: boolean) {
-    const ids = agent.stays.filter((stay) => due(stay) && Boolean(stay.agent_commission_paid_at) !== paid).map((stay) => stay.id);
+    const ids = agent.stays
+      .filter((stay) => paysThisMonth(stay, month) && Boolean(stay.agent_commission_paid_at) !== paid)
+      .map((stay) => stay.id);
     if (!ids.length) return;
     setBusy(agent.code);
     setError(null);
@@ -92,8 +101,8 @@ export function CommissionSheet() {
         <div>
           <h1 className="text-2xl font-semibold text-[#1b2a6b]">Agent commission</h1>
           <p className="mt-2 max-w-2xl text-sm text-[#5c6570]">
-            Make this sheet at the end of the month. It lists every guest whose stay falls in that month and who booked through an agent.
-            Commission is due only on confirmed stays. The last column is whether that commission has been paid to the agent.
+            Every booking made or checking in this month is listed by guest name. Commission is the list price × the agent percent.
+            The list price is the room rent before the guest discount. A booking is payable in its check-in month, and only after it is confirmed.
           </p>
         </div>
         <label className="flex flex-col gap-1 text-[11px] font-medium text-[#6b7280]">
@@ -128,16 +137,19 @@ export function CommissionSheet() {
       {!agents ? (
         <div className="glass mt-6 h-40" />
       ) : agents.length === 0 ? (
-        <p className="mt-6 text-sm text-muted">No agent bookings fall in {monthLabel(month)}.</p>
+        <p className="mt-6 text-sm text-muted">No bookings were made or check in during {monthLabel(month)}.</p>
       ) : (
         <div className="mt-8 space-y-10">
           {agents.map((agent) => {
-            const agentMoney = money(agent.stays);
+            const agentMoney = money(agent.stays, month);
             return (
               <section key={agent.id}>
                 <div className="flex flex-wrap items-end justify-between gap-3">
                   <div>
-                    <p className="text-xs font-medium text-[#1b2a6b]">{agent.code} · {agent.agent_percent}%</p>
+                    <p className="text-xs font-medium text-[#1b2a6b]">
+                      {agent.code ? `${agent.code} · ` : ""}
+                      {agent.agent_percent}% of list price
+                    </p>
                     <h2 className="text-lg font-semibold text-[#1b2a6b]">{agent.agent_name}</h2>
                     <p className="mt-1 text-sm text-[#5c6570]">
                       {agent.agent_phone || "No phone"}
@@ -145,7 +157,7 @@ export function CommissionSheet() {
                       {agent.label ? ` · ${agent.label}` : ""}
                     </p>
                     <p className="mt-1 text-sm tabular-nums">
-                      Earned {formatInr(agentMoney.earned)} · Paid {formatInr(agentMoney.paid)} · To pay {formatInr(agentMoney.toPay)}
+                      This month {formatInr(agentMoney.earned)} · Paid {formatInr(agentMoney.paid)} · To pay {formatInr(agentMoney.toPay)}
                     </p>
                   </div>
                   {agentMoney.toPay > 0 ? (
@@ -162,26 +174,27 @@ export function CommissionSheet() {
                   <table className="w-full min-w-[1100px] text-sm">
                     <thead className="bg-[#1b2a6b] text-left text-[11px] font-medium text-white">
                       <tr>
-                        <th className="p-2">Booking</th>
                         <th className="p-2">Guest</th>
+                        <th className="p-2">Booking</th>
                         <th className="p-2">Phone</th>
                         <th className="p-2">Room</th>
                         <th className="p-2">Check-in</th>
                         <th className="p-2">Check-out</th>
                         <th className="p-2">Nights</th>
-                        <th className="p-2">Bill</th>
-                        <th className="p-2">Discount</th>
+                        <th className="p-2">List price</th>
+                        <th className="p-2">Calculation</th>
                         <th className="p-2">Commission</th>
                         <th className="p-2">Paid</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-ink/10">
                       {agent.stays.map((stay) => {
-                        const counts = due(stay);
+                        const counts = paysThisMonth(stay, month);
+                        const list = listPrice(stay);
                         return (
-                          <tr key={stay.id} className={cn(!counts && "text-muted")}>
+                          <tr key={stay.id} className={cn(!counts && "text-[#6b7280]")}>
+                            <td className="p-2 font-semibold text-[#1c2434]">{stay.guest_name}</td>
                             <td className="p-2 font-mono">{stay.id}</td>
-                            <td className="p-2">{stay.guest_name}</td>
                             <td className="p-2 tabular-nums">
                               <a href={`tel:+91${stay.phone}`}>{stay.phone}</a>
                             </td>
@@ -191,11 +204,13 @@ export function CommissionSheet() {
                             <td className="p-2">{formatShortDate(stay.check_in)}</td>
                             <td className="p-2">{formatShortDate(stay.check_out)}</td>
                             <td className="p-2 tabular-nums">{stay.nights}</td>
-                            <td className="p-2 tabular-nums">{formatInr(stay.total_amount)}</td>
-                            <td className="p-2 tabular-nums">{formatInr(stay.guest_discount_amount)}</td>
-                            <td className="p-2 tabular-nums">{counts ? formatInr(stay.agent_commission_amount) : "Not due"}</td>
+                            <td className="p-2 tabular-nums">{formatInr(list)}</td>
+                            <td className="p-2 tabular-nums">
+                              {formatInr(list)} × {agent.agent_percent}%
+                            </td>
+                            <td className="p-2 font-medium tabular-nums">{formatInr(stay.agent_commission_amount)}</td>
                             <td className="p-2">
-                              {counts ? (
+                              {counts && agent.agent_percent > 0 ? (
                                 <Button
                                   size="sm"
                                   variant={stay.agent_commission_paid_at ? "outline" : "ink"}
@@ -204,8 +219,10 @@ export function CommissionSheet() {
                                 >
                                   {stay.agent_commission_paid_at ? "Paid" : "Unpaid"}
                                 </Button>
+                              ) : stay.status !== "confirmed" ? (
+                                "Not confirmed"
                               ) : (
-                                stay.status.replace(/_/g, " ")
+                                `Pays in ${monthLabel(stay.check_in.slice(0, 7))}`
                               )}
                             </td>
                           </tr>
