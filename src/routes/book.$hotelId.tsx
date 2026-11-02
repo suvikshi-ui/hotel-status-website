@@ -99,9 +99,20 @@ function BookPage() {
   const [customAmount, setCustomAmount] = useState("1"); // TEMP-TEST-AMOUNT: remove later
 
   useEffect(() => {
-    listPublicRooms()
-      .then((list) => setPrices(Object.fromEntries(list.map((item) => [item.id, item.price]))))
-      .catch(() => {});
+    let live = true;
+    const loadPrices = () => {
+      listPublicRooms()
+        .then((list) => {
+          if (live) setPrices(Object.fromEntries(list.map((item) => [item.id, item.price])));
+        })
+        .catch(() => {});
+    };
+    loadPrices();
+    window.addEventListener("focus", loadPrices);
+    return () => {
+      live = false;
+      window.removeEventListener("focus", loadPrices);
+    };
   }, []);
 
   useEffect(() => {
@@ -149,13 +160,18 @@ function BookPage() {
       return;
     }
     let live = true;
-    listStayPrices({ data: { checkIn, checkOut } })
-      .then((list) => {
-        if (live) setStayPrices(Object.fromEntries(list.map((item) => [item.id, item])));
-      })
-      .catch(() => live && setStayPrices({}));
+    const load = () => {
+      listStayPrices({ data: { checkIn, checkOut } })
+        .then((list) => {
+          if (live) setStayPrices(Object.fromEntries(list.map((item) => [item.id, item])));
+        })
+        .catch(() => live && setStayPrices({}));
+    };
+    load();
+    window.addEventListener("focus", load);
     return () => {
       live = false;
+      window.removeEventListener("focus", load);
     };
   }, [datesOk, checkIn, checkOut]);
   const stay = stayPrices[room.id];
