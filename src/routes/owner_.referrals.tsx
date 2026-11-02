@@ -153,7 +153,7 @@ function ReferralsPage() {
       <header className="border-b border-[#e4e8ee] bg-white">
         <div className="mx-auto flex min-h-[4.5rem] max-w-6xl items-center justify-between gap-4 px-4 py-2">
           <Link to="/" className="flex min-w-0 items-center gap-3">
-            <img src="/hotels/logo-digital.png?v=blue3d" alt="" className="size-12 shrink-0 sm:size-14" />
+            <img src="/hotels/logo-desk.png?v=white" alt="" className="size-12 shrink-0 bg-white sm:size-14" />
             <span className="min-w-0 leading-tight">
               <span className="block text-[11px] font-medium tracking-wide text-[#5b7194] uppercase">Owner desk</span>
               <span className="block text-xl font-semibold text-[#12263d] sm:text-2xl">Hotel Status Residency</span>
