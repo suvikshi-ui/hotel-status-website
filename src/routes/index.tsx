@@ -28,7 +28,7 @@ import { SearchPanel } from "@/components/search-panel";
 import { PageShell } from "@/components/site-chrome";
 import { Button } from "@/components/ui/button";
 import { formatInr, todayIso, tomorrowIso } from "@/lib/format";
-import { listPublicRooms } from "@/lib/bookings.functions";
+import { listStayPrices } from "@/lib/bookings.functions";
 import { AMENITIES, GALLERY, HOTEL, type AmenityId, type RoomType } from "@/lib/hotels";
 
 const AMENITY_ICON: Record<AmenityId, typeof Wifi> = {
@@ -63,7 +63,8 @@ const AMENITY_ICON: Record<AmenityId, typeof Wifi> = {
 export const Route = createFileRoute("/")({
   loader: async () => {
     try {
-      return { prices: Object.fromEntries((await listPublicRooms()).map((room) => [room.id, room.price])) };
+      const nights = await listStayPrices({ data: { checkIn: todayIso(), checkOut: tomorrowIso() } });
+      return { prices: Object.fromEntries(nights.map((room) => [room.id, room.perNight])) };
     } catch {
       return { prices: null as Record<string, number> | null };
     }

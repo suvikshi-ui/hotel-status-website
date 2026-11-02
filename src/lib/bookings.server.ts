@@ -225,6 +225,33 @@ export async function stayListAmount(roomType: string, checkIn: string, checkOut
   return Number(rows[0]?.total ?? 0);
 }
 
+export type PublicStayPrice = { id: string; perNight: number; total: number; flat: boolean };
+
+/** What the website should show for each active room over [checkIn, checkOut). */
+export async function publicStayPrices(checkIn: string, checkOut: string): Promise<PublicStayPrice[]> {
+  const sql = await getSql();
+  const rows = await sql.query<{ room_type: string; price: number }>(
+    `select i.room_type, coalesce(n.price, i.price)::int as price
+     from room_inventory i
+     cross join generate_series($1::date, ($2::date - interval '1 day')::date, interval '1 day') as night
+     left join room_rate_nights n on n.room_type = i.room_type and n.night = night::date
+     where i.is_active
+     order by i.sort_order, i.room_type, night`,
+    [checkIn, checkOut],
+  );
+  const grouped = new Map<string, number[]>();
+  for (const row of rows) {
+    const list = grouped.get(row.room_type) ?? [];
+    list.push(Number(row.price));
+    grouped.set(row.room_type, list);
+  }
+  return [...grouped.entries()].map(([id, nights]) => {
+    const total = nights.reduce((sum, price) => sum + price, 0);
+    const flat = nights.every((price) => price === nights[0]);
+    return { id, perNight: flat ? nights[0] : Math.round(total / Math.max(1, nights.length)), total, flat };
+  });
+}
+
 /** Rooms still free for every night of [checkIn, checkOut), per room type. */
 export async function roomsLeft(checkIn: string, checkOut: string): Promise<RoomsLeft> {
   const sql = await getSql();

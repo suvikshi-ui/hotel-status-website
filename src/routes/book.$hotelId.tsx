@@ -10,7 +10,7 @@ import {
   checkAvailability,
   checkReferralCode,
   listPublicRooms,
-  quoteStay,
+  listStayPrices,
   type AvailabilityLevel,
   type BookingOptions,
   type PublicAvailability,
@@ -142,21 +142,24 @@ function BookPage() {
   const room = visibleRooms.find((item) => item.id === roomId) ?? visibleRooms[0];
   const datesOk = checkOut > checkIn;
   const nights = datesOk ? nightsBetween(checkIn, checkOut) : 0;
-  const [quoted, setQuoted] = useState<number | null>(null);
+  const [stayPrices, setStayPrices] = useState<Record<string, { perNight: number; total: number; flat: boolean }>>({});
   useEffect(() => {
     if (!datesOk) {
-      setQuoted(null);
+      setStayPrices({});
       return;
     }
     let live = true;
-    quoteStay({ data: { roomType: room.id as "deluxe" | "suite" | "super-deluxe", checkIn, checkOut, rooms } })
-      .then((total) => live && setQuoted(total))
-      .catch(() => live && setQuoted(null));
+    listStayPrices({ data: { checkIn, checkOut } })
+      .then((list) => {
+        if (live) setStayPrices(Object.fromEntries(list.map((item) => [item.id, item])));
+      })
+      .catch(() => live && setStayPrices({}));
     return () => {
       live = false;
     };
-  }, [datesOk, room.id, checkIn, checkOut, rooms]);
-  const listTotal = quoted ?? nights * room.price * rooms;
+  }, [datesOk, checkIn, checkOut]);
+  const stay = stayPrices[room.id];
+  const listTotal = (stay ? stay.total : nights * room.price) * rooms;
   const discount = referral ? Math.floor((listTotal * referral.guestPercent) / 100) : 0;
   const total = listTotal - discount;
   const level = datesOk ? avail[room.id] : undefined;
@@ -273,15 +276,20 @@ function BookPage() {
             <fieldset>
               <legend className={kicker}>Room</legend>
               <div className="mt-5 grid gap-4 md:grid-cols-2">
-                {visibleRooms.map((item) => (
+                {visibleRooms.map((item) => {
+                  const priced = stayPrices[item.id];
+                  return (
                   <RoomChoice
                     key={item.id}
                     room={item}
+                    price={priced ? (priced.flat ? priced.perNight : priced.total) : item.price}
+                    priceNote={priced && !priced.flat ? `for ${nights} nights` : "per night"}
                     level={datesOk ? avail[item.id]?.level : undefined}
                     selected={item.id === room.id}
                     onSelect={() => setRoomId(item.id as RoomId)}
                   />
-                ))}
+                  );
+                })}
               </div>
             </fieldset>
 
@@ -543,11 +551,15 @@ function AvailabilityBadge({ level }: { level: AvailabilityLevel }) {
 
 function RoomChoice({
   room,
+  price,
+  priceNote,
   level,
   selected,
   onSelect,
 }: {
   room: RoomType;
+  price: number;
+  priceNote: string;
   level?: AvailabilityLevel;
   selected: boolean;
   onSelect: () => void;
@@ -576,7 +588,12 @@ function RoomChoice({
             </span>
           ) : null}
         </span>
-        <span className="font-display text-2xl text-[#c6a15a] tabular-nums">{formatInr(room.price)}</span>
+        <span className="text-right">
+          <span className="block font-display text-2xl text-[#c6a15a] tabular-nums">{formatInr(price)}</span>
+          <span className={cn("block text-[0.65rem] tracking-[0.14em] uppercase", selected ? "text-[#f6f0e4]/60" : "text-muted")}>
+            {priceNote}
+          </span>
+        </span>
       </span>
     </button>
   );
