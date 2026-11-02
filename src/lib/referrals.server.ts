@@ -255,24 +255,34 @@ export type CommissionAgent = {
 
 type CommissionRow = CommissionStay & Omit<CommissionAgent, "stays">;
 
-/** Stays that fall in the month and came through an agent. Cancelled and expired are left out. */
+/** Every booking that was made or checks in during the month. Commission is list price × agent percent. */
 export async function commissionSheet(month: string): Promise<CommissionAgent[]> {
   const sql = await getSql();
   const rows = await sql.query<CommissionRow>(
-    `select c.id::int as id, c.label, c.code, c.agent_name, c.agent_phone, c.agent_email,
-       c.agent_percent::float8 as agent_percent,
+    `select coalesce(c.id, 0)::int as id,
+       coalesce(c.label, '') as label,
+       coalesce(c.code, '') as code,
+       coalesce(c.agent_name, 'Direct booking') as agent_name,
+       coalesce(c.agent_phone, '') as agent_phone,
+       coalesce(c.agent_email, '') as agent_email,
+       coalesce(c.agent_percent, 0)::float8 as agent_percent,
        b.id as booking_id, b.guest_name, b.phone, b.room_type, b.rooms::int as rooms, b.guests::int as guests,
        (b.check_out - b.check_in)::int as nights,
        b.check_in::text as check_in, b.check_out::text as check_out, b.status,
-       b.total_amount, b.list_amount, b.guest_discount_amount, b.agent_commission_amount,
+       b.total_amount,
+       coalesce(b.list_amount, b.total_amount + b.guest_discount_amount)::int as list_amount,
+       b.guest_discount_amount,
+       round(coalesce(b.list_amount, b.total_amount + b.guest_discount_amount) * coalesce(c.agent_percent, 0) / 100.0)::int as agent_commission_amount,
        case when b.agent_commission_paid_at is null then null
          else to_char(b.agent_commission_paid_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') end as agent_commission_paid_at
-     from referral_codes c
-     join bookings b on b.referral_code_id = c.id
+     from bookings b
+     left join referral_codes c on c.id = b.referral_code_id
      where b.status not in ('cancelled', 'expired')
-       and b.check_in < (to_date($1, 'YYYY-MM') + interval '1 month')::date
-       and b.check_out > to_date($1, 'YYYY-MM')
-     order by c.agent_name, b.check_in, b.id`,
+       and (
+         to_char(b.check_in, 'YYYY-MM') = $1
+         or to_char(b.created_at at time zone 'Asia/Kolkata', 'YYYY-MM') = $1
+       )
+     order by c.agent_name nulls last, b.guest_name, b.check_in, b.id`,
     [month],
   );
   const byAgent = new Map<number, CommissionAgent>();
