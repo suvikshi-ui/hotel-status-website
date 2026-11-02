@@ -151,10 +151,13 @@ function ReferralsPage() {
       style={{ fontFamily: "Rubik, Figtree, sans-serif" }}
     >
       <header className="border-b border-[#e4e8ee] bg-white">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
-          <Link to="/" className="leading-tight">
-            <span className="block text-[11px] font-medium tracking-wide text-[#6b7280] uppercase">Owner desk</span>
-            <span className="block text-lg font-semibold text-[#1b2a6b]">Hotel Status Residency</span>
+        <div className="mx-auto flex min-h-[4.5rem] max-w-6xl items-center justify-between gap-4 px-4 py-2">
+          <Link to="/" className="flex min-w-0 items-center gap-3">
+            <img src="/hotels/logo-digital.png?v=blue3d" alt="" className="size-12 shrink-0 sm:size-14" />
+            <span className="min-w-0 leading-tight">
+              <span className="block text-[11px] font-medium tracking-wide text-[#5b7194] uppercase">Owner desk</span>
+              <span className="block text-xl font-semibold text-[#12263d] sm:text-2xl">Hotel Status Residency</span>
+            </span>
           </Link>
           <div className="flex items-center gap-3 text-right">
             <p className="hidden text-xs text-muted sm:block">{ownerEmail}</p>
@@ -174,7 +177,7 @@ function ReferralsPage() {
           <Link to="/owner" className="border-b-2 border-transparent px-3 py-3 text-sm font-medium whitespace-nowrap text-[#6b7280] hover:text-[#1b2a6b]">
             Desk
           </Link>
-          <span className="border-b-2 border-[#f5c400] px-3 py-3 text-sm font-medium whitespace-nowrap text-[#1b2a6b]">Referrals</span>
+          <span className="border-b-2 border-[#12263d] px-3 py-3 text-sm font-medium whitespace-nowrap text-[#12263d]">Referrals</span>
         </nav>
       </header>
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
@@ -241,7 +244,7 @@ function ReferralsPage() {
               </thead>
               <tbody className="divide-y divide-ink/10">
                 {codes.map((c) => (
-                  <tr key={c.id} className={cn(c.id === search.id && "bg-cream")}>
+                  <tr key={c.id} className={cn(c.id === search.id && "bg-[#eef3f8]")}>
                     <td className="p-2 align-top">
                       <p className="font-mono font-semibold">{c.code}</p>
                       <p className="text-xs text-muted">{c.label}</p>
