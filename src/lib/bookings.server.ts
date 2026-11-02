@@ -219,8 +219,8 @@ export async function stayListAmount(roomType: string, checkIn: string, checkOut
   const rows = await sql.query<{ total: number }>(
     `select coalesce(sum(coalesce(n.price, case i.room_type when 'deluxe' then 2500 when 'suite' then 6000 else i.price end)), 0)::int * $4::int as total
      from room_inventory i
-     cross join generate_series($2::date, ($3::date - interval '1 day')::date, interval '1 day') as night
-     left join room_rate_nights n on n.room_type = i.room_type and n.night = night::date
+     cross join generate_series($2::date, ($3::date - interval '1 day')::date, interval '1 day') as gs(stay_night)
+     left join room_rate_nights n on n.room_type = i.room_type and n.night = gs.stay_night
      where i.room_type = $1 and i.is_active`,
     [roomType, checkIn, checkOut, rooms],
   );
@@ -235,10 +235,10 @@ export async function publicStayPrices(checkIn: string, checkOut: string): Promi
   const rows = await sql.query<{ room_type: string; price: number }>(
     `select i.room_type, coalesce(n.price, case i.room_type when 'deluxe' then 2500 when 'suite' then 6000 else i.price end)::int as price
      from room_inventory i
-     cross join generate_series($1::date, ($2::date - interval '1 day')::date, interval '1 day') as night
-     left join room_rate_nights n on n.room_type = i.room_type and n.night = night::date
+     cross join generate_series($1::date, ($2::date - interval '1 day')::date, interval '1 day') as gs(stay_night)
+     left join room_rate_nights n on n.room_type = i.room_type and n.night = gs.stay_night
      where i.is_active
-     order by i.sort_order, i.room_type, night`,
+     order by i.sort_order, i.room_type, gs.stay_night`,
     [checkIn, checkOut],
   );
   const grouped = new Map<string, number[]>();
