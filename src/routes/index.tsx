@@ -22,13 +22,13 @@ import {
   ArrowUpDown,
   Clock,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Lightbox, PhotoGallery } from "@/components/photo-gallery";
 import { SearchPanel } from "@/components/search-panel";
 import { PageShell } from "@/components/site-chrome";
 import { Button } from "@/components/ui/button";
 import { formatInr, todayIso, tomorrowIso } from "@/lib/format";
-import { listStayPrices } from "@/lib/bookings.functions";
+import { listPublicRooms } from "@/lib/bookings.functions";
 import { AMENITIES, GALLERY, HOTEL, type AmenityId, type RoomType } from "@/lib/hotels";
 
 const AMENITY_ICON: Record<AmenityId, typeof Wifi> = {
@@ -61,10 +61,11 @@ const AMENITY_ICON: Record<AmenityId, typeof Wifi> = {
 };
 
 export const Route = createFileRoute("/")({
+  staleTime: 0,
   loader: async () => {
     try {
-      const nights = await listStayPrices({ data: { checkIn: todayIso(), checkOut: tomorrowIso() } });
-      return { prices: Object.fromEntries(nights.map((room) => [room.id, room.perNight])) };
+      const rooms = await listPublicRooms();
+      return { prices: Object.fromEntries(rooms.map((room) => [room.id, room.price])) };
     } catch {
       return { prices: null as Record<string, number> | null };
     }
@@ -77,7 +78,24 @@ const COUNT_WORDS = ["No", "One", "Two", "Three", "Four", "Five"];
 function Home() {
   const roomItems = HOTEL.amenities.filter((id) => AMENITIES[id].group === "Room");
   const hotelItems = HOTEL.amenities.filter((id) => AMENITIES[id].group === "Hotel");
-  const { prices } = Route.useLoaderData();
+  const loaded = Route.useLoaderData().prices;
+  const [prices, setPrices] = useState(loaded);
+  useEffect(() => {
+    let live = true;
+    const load = () => {
+      listPublicRooms()
+        .then((rooms) => {
+          if (live) setPrices(Object.fromEntries(rooms.map((room) => [room.id, room.price])));
+        })
+        .catch(() => {});
+    };
+    load();
+    window.addEventListener("focus", load);
+    return () => {
+      live = false;
+      window.removeEventListener("focus", load);
+    };
+  }, []);
   // Only the room types the owner shows on the website, at the owner-set price.
   const rooms = HOTEL.rooms
     .filter((room) => (prices ? room.id in prices : room.id !== "super-deluxe"))

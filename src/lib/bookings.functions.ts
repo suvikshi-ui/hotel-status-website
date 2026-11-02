@@ -108,7 +108,7 @@ export const checkAvailability = createServerFn({ method: "POST" })
   });
 
 /** Room types guests can see and book, with the owner-set nightly price. */
-export const listPublicRooms = createServerFn({ method: "GET" }).handler(async (): Promise<PublicRoomType[]> => {
+export const listPublicRooms = createServerFn({ method: "POST" }).handler(async (): Promise<PublicRoomType[]> => {
   await noStore();
   return publicRoomTypes();
 });
@@ -124,7 +124,14 @@ export const listStayPrices = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await noStore();
     if (data.checkOut <= data.checkIn) return [];
-    return publicStayPrices(data.checkIn, data.checkOut);
+    try {
+      const priced = await publicStayPrices(data.checkIn, data.checkOut);
+      if (priced.length > 0) return priced;
+    } catch {
+      // Date rates are optional. The saved nightly rent still has to show.
+    }
+    const rooms = await publicRoomTypes();
+    return rooms.map((room) => ({ id: room.id, perNight: room.price, total: room.price, flat: true }));
   });
 
 /** Guest-side check of a referral code: only the guest discount is revealed. */
