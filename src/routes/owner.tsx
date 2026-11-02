@@ -217,9 +217,9 @@ type Actions = {
 
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-lg border border-[#e4e8ee] bg-white p-4 shadow-sm">
+    <div className="min-w-0 overflow-hidden rounded-lg border border-[#e4e8ee] bg-white p-3 shadow-sm">
       <dt className="text-xs font-medium text-[#6b7280]">{label}</dt>
-      <dd className="mt-1 text-3xl font-semibold text-[#1b2a6b] tabular-nums">{value}</dd>
+      <dd className="mt-1 text-base font-semibold leading-tight text-[#1b2a6b] tabular-nums sm:text-lg">{value}</dd>
     </div>
   );
 }
@@ -236,7 +236,7 @@ function Dashboard({ rows, actions }: { rows: BookingRow[]; actions: Actions }) 
   return (
     <>
       <h1 className="text-2xl font-semibold text-[#1b2a6b]">Today</h1>
-      <dl className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
+      <dl className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3">
         <Stat label="Arrivals today" value={arrivals.length} />
         <Stat label="Departures today" value={departures.length} />
         <Stat label="In house" value={inHouse.length} />

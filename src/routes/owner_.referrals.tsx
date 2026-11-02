@@ -33,12 +33,18 @@ export const Route = createFileRoute("/owner_/referrals")({
   component: ReferralsPage,
   head: () => ({
     meta: [{ title: "Referrals · Owner desk" }, { name: "robots", content: "noindex" }],
+    links: [
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap",
+      },
+    ],
   }),
 });
 
 const REFRESH_MS = 20_000;
-const field = "h-10 w-full border border-ink/20 bg-transparent px-2 text-sm text-ink";
-const label = "flex flex-col gap-1 text-[11px] tracking-[0.12em] text-muted uppercase";
+const field = "h-10 w-full rounded-md border border-[#d5dbe3] bg-white px-2 text-sm text-[#1c2434]";
+const label = "flex flex-col gap-1 text-[11px] font-medium text-[#6b7280]";
 
 function istMonthNow(): string {
   return new Date(Date.now() + 330 * 60_000).toISOString().slice(0, 7);
@@ -140,11 +146,15 @@ function ReferralsPage() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-paper text-ink">
-      <header className="border-b border-ink/10">
-        <div className="mx-auto flex h-20 max-w-6xl items-center justify-between gap-4 px-4">
-          <Link to="/" className="font-display text-xl leading-tight font-semibold sm:text-2xl">
-            Hotel Status Residency
+    <div
+      className="flex min-h-dvh flex-col bg-[#f3f5f8] text-[#1c2434]"
+      style={{ fontFamily: "Rubik, Figtree, sans-serif" }}
+    >
+      <header className="border-b border-[#e4e8ee] bg-white">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
+          <Link to="/" className="leading-tight">
+            <span className="block text-[11px] font-medium tracking-wide text-[#6b7280] uppercase">Owner desk</span>
+            <span className="block text-lg font-semibold text-[#1b2a6b]">Hotel Status Residency</span>
           </Link>
           <div className="flex items-center gap-3 text-right">
             <p className="hidden text-xs text-muted sm:block">{ownerEmail}</p>
@@ -161,17 +171,17 @@ function ReferralsPage() {
           </div>
         </div>
         <nav className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-4">
-          <Link to="/owner" className="border-b-2 border-transparent px-3 py-3 text-xs tracking-[0.14em] whitespace-nowrap text-muted uppercase hover:text-ink">
-            ← Desk
+          <Link to="/owner" className="border-b-2 border-transparent px-3 py-3 text-sm font-medium whitespace-nowrap text-[#6b7280] hover:text-[#1b2a6b]">
+            Desk
           </Link>
-          <span className="border-b-2 border-gold px-3 py-3 text-xs tracking-[0.14em] whitespace-nowrap uppercase">Referrals</span>
+          <span className="border-b-2 border-[#f5c400] px-3 py-3 text-sm font-medium whitespace-nowrap text-[#1b2a6b]">Referrals</span>
         </nav>
       </header>
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="font-display text-4xl font-semibold">Referrals</h1>
-            <p className="mt-2 max-w-2xl text-sm text-ink-soft">
+            <h1 className="text-2xl font-semibold text-[#1b2a6b]">Referrals</h1>
+            <p className="mt-2 max-w-2xl text-sm text-[#5c6570]">
               Codes for agents. The guest discount comes off the booking total before payment. The agent commission is
               what the hotel owes the agent, worked out on the price before the discount. Updates every 20 seconds.
             </p>
@@ -212,9 +222,9 @@ function ReferralsPage() {
         ) : codes.length === 0 ? (
           <p className="mt-6 text-sm text-muted">No referral codes yet. Create one with “New code”.</p>
         ) : (
-          <div className="mt-6 overflow-x-auto border border-ink/15">
+          <div className="mt-6 overflow-x-auto rounded-lg border border-[#e4e8ee] bg-white">
             <table className="w-full min-w-[1000px] text-sm">
-              <thead className="bg-cream text-left text-[11px] tracking-[0.12em] text-muted uppercase">
+              <thead className="bg-[#1b2a6b] text-left text-[11px] font-medium text-white">
                 <tr>
                   <th className="p-2">Code</th>
                   <th className="p-2">Agent</th>
@@ -359,8 +369,8 @@ function CodeForm({
   }
 
   return (
-    <form onSubmit={submit} className="mt-6 border border-ink/15 bg-cream p-4">
-      <h2 className="font-display text-2xl font-semibold">{id ? "Edit code" : "New referral code"}</h2>
+    <form onSubmit={submit} className="mt-6 rounded-lg border border-[#e4e8ee] bg-white p-4 shadow-sm">
+      <h2 className="text-lg font-semibold text-[#1b2a6b]">{id ? "Edit code" : "New referral code"}</h2>
       <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <label className={label}>
           Name / label *
@@ -519,11 +529,11 @@ function CodeDetail({
   }
 
   return (
-    <section className="mt-8 border border-ink/15 p-4">
+    <section className="mt-8 rounded-lg border border-[#e4e8ee] bg-white p-4 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-xs tracking-[0.16em] text-gold uppercase">{code.label}</p>
-          <h2 className="font-mono text-3xl font-semibold">{code.code}</h2>
+          <p className="text-xs font-medium text-[#6b7280]">{code.label}</p>
+          <h2 className="text-2xl font-semibold text-[#1b2a6b]">{code.code}</h2>
           <dl className="mt-3 grid gap-x-8 gap-y-1 text-sm sm:grid-cols-2">
             <div>Agent name: <strong>{code.agent_name}</strong></div>
             <div>Agent phone: {code.agent_phone || "—"}</div>
@@ -548,7 +558,7 @@ function CodeDetail({
         <Tile label="Agent commission unpaid (all time)" value={formatInr(code.earnings_unpaid)} />
       </dl>
       <div className="mt-6 flex flex-wrap items-end justify-between gap-3">
-        <h3 className="font-display text-2xl font-semibold">Bookings with this code</h3>
+        <h3 className="text-lg font-semibold text-[#1b2a6b]">Bookings with this code</h3>
         <label className={label}>
           Month (IST, by booking date)
           <select className={field} value={month} onChange={(e) => setMonth(e.target.value)}>
@@ -574,7 +584,7 @@ function CodeDetail({
       ) : (
         <div className="mt-3 overflow-x-auto">
           <table className="w-full min-w-[820px] text-sm">
-            <thead className="text-left text-[11px] tracking-[0.12em] text-muted uppercase">
+            <thead className="bg-[#1b2a6b] text-left text-[11px] font-medium text-white">
               <tr>
                 <th className="p-2">Booking</th>
                 <th className="p-2">Guest</th>
@@ -622,9 +632,9 @@ function CodeDetail({
 
 function Tile({ label: text, value }: { label: string; value: string }) {
   return (
-    <div className="border border-ink/15 bg-cream p-3">
-      <dt className="text-[11px] tracking-[0.12em] text-muted uppercase">{text}</dt>
-      <dd className="mt-1 font-display text-2xl tabular-nums">{value}</dd>
+    <div className="min-w-0 overflow-hidden rounded-lg border border-[#e4e8ee] bg-white p-3 shadow-sm">
+      <dt className="text-xs font-medium text-[#6b7280]">{text}</dt>
+      <dd className="mt-1 text-base font-semibold leading-tight text-[#1b2a6b] tabular-nums sm:text-lg">{value}</dd>
     </div>
   );
 }

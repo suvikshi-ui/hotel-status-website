@@ -90,16 +90,16 @@ export function CommissionSheet() {
     <>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-4xl font-semibold">Agent commission</h1>
-          <p className="mt-2 max-w-2xl text-sm text-ink-soft">
+          <h1 className="text-2xl font-semibold text-[#1b2a6b]">Agent commission</h1>
+          <p className="mt-2 max-w-2xl text-sm text-[#5c6570]">
             Make this sheet at the end of the month. It lists every guest whose stay falls in that month and who booked through an agent.
             Commission is due only on confirmed stays. The last column is whether that commission has been paid to the agent.
           </p>
         </div>
-        <label className="flex flex-col gap-1 text-[11px] tracking-[0.12em] text-muted uppercase">
+        <label className="flex flex-col gap-1 text-[11px] font-medium text-[#6b7280]">
           Month
           <select
-            className="h-10 border border-ink/20 bg-transparent px-2 text-sm text-ink"
+            className="h-10 rounded-md border border-[#d5dbe3] bg-white px-2 text-sm text-[#1c2434]"
             value={month}
             onChange={(event) => setMonth(event.target.value)}
           >
@@ -119,9 +119,9 @@ export function CommissionSheet() {
           ["Already paid", formatInr(totals.paid)],
           ["Still to pay", formatInr(totals.toPay)],
         ].map(([label, value]) => (
-          <div key={label} className="border border-ink/15 bg-cream p-4">
-            <dt className="text-[11px] tracking-[0.16em] text-muted uppercase">{label}</dt>
-            <dd className="mt-1 font-display text-3xl tabular-nums">{value}</dd>
+          <div key={label} className="min-w-0 overflow-hidden rounded-lg border border-[#e4e8ee] bg-white p-3 shadow-sm">
+            <dt className="text-xs font-medium text-[#6b7280]">{label}</dt>
+            <dd className="mt-1 text-base font-semibold leading-tight text-[#1b2a6b] tabular-nums sm:text-lg">{value}</dd>
           </div>
         ))}
       </dl>
@@ -137,9 +137,9 @@ export function CommissionSheet() {
               <section key={agent.id}>
                 <div className="flex flex-wrap items-end justify-between gap-3">
                   <div>
-                    <p className="text-xs tracking-[0.16em] text-gold uppercase">{agent.code} · {agent.agent_percent}%</p>
-                    <h2 className="font-display text-3xl font-semibold">{agent.agent_name}</h2>
-                    <p className="mt-1 text-sm text-ink-soft">
+                    <p className="text-xs font-medium text-[#1b2a6b]">{agent.code} · {agent.agent_percent}%</p>
+                    <h2 className="text-lg font-semibold text-[#1b2a6b]">{agent.agent_name}</h2>
+                    <p className="mt-1 text-sm text-[#5c6570]">
                       {agent.agent_phone || "No phone"}
                       {agent.agent_email ? ` · ${agent.agent_email}` : ""}
                       {agent.label ? ` · ${agent.label}` : ""}
@@ -158,9 +158,9 @@ export function CommissionSheet() {
                     </Button>
                   ) : null}
                 </div>
-                <div className="mt-3 overflow-x-auto border border-ink/15">
+                <div className="mt-3 overflow-x-auto rounded-lg border border-[#e4e8ee] bg-white">
                   <table className="w-full min-w-[1100px] text-sm">
-                    <thead className="bg-cream text-left text-[11px] tracking-[0.12em] text-muted uppercase">
+                    <thead className="bg-[#1b2a6b] text-left text-[11px] font-medium text-white">
                       <tr>
                         <th className="p-2">Booking</th>
                         <th className="p-2">Guest</th>
