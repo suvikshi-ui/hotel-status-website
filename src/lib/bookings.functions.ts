@@ -18,6 +18,7 @@ import {
   publicAvailability,
   publicRoomTypes,
   roomPrice,
+  stayListAmount,
   type PublicAvailability,
   type PublicRoomType,
   type RoomsLeft,
@@ -123,12 +124,29 @@ export const checkReferralCode = createServerFn({ method: "POST" })
     }
   });
 
-/** The server prices the stay from the owner-set price; the browser total is only a preview. */
+/** The server prices the stay from the date rates, falling back to the default nightly price. */
 async function stayTotal(roomType: string, checkIn: string, checkOut: string, rooms: number): Promise<number> {
   const room = await roomPrice(roomType);
   if (!room || !room.active) throw new Error("That room type is not available to book.");
-  return room.price * rooms * nightsBetween(checkIn, checkOut);
+  const total = await stayListAmount(roomType, checkIn, checkOut, rooms);
+  if (total < 1) throw new Error("That room type is not available to book.");
+  return total;
 }
+
+export const quoteStay = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      roomType: z.enum(["deluxe", "super-deluxe", "suite"]),
+      checkIn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      checkOut: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      rooms: z.number().int().min(1).max(8),
+    }),
+  )
+  .handler(async ({ data }): Promise<number> => {
+    await noStore();
+    if (data.checkOut <= data.checkIn) return 0;
+    return stayTotal(data.roomType, data.checkIn, data.checkOut, data.rooms);
+  });
 
 export const createBooking = createServerFn({ method: "POST" })
   .validator(bookingInput)

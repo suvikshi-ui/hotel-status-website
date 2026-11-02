@@ -211,6 +211,20 @@ export async function roomPrice(roomType: string): Promise<{ price: number; acti
   return r ? { price: Number(r.price), active: Boolean(r.is_active) } : null;
 }
 
+/** List price for a stay. Each night uses its date rate, or the room's default price. */
+export async function stayListAmount(roomType: string, checkIn: string, checkOut: string, rooms: number): Promise<number> {
+  const sql = await getSql();
+  const rows = await sql.query<{ total: number }>(
+    `select coalesce(sum(coalesce(n.price, i.price)), 0)::int * $4::int as total
+     from room_inventory i
+     cross join generate_series($2::date, ($3::date - interval '1 day')::date, interval '1 day') as night
+     left join room_rate_nights n on n.room_type = i.room_type and n.night = night::date
+     where i.room_type = $1 and i.is_active`,
+    [roomType, checkIn, checkOut, rooms],
+  );
+  return Number(rows[0]?.total ?? 0);
+}
+
 /** Rooms still free for every night of [checkIn, checkOut), per room type. */
 export async function roomsLeft(checkIn: string, checkOut: string): Promise<RoomsLeft> {
   const sql = await getSql();

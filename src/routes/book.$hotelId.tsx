@@ -10,6 +10,7 @@ import {
   checkAvailability,
   checkReferralCode,
   listPublicRooms,
+  quoteStay,
   type AvailabilityLevel,
   type BookingOptions,
   type PublicAvailability,
@@ -141,7 +142,21 @@ function BookPage() {
   const room = visibleRooms.find((item) => item.id === roomId) ?? visibleRooms[0];
   const datesOk = checkOut > checkIn;
   const nights = datesOk ? nightsBetween(checkIn, checkOut) : 0;
-  const listTotal = nights * room.price * rooms;
+  const [quoted, setQuoted] = useState<number | null>(null);
+  useEffect(() => {
+    if (!datesOk) {
+      setQuoted(null);
+      return;
+    }
+    let live = true;
+    quoteStay({ data: { roomType: room.id as "deluxe" | "suite" | "super-deluxe", checkIn, checkOut, rooms } })
+      .then((total) => live && setQuoted(total))
+      .catch(() => live && setQuoted(null));
+    return () => {
+      live = false;
+    };
+  }, [datesOk, room.id, checkIn, checkOut, rooms]);
+  const listTotal = quoted ?? nights * room.price * rooms;
   const discount = referral ? Math.floor((listTotal * referral.guestPercent) / 100) : 0;
   const total = listTotal - discount;
   const level = datesOk ? avail[room.id] : undefined;
