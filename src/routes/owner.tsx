@@ -16,7 +16,7 @@ import {
   type RoomStatus,
 } from "@/lib/bookings.functions";
 import { ownerSession, signOutOwnerDesk } from "@/lib/owner-auth.functions";
-import { ownerCommissionPaid, ownerRoomSettings, ownerUpdateRoomSetting, type RoomSetting } from "@/lib/referrals.functions";
+import { ownerCommissionPaid } from "@/lib/referrals.functions";
 import { formatInr, formatLongDate, formatShortDate, nightsBetween, todayIso } from "@/lib/format";
 import { paymentLabel, ROOM_LABELS } from "@/lib/booking-labels";
 import { cn } from "@/lib/utils";
@@ -538,7 +538,7 @@ function Rooms() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-[#1b2a6b]">Rooms</h1>
-          <p className="mt-1 text-sm text-[#5c6570]">Free rooms on the selected night, then block dates and set the nightly rate.</p>
+          <p className="mt-1 text-sm text-[#5c6570]">Free rooms on the selected night, then block dates and set date rates.</p>
         </div>
         <label className="flex flex-col text-[11px] font-medium text-[#6b7280]">
           Date
@@ -583,7 +583,6 @@ function Rooms() {
       </p>
       <DateBlocks />
       <RateCalendar />
-      <RoomSettings only={["deluxe", "suite"]} />
     </>
   );
 }
@@ -695,81 +694,5 @@ function BookingPage({ row, actions, onClose }: { row: BookingRow; actions: Acti
         </section>
       ) : null}
     </div>
-  );
-}
-
-function RoomSettings({ only }: { only?: string[] }) {
-  const [list, setList] = useState<RoomSetting[] | null>(null);
-  const [draft, setDraft] = useState<Record<string, string>>({});
-  const [msg, setMsg] = useState<string | null>(null);
-  const [busy, setBusy] = useState<string | null>(null);
-  useEffect(() => {
-    ownerRoomSettings().then(setList, (e: unknown) => setMsg(e instanceof Error ? e.message : "Could not load room types."));
-  }, []);
-  async function save(r: RoomSetting, isActive: boolean) {
-    const price = Math.round(Number(draft[r.room_type] ?? r.price));
-    if (!Number.isFinite(price) || price < 1) {
-      setMsg("Enter a nightly price of at least ₹1.");
-      return;
-    }
-    setBusy(r.room_type);
-    setMsg(null);
-    try {
-      setList(await ownerUpdateRoomSetting({ data: { room_type: r.room_type as "deluxe" | "super-deluxe" | "suite", price, is_active: isActive } }));
-      setDraft((d) => {
-        const { [r.room_type]: _gone, ...rest } = d;
-        return rest;
-      });
-      setMsg(`${roomName(r.room_type)} saved.`);
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : "Could not save.");
-    } finally {
-      setBusy(null);
-    }
-  }
-  return (
-    <section className="mt-8">
-      <h2 className="text-lg font-semibold text-[#1b2a6b]">Default nightly rent</h2>
-      <p className="mt-2 text-sm text-[#5c6570]">
-        Used on any date that has no special rate in the month list above.
-      </p>
-      {msg ? <p className="mt-3 text-sm text-ink-soft">{msg}</p> : null}
-      <div className="mt-4 grid gap-3 md:grid-cols-2">
-        {list
-          ? list
-              .filter((r) => !only || only.includes(r.room_type))
-              .map((r) => (
-              <div key={r.room_type} className="rounded-lg border border-[#e4e8ee] bg-white p-4 shadow-sm">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-lg font-semibold text-[#1b2a6b]">{roomName(r.room_type)}</p>
-                  <span className={cn("border px-2 py-0.5 text-xs", r.is_active ? "border-success/50 text-success" : "border-ink/20 text-muted")}>
-                    {r.is_active ? "Shown on website" : "Hidden"}
-                  </span>
-                </div>
-                <label className="mt-3 flex flex-col text-[11px] font-medium text-[#6b7280]">
-                  Price per night (₹)
-                  <input
-                    type="number"
-                    min={1}
-                    step={1}
-                    inputMode="numeric"
-                    className="h-10 rounded-md border border-[#d5dbe3] bg-white px-2 text-sm"
-                    value={draft[r.room_type] ?? String(r.price)}
-                    onChange={(e) => setDraft((d) => ({ ...d, [r.room_type]: e.target.value }))}
-                  />
-                </label>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Button size="sm" variant="ink" disabled={busy === r.room_type} onClick={() => save(r, r.is_active)}>
-                    Save price
-                  </Button>
-                  <Button size="sm" variant="outline" disabled={busy === r.room_type} onClick={() => save(r, !r.is_active)}>
-                    {r.is_active ? "Hide from website" : "Show on website"}
-                  </Button>
-                </div>
-              </div>
-            ))
-          : <div className="glass h-28 md:col-span-3" />}
-      </div>
-    </section>
   );
 }
