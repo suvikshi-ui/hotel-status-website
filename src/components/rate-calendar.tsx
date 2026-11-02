@@ -67,7 +67,7 @@ export function RateCalendar() {
         <div>
           <h2 className="text-lg font-semibold text-[#1b2a6b]">Date rates</h2>
           <p className="mt-1 max-w-xl text-sm text-[#5c6570]">
-            Set one rate from a date to a date. The month list shows what each night costs. A date with no special rate uses the default nightly rent.
+            Set one rate from a date to a date. The website shows that rate. A date you have not updated stays at ₹2,500 for Deluxe and ₹6,000 for Suite.
           </p>
         </div>
         <div className="flex items-center gap-2">

@@ -196,7 +196,9 @@ export type PublicRoomType = { id: string; price: number };
 export async function publicRoomTypes(): Promise<PublicRoomType[]> {
   const sql = await getSql();
   const rows = await sql.query<{ room_type: string; price: number }>(
-    `select room_type, price from room_inventory where is_active order by sort_order, room_type`,
+    `select room_type,
+            case room_type when 'deluxe' then 2500 when 'suite' then 6000 else price end as price
+     from room_inventory where is_active order by sort_order, room_type`,
   );
   return rows.map((r) => ({ id: r.room_type, price: Number(r.price) }));
 }
@@ -215,7 +217,7 @@ export async function roomPrice(roomType: string): Promise<{ price: number; acti
 export async function stayListAmount(roomType: string, checkIn: string, checkOut: string, rooms: number): Promise<number> {
   const sql = await getSql();
   const rows = await sql.query<{ total: number }>(
-    `select coalesce(sum(coalesce(n.price, i.price)), 0)::int * $4::int as total
+    `select coalesce(sum(coalesce(n.price, case i.room_type when 'deluxe' then 2500 when 'suite' then 6000 else i.price end)), 0)::int * $4::int as total
      from room_inventory i
      cross join generate_series($2::date, ($3::date - interval '1 day')::date, interval '1 day') as night
      left join room_rate_nights n on n.room_type = i.room_type and n.night = night::date
@@ -231,7 +233,7 @@ export type PublicStayPrice = { id: string; perNight: number; total: number; fla
 export async function publicStayPrices(checkIn: string, checkOut: string): Promise<PublicStayPrice[]> {
   const sql = await getSql();
   const rows = await sql.query<{ room_type: string; price: number }>(
-    `select i.room_type, coalesce(n.price, i.price)::int as price
+    `select i.room_type, coalesce(n.price, case i.room_type when 'deluxe' then 2500 when 'suite' then 6000 else i.price end)::int as price
      from room_inventory i
      cross join generate_series($1::date, ($2::date - interval '1 day')::date, interval '1 day') as night
      left join room_rate_nights n on n.room_type = i.room_type and n.night = night::date

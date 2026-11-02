@@ -28,7 +28,7 @@ import { SearchPanel } from "@/components/search-panel";
 import { PageShell } from "@/components/site-chrome";
 import { Button } from "@/components/ui/button";
 import { formatInr, todayIso, tomorrowIso } from "@/lib/format";
-import { listPublicRooms } from "@/lib/bookings.functions";
+import { listStayPrices } from "@/lib/bookings.functions";
 import { AMENITIES, GALLERY, HOTEL, type AmenityId, type RoomType } from "@/lib/hotels";
 
 const AMENITY_ICON: Record<AmenityId, typeof Wifi> = {
@@ -64,8 +64,8 @@ export const Route = createFileRoute("/")({
   staleTime: 0,
   loader: async () => {
     try {
-      const rooms = await listPublicRooms();
-      return { prices: Object.fromEntries(rooms.map((room) => [room.id, room.price])) };
+      const nights = await listStayPrices({ data: { checkIn: todayIso(), checkOut: tomorrowIso() } });
+      return { prices: Object.fromEntries(nights.map((room) => [room.id, room.perNight])) };
     } catch {
       return { prices: null as Record<string, number> | null };
     }
@@ -83,9 +83,9 @@ function Home() {
   useEffect(() => {
     let live = true;
     const load = () => {
-      listPublicRooms()
-        .then((rooms) => {
-          if (live) setPrices(Object.fromEntries(rooms.map((room) => [room.id, room.price])));
+      listStayPrices({ data: { checkIn: todayIso(), checkOut: tomorrowIso() } })
+        .then((nights) => {
+          if (live) setPrices(Object.fromEntries(nights.map((room) => [room.id, room.perNight])));
         })
         .catch(() => {});
     };

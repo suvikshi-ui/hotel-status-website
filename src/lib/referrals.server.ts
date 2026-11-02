@@ -346,7 +346,7 @@ export async function monthRates(roomType: string, month: string): Promise<Night
   const sql = await getSql();
   const rows = await sql.query<{ night: string; price: number; custom: boolean }>(
     `select to_char(d::date, 'YYYY-MM-DD') as night,
-            coalesce(n.price, i.price)::int as price,
+            coalesce(n.price, case i.room_type when 'deluxe' then 2500 when 'suite' then 6000 else i.price end)::int as price,
             n.price is not null as custom
      from generate_series(($2 || '-01')::date, (($2 || '-01')::date + interval '1 month' - interval '1 day')::date, interval '1 day') as d
      join room_inventory i on i.room_type = $1
