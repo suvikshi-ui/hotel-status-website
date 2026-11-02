@@ -338,3 +338,33 @@ export async function updateRoomSetting(roomType: string, price: number, isActiv
   const sql = await getSql();
   await sql.query(`update room_inventory set price = $2, is_active = $3 where room_type = $1`, [roomType, price, isActive]);
 }
+
+export type NightRate = { night: string; price: number; custom: boolean };
+
+/** Every night of a month, with the rate that applies (date rate or the default). */
+export async function monthRates(roomType: string, month: string): Promise<NightRate[]> {
+  const sql = await getSql();
+  const rows = await sql.query<{ night: string; price: number; custom: boolean }>(
+    `select to_char(d::date, 'YYYY-MM-DD') as night,
+            coalesce(n.price, i.price)::int as price,
+            n.price is not null as custom
+     from generate_series(($2 || '-01')::date, (($2 || '-01')::date + interval '1 month' - interval '1 day')::date, interval '1 day') as d
+     join room_inventory i on i.room_type = $1
+     left join room_rate_nights n on n.room_type = i.room_type and n.night = d::date
+     order by d`,
+    [roomType, month],
+  );
+  return rows.map((r) => ({ night: r.night, price: num(r.price), custom: Boolean(r.custom) }));
+}
+
+/** Set one price on every night from start through end, inclusive. */
+export async function setRateRange(roomType: string, start: string, end: string, price: number): Promise<void> {
+  const sql = await getSql();
+  await sql.query(
+    `insert into room_rate_nights (room_type, night, price)
+     select $1, d::date, $4
+     from generate_series($2::date, $3::date, interval '1 day') as d
+     on conflict (room_type, night) do update set price = excluded.price`,
+    [roomType, start, end, price],
+  );
+}

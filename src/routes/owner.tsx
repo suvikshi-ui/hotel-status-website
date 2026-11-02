@@ -3,6 +3,7 @@ import { addDays, format, parseISO } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DateBlocks } from "@/components/date-blocks";
+import { RateCalendar } from "@/components/rate-calendar";
 import { CommissionSheet } from "@/components/commission-sheet";
 import {
   cancelOwnerBooking,
@@ -38,13 +39,12 @@ export const Route = createFileRoute("/owner")({
   }),
 });
 
-type Tab = "dashboard" | "bookings" | "arrivals" | "rooms" | "rates" | "commission";
+type Tab = "dashboard" | "bookings" | "arrivals" | "rooms" | "commission";
 const TABS: { id: Tab; label: string }[] = [
   { id: "dashboard", label: "Dashboard" },
   { id: "bookings", label: "Bookings" },
   { id: "arrivals", label: "Arrivals / Departures" },
   { id: "rooms", label: "Rooms" },
-  { id: "rates", label: "Room rates" },
   { id: "commission", label: "Commission" },
 ];
 
@@ -196,8 +196,6 @@ function OwnerPage() {
           <ArrivalsDepartures rows={rows} actions={actions} />
         ) : tab === "rooms" ? (
           <Rooms />
-        ) : tab === "rates" ? (
-          <RoomRates />
         ) : (
           <CommissionSheet />
         )}
@@ -584,6 +582,7 @@ function Rooms() {
         Free is total minus booked minus blocked for that night. A minus number means more rooms are taken than you have.
       </p>
       <DateBlocks />
+      <RateCalendar />
       <RoomSettings only={["deluxe", "suite"]} />
     </>
   );
@@ -699,18 +698,6 @@ function BookingPage({ row, actions, onClose }: { row: BookingRow; actions: Acti
   );
 }
 
-function RoomRates() {
-  return (
-    <>
-      <h1 className="text-2xl font-semibold text-[#1b2a6b]">Room rates</h1>
-      <p className="mt-2 max-w-2xl text-sm text-[#5c6570]">
-        Set the nightly rent for Deluxe and Suite. The price you save here is the price guests see on the website, and the price used for new bookings.
-      </p>
-      <RoomSettings only={["deluxe", "suite"]} />
-    </>
-  );
-}
-
 function RoomSettings({ only }: { only?: string[] }) {
   const [list, setList] = useState<RoomSetting[] | null>(null);
   const [draft, setDraft] = useState<Record<string, string>>({});
@@ -742,9 +729,9 @@ function RoomSettings({ only }: { only?: string[] }) {
   }
   return (
     <section className="mt-8">
-      <h2 className="text-lg font-semibold text-[#1b2a6b]">Nightly rent</h2>
+      <h2 className="text-lg font-semibold text-[#1b2a6b]">Default nightly rent</h2>
       <p className="mt-2 text-sm text-[#5c6570]">
-        Enter the rent in rupees and press Save price. Refresh the public site to see the new rate.
+        Used on any date that has no special rate in the month list above.
       </p>
       {msg ? <p className="mt-3 text-sm text-ink-soft">{msg}</p> : null}
       <div className="mt-4 grid gap-3 md:grid-cols-2">

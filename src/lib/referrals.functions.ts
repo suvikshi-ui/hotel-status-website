@@ -1,3 +1,4 @@
+export type { NightRate } from "@/lib/referrals.server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { ownerMiddleware } from "@/lib/owner-auth.functions";
@@ -14,13 +15,17 @@ import {
   setReferralActive,
   updateReferral,
   updateRoomSetting,
+  monthRates,
+  setRateRange,
+  type NightRate,
   type CommissionAgent,
+  type CommissionStay,
   type ReferralBooking,
   type ReferralSummary,
   type RoomSetting,
 } from "@/lib/referrals.server";
 
-export type { ReferralBooking, ReferralSummary, RoomSetting, CommissionAgent };
+export type { ReferralBooking, ReferralSummary, RoomSetting, CommissionAgent, CommissionStay };
 
 async function noStore() {
   const { setResponseHeader } = await import("@tanstack/react-start/server");
@@ -158,4 +163,34 @@ export const ownerUpdateRoomSetting = createServerFn({ method: "POST" })
     await noStore();
     await updateRoomSetting(data.room_type, data.price, data.is_active);
     return roomSettings();
+  });
+
+const roomType = z.enum(["deluxe", "super-deluxe", "suite"]);
+const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+
+export const ownerMonthRates = createServerFn({ method: "POST" })
+  .middleware([ownerMiddleware])
+  .validator(z.object({ room_type: roomType, month: z.string().regex(/^\d{4}-\d{2}$/) }))
+  .handler(async ({ data }): Promise<NightRate[]> => {
+    await noStore();
+    return monthRates(data.room_type, data.month);
+  });
+
+export const ownerSetRateRange = createServerFn({ method: "POST" })
+  .middleware([ownerMiddleware])
+  .validator(
+    z.object({
+      room_type: roomType,
+      start: isoDate,
+      end: isoDate,
+      price: z.number().int().min(1).max(1_000_000),
+    }),
+  )
+  .handler(async ({ data }): Promise<NightRate[]> => {
+    await noStore();
+    if (data.end < data.start) throw new Error("The end date must be on or after the start date.");
+    const span = (Date.parse(data.end) - Date.parse(data.start)) / 86_400_000;
+    if (span > 366) throw new Error("Set at most one year at a time.");
+    await setRateRange(data.room_type, data.start, data.end, data.price);
+    return monthRates(data.room_type, data.start.slice(0, 7));
   });
