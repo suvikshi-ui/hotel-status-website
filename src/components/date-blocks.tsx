@@ -4,7 +4,7 @@ import { addBlock, listBlocks, removeBlock, type DateBlock } from "@/lib/booking
 import { ROOM_LABELS } from "@/lib/booking-labels";
 
 const SOURCES = ["makemytrip", "fabhotels", "brevistay", "walk-in", "maintenance", "other"] as const;
-const field = "h-10 border border-ink/20 bg-transparent px-2 text-sm";
+const field = "h-10 rounded-md border border-[#d5dbe3] bg-white px-2 text-sm";
 
 /** Owner tool: hold rooms sold elsewhere so the website cannot double-book them. */
 export function DateBlocks() {
@@ -43,9 +43,9 @@ export function DateBlocks() {
   }
 
   return (
-    <section className="mt-10 border-t border-ink/10 pt-8">
-      <h2 className="font-display text-2xl font-semibold">Block dates</h2>
-      <p className="mt-2 max-w-2xl text-sm text-terracotta">
+    <section className="mt-8 rounded-lg border border-[#e4e8ee] bg-white p-4 shadow-sm">
+      <h2 className="text-lg font-semibold text-[#1b2a6b]">Block dates</h2>
+      <p className="mt-2 max-w-2xl text-sm text-[#5c6570]">
         The website is not connected to MakeMyTrip, FabHotels or Brevistay. When a room is sold there, block it here
         straight away (and close it there when a website booking comes in), or the same room can be sold twice.
       </p>

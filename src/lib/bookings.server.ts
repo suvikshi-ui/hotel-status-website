@@ -369,7 +369,9 @@ export async function roomStatusFor(date: string): Promise<RoomStatus[]> {
                  and b.check_in <= $1::date and b.check_out > $1::date), 0)::int as booked,
        coalesce((select sum(d.rooms) from date_blocks d where d.room_type = i.room_type
                  and d.start_date <= $1::date and d.end_date > $1::date), 0)::int as blocked
-     from room_inventory i order by i.rooms desc`,
+     from room_inventory i
+     where i.is_active
+     order by i.rooms desc`,
     [date],
   );
   return rows.map((r) => {
