@@ -29,6 +29,12 @@ export const Route = createFileRoute("/owner")({
   component: OwnerPage,
   head: () => ({
     meta: [{ title: "Owner desk · Hotel Status Residency" }, { name: "robots", content: "noindex" }],
+    links: [
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap",
+      },
+    ],
   }),
 });
 
@@ -126,14 +132,19 @@ function OwnerPage() {
   const openRow = rows?.find((row) => row.id === openId) ?? null;
 
   return (
-    <div className="flex min-h-dvh flex-col bg-paper text-ink">
-      <header className="border-b border-ink/10">
-        <div className="mx-auto flex h-20 max-w-6xl items-center justify-between gap-4 px-4">
-          <Link to="/" className="font-display text-xl leading-tight font-semibold sm:text-2xl">
-            Hotel Status Residency
+    <div
+      className="flex min-h-dvh flex-col bg-[#f3f5f8] text-[#1c2434]"
+      style={{ fontFamily: "Rubik, Figtree, sans-serif" }}
+    >
+      <header className="border-b border-[#e4e8ee] bg-white">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
+          <Link to="/" className="leading-tight">
+            <span className="block text-[11px] font-medium tracking-wide text-[#6b7280] uppercase">Owner desk</span>
+            <span className="block text-lg font-semibold text-[#1b2a6b]">Hotel Status Residency</span>
           </Link>
           <div className="flex items-center gap-3 text-right">
-            <p className="hidden text-xs text-muted sm:block">{ownerEmail}</p>
+            <p className="text-sm font-medium text-[#1b2a6b]">{format(new Date(), "EEE, d MMM yyyy")}</p>
+            <p className="hidden text-xs text-[#6b7280] sm:block">{ownerEmail}</p>
             <Button
               size="sm"
               variant="outline"
@@ -153,8 +164,8 @@ function OwnerPage() {
               type="button"
               onClick={() => setTab(item.id)}
               className={cn(
-                "border-b-2 px-3 py-3 text-xs tracking-[0.14em] whitespace-nowrap uppercase",
-                tab === item.id ? "border-gold text-ink" : "border-transparent text-muted hover:text-ink",
+                "border-b-2 px-3 py-3 text-sm font-medium whitespace-nowrap",
+                tab === item.id ? "border-[#f5c400] text-[#1b2a6b]" : "border-transparent text-[#6b7280] hover:text-[#1b2a6b]",
               )}
             >
               {item.label}
@@ -162,7 +173,7 @@ function OwnerPage() {
           ))}
           <Link
             to="/owner/referrals"
-            className="border-b-2 border-transparent px-3 py-3 text-xs tracking-[0.14em] whitespace-nowrap text-muted uppercase hover:text-ink"
+            className="border-b-2 border-transparent px-3 py-3 text-sm font-medium whitespace-nowrap text-[#6b7280] hover:text-[#1b2a6b]"
           >
             Referrals
           </Link>
@@ -206,9 +217,9 @@ type Actions = {
 
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="border border-ink/15 bg-cream p-4">
-      <dt className="text-[11px] tracking-[0.16em] text-muted uppercase">{label}</dt>
-      <dd className="mt-1 font-display text-3xl tabular-nums">{value}</dd>
+    <div className="rounded-lg border border-[#e4e8ee] bg-white p-4 shadow-sm">
+      <dt className="text-xs font-medium text-[#6b7280]">{label}</dt>
+      <dd className="mt-1 text-3xl font-semibold text-[#1b2a6b] tabular-nums">{value}</dd>
     </div>
   );
 }
@@ -224,7 +235,7 @@ function Dashboard({ rows, actions }: { rows: BookingRow[]; actions: Actions }) 
   const due = confirmed.reduce((sum, row) => sum + (row.stay_status === "checked_out" ? 0 : row.balance), 0);
   return (
     <>
-      <h1 className="font-display text-4xl font-semibold">Dashboard</h1>
+      <h1 className="text-2xl font-semibold text-[#1b2a6b]">Today</h1>
       <dl className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
         <Stat label="Arrivals today" value={arrivals.length} />
         <Stat label="Departures today" value={departures.length} />
@@ -241,7 +252,7 @@ function Dashboard({ rows, actions }: { rows: BookingRow[]; actions: Actions }) 
         <DayList title="Arriving today" rows={arrivals} actions={actions} kind="arrival" />
         <DayList title="Departing today" rows={departures} actions={actions} kind="departure" />
       </div>
-      <h2 className="mt-10 font-display text-2xl font-semibold">Latest bookings</h2>
+      <h2 className="mt-10 text-lg font-semibold text-[#1b2a6b]">Latest bookings</h2>
       <BookingsTable rows={rows.slice(0, 8)} actions={actions} compact />
     </>
   );
@@ -266,7 +277,7 @@ function DayList({
       {rows.length === 0 ? (
         <p className="mt-2 text-sm text-muted">None.</p>
       ) : (
-        <ul className="mt-2 divide-y divide-ink/10 border border-ink/15 bg-cream">
+        <ul className="mt-2 divide-y divide-[#e4e8ee] rounded-lg border border-[#e4e8ee] bg-white">
           {rows.map((row) => (
             <li key={row.id} className="flex flex-wrap items-center justify-between gap-2 p-3 text-sm">
               <button type="button" className="text-left" onClick={() => actions.open(row.id)}>
@@ -321,7 +332,7 @@ function matchesStatus(row: BookingRow, filter: string): boolean {
   return row.status === filter;
 }
 
-const th = "px-3 py-2 text-left text-[11px] font-medium tracking-[0.12em] whitespace-nowrap text-muted uppercase";
+const th = "bg-[#1b2a6b] px-3 py-2 text-left text-[11px] font-medium whitespace-nowrap text-white";
 const td = "px-3 py-2 whitespace-nowrap";
 
 function BookingsTable({ rows, actions, compact }: { rows: BookingRow[]; actions: Actions; compact?: boolean }) {
@@ -356,7 +367,7 @@ function BookingsTable({ rows, actions, compact }: { rows: BookingRow[]; actions
       <th className={th}>
         <button
           type="button"
-          className="uppercase"
+          className="text-left text-white uppercase"
           onClick={() => {
             if (sort === key) setDesc(!desc);
             else {
@@ -372,12 +383,12 @@ function BookingsTable({ rows, actions, compact }: { rows: BookingRow[]; actions
     );
   }
 
-  const input = "h-10 border border-ink/20 bg-transparent px-2 text-sm";
+  const input = "h-10 rounded-md border border-[#d5dbe3] bg-white px-2 text-sm";
   return (
     <>
       {!compact ? (
         <>
-          <h1 className="font-display text-4xl font-semibold">Bookings</h1>
+          <h1 className="text-2xl font-semibold text-[#1b2a6b]">Bookings</h1>
           <div className="mt-6 flex flex-wrap items-end gap-3">
             <input
               className={cn(input, "min-w-56 flex-1")}
@@ -392,12 +403,12 @@ function BookingsTable({ rows, actions, compact }: { rows: BookingRow[]; actions
                 </option>
               ))}
             </select>
-            <label className="flex flex-col text-[11px] text-muted uppercase">
-              Stay from
+            <label className="flex flex-col text-[11px] font-medium text-[#6b7280]">
+              Check-in from
               <input type="date" className={input} value={from} onChange={(e) => setFrom(e.target.value)} />
             </label>
-            <label className="flex flex-col text-[11px] text-muted uppercase">
-              to
+            <label className="flex flex-col text-[11px] font-medium text-[#6b7280]">
+              Check-out to
               <input type="date" className={input} value={to} onChange={(e) => setTo(e.target.value)} />
             </label>
             {query || status !== "all" || from || to ? (
@@ -409,7 +420,7 @@ function BookingsTable({ rows, actions, compact }: { rows: BookingRow[]; actions
           <p className="mt-3 text-xs text-muted">{list.length} bookings</p>
         </>
       ) : null}
-      <div className="mt-3 overflow-x-auto border border-ink/15 bg-cream">
+      <div className="mt-3 overflow-x-auto rounded-lg border border-[#e4e8ee] bg-white">
         <table className="w-full text-sm tabular-nums">
           <thead className="border-b border-ink/15">
             <tr>
