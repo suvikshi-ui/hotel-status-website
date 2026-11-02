@@ -17,6 +17,7 @@ import {
   listTakenStays,
   publicAvailability,
   publicRoomTypes,
+  publicStayPrices,
   roomPrice,
   stayListAmount,
   type PublicAvailability,
@@ -108,8 +109,23 @@ export const checkAvailability = createServerFn({ method: "POST" })
 
 /** Room types guests can see and book, with the owner-set nightly price. */
 export const listPublicRooms = createServerFn({ method: "GET" }).handler(async (): Promise<PublicRoomType[]> => {
+  await noStore();
   return publicRoomTypes();
 });
+
+/** Owner date rates for a stay, so the website shows the same price as the desk. */
+export const listStayPrices = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      checkIn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      checkOut: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    }),
+  )
+  .handler(async ({ data }) => {
+    await noStore();
+    if (data.checkOut <= data.checkIn) return [];
+    return publicStayPrices(data.checkIn, data.checkOut);
+  });
 
 /** Guest-side check of a referral code: only the guest discount is revealed. */
 export const checkReferralCode = createServerFn({ method: "POST" })
