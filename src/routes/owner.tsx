@@ -185,7 +185,9 @@ function OwnerPage() {
           <p className="mb-4 text-sm text-ink-soft">Razorpay is not connected, so guests do not get a pay link.</p>
         ) : null}
         {!rows ? (
-          <div className="glass h-40" />
+          <div className="h-40 rounded-lg bg-white" />
+        ) : openRow ? (
+          <BookingPage row={openRow} actions={actions} onClose={() => setOpenId(null)} />
         ) : tab === "dashboard" ? (
           <Dashboard rows={rows} actions={actions} />
         ) : tab === "bookings" ? (
@@ -200,7 +202,6 @@ function OwnerPage() {
           <CommissionSheet />
         )}
       </main>
-      {openRow ? <BookingDrawer row={openRow} actions={actions} onClose={() => setOpenId(null)} /> : null}
     </div>
   );
 }
@@ -534,149 +535,83 @@ function Rooms() {
       live = false;
     };
   }, [date]);
-  const total = status?.reduce(
-    (acc, r) => ({ capacity: acc.capacity + r.capacity, booked: acc.booked + r.booked, blocked: acc.blocked + r.blocked, available: acc.available + r.available }),
-    { capacity: 0, booked: 0, blocked: 0, available: 0 },
-  );
   return (
     <>
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="font-display text-4xl font-semibold">Rooms</h1>
-        <label className="flex flex-col text-[11px] text-muted uppercase">
-          Night of
+        <div>
+          <h1 className="text-2xl font-semibold text-[#1b2a6b]">Rooms</h1>
+          <p className="mt-1 text-sm text-[#5c6570]">Free rooms on the selected night, then block dates and set the nightly rate.</p>
+        </div>
+        <label className="flex flex-col text-[11px] font-medium text-[#6b7280]">
+          Date
           <input
             type="date"
-            className="h-10 border border-ink/20 bg-transparent px-2 text-sm text-ink"
+            className="h-10 rounded-md border border-[#d5dbe3] bg-white px-2 text-sm"
             value={date}
             onChange={(e) => e.target.value && setDate(e.target.value)}
           />
         </label>
       </div>
       {error ? <p className="mt-3 text-sm text-terracotta">{error}</p> : null}
-      <div className="mt-6 grid gap-3 md:grid-cols-4">
+      <div className="mt-6 grid gap-3 md:grid-cols-2">
         {status
-          ? [...status, ...(total ? [{ room_type: "All rooms", ...total }] : [])].map((r) => (
-              <div key={r.room_type} className="border border-ink/15 bg-cream p-4">
-                <p className="text-xs tracking-[0.16em] text-gold uppercase">{roomName(r.room_type)}</p>
-                <p className="mt-1 font-display text-4xl tabular-nums">
-                  {r.available}
-                  <span className="text-lg text-muted"> / {r.capacity} free</span>
-                </p>
-                <div className="mt-3 flex h-2 overflow-hidden bg-ink/10">
-                  <div className="bg-success" style={{ width: `${(r.booked / Math.max(1, r.capacity)) * 100}%` }} />
-                  <div className="bg-terracotta" style={{ width: `${(r.blocked / Math.max(1, r.capacity)) * 100}%` }} />
+          ? status.map((r) => {
+              const free = r.capacity - r.booked - r.blocked;
+              return (
+                <div key={r.room_type} className="rounded-lg border border-[#e4e8ee] bg-white p-4 shadow-sm">
+                  <p className="text-sm font-semibold text-[#1b2a6b]">{roomName(r.room_type)}</p>
+                  <dl className="mt-3 grid grid-cols-4 gap-2">
+                    {[
+                      ["Free", free],
+                      ["Booked", r.booked],
+                      ["Blocked", r.blocked],
+                      ["Total", r.capacity],
+                    ].map(([label, value]) => (
+                      <div key={String(label)} className="min-w-0">
+                        <dt className="text-[11px] font-medium text-[#6b7280]">{label}</dt>
+                        <dd className={cn("mt-1 text-lg font-semibold tabular-nums", label === "Free" && Number(value) < 0 ? "text-terracotta" : "text-[#1b2a6b]")}>
+                          {value}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
                 </div>
-                <p className="mt-2 text-xs text-muted tabular-nums">
-                  Booked {r.booked} · Blocked {r.blocked}
-                  {r.booked + r.blocked > r.capacity ? " · OVERBOOKED" : ""}
-                </p>
-              </div>
-            ))
-          : <div className="glass h-28 md:col-span-4" />}
+              );
+            })
+          : <div className="h-28 rounded-lg bg-white md:col-span-2" />}
       </div>
-      <p className="mt-2 text-xs text-muted">
-        Booked counts confirmed stays and unexpired payment holds for that night. Blocked counts the blocks below.
+      <p className="mt-2 text-xs text-[#6b7280]">
+        Free is total minus booked minus blocked for that night. A minus number means more rooms are taken than you have.
       </p>
       <DateBlocks />
+      <RoomSettings only={["deluxe", "suite"]} />
     </>
   );
 }
 
-function BookingDrawer({ row, actions, onClose }: { row: BookingRow; actions: Actions; onClose: () => void }) {
+function BookingPage({ row, actions, onClose }: { row: BookingRow; actions: Actions; onClose: () => void }) {
   const busy = actions.busyId === row.id;
   const live = isLive(row);
   const line = (label: string, value: React.ReactNode) => (
-    <div className="flex justify-between gap-4 border-b border-ink/10 py-2 text-sm">
-      <dt className="text-muted">{label}</dt>
-      <dd className="text-right tabular-nums">{value}</dd>
+    <div className="grid gap-1 border-b border-[#e4e8ee] py-3 sm:grid-cols-[160px_1fr]">
+      <dt className="text-xs font-medium text-[#6b7280]">{label}</dt>
+      <dd className="text-sm font-medium break-words text-[#1c2434] tabular-nums">{value}</dd>
     </div>
   );
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-ink/40" onClick={onClose}>
-      <aside
-        className="h-full w-full max-w-md overflow-y-auto bg-paper p-6 shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-label={`Booking ${row.id}`}
-      >
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-xs tracking-widest text-muted uppercase">{row.id}</p>
-            <h2 className="mt-1 font-display text-3xl font-semibold">{row.guest_name}</h2>
-            <div className="mt-2">
-              <StatusChip row={row} />
-            </div>
+    <div>
+      <button type="button" onClick={onClose} className="text-sm font-medium text-[#1b2a6b]">
+        ← Back
+      </button>
+      <div className="mt-4 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-medium text-[#6b7280]">{row.id}</p>
+          <h1 className="mt-1 text-2xl font-semibold text-[#1b2a6b]">{row.guest_name}</h1>
+          <div className="mt-2">
+            <StatusChip row={row} />
           </div>
-          <Button size="sm" variant="ghost" onClick={onClose}>
-            Close
-          </Button>
         </div>
-        <h3 className="mt-6 text-xs tracking-[0.16em] text-gold uppercase">Guest</h3>
-        <dl>
-          {line("Phone", <a href={`tel:+91${row.phone}`}>{row.phone}</a>)}
-          {line("Email", <a href={`mailto:${row.email}`}>{row.email}</a>)}
-          {line("Guests", row.guests)}
-        </dl>
-        <h3 className="mt-6 text-xs tracking-[0.16em] text-gold uppercase">Stay</h3>
-        <dl>
-          {line("Room", `${row.rooms} × ${roomName(row.room_type)}`)}
-          {line("Check-in", formatLongDate(row.check_in))}
-          {line("Check-out", formatLongDate(row.check_out))}
-          {line("Nights", nightsBetween(row.check_in, row.check_out))}
-          {row.checked_in_at ? line("Checked in at", format(new Date(row.checked_in_at), "d MMM, HH:mm")) : null}
-          {row.checked_out_at ? line("Checked out at", format(new Date(row.checked_out_at), "d MMM, HH:mm")) : null}
-          {line("Booked on", format(new Date(row.created_at), "d MMM yyyy, HH:mm"))}
-        </dl>
-        <h3 className="mt-6 text-xs tracking-[0.16em] text-gold uppercase">Payment</h3>
-        <dl>
-          {line("Total", formatInr(row.total_amount))}
-          {line("Paid", formatInr(row.amount_paid))}
-          {line("Due", live ? formatInr(row.balance) : "—")}
-          {line("Mode", { full: "Full online", advance: "Advance online", pay_at_hotel: "Pay at hotel" }[row.payment_mode] ?? row.payment_mode)}
-          {line("Status", paymentLabel(row.payment_status))}
-          {row.payment_id ? line("Razorpay payment", row.payment_id) : null}
-          {row.refund_amount > 0
-            ? line("Refund", `${formatInr(row.refund_amount)} · ${row.refund_status === "failed" ? "refund by hand" : row.refund_status}`)
-            : null}
-          {row.invoice_number
-            ? line(
-                "Invoice",
-                <a className="underline" href={`/invoice/${row.id}?t=${row.manage_token}`} target="_blank" rel="noreferrer">
-                  {row.invoice_number}
-                </a>,
-              )
-            : null}
-          {row.status === "pending_payment" && row.payment_url
-            ? line("Pay link", <a className="underline" href={row.payment_url} target="_blank" rel="noreferrer">Razorpay link</a>)
-            : null}
-        </dl>
-        {row.referral_code_id ? (
-          <>
-            <h3 className="mt-6 text-xs tracking-[0.16em] text-gold uppercase">Referral</h3>
-            <dl>
-              {line(
-                "Code",
-                <Link to="/owner/referrals" search={{ id: row.referral_code_id }} className="underline">
-                  {row.referral_code ?? `#${row.referral_code_id}`}
-                </Link>,
-              )}
-              {row.list_amount !== null ? line("Price before discount", formatInr(row.list_amount)) : null}
-              {line("Guest discount", `− ${formatInr(row.guest_discount_amount)}`)}
-              {line("Agent commission", formatInr(row.agent_commission_amount))}
-              {line("Agent commission paid", row.agent_commission_paid_at ? `Yes · ${format(new Date(row.agent_commission_paid_at), "d MMM yyyy")}` : "No")}
-            </dl>
-            <Button
-              size="sm"
-              variant="outline"
-              className="mt-2"
-              disabled={busy}
-              onClick={() => actions.commission(row.id, !row.agent_commission_paid_at)}
-            >
-              {row.agent_commission_paid_at ? "Mark agent commission unpaid" : "Mark agent commission paid"}
-            </Button>
-          </>
-        ) : null}
-        <div className="mt-6 flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2">
           <StayButtons row={row} actions={actions} />
           {row.status === "confirmed" && row.balance > 0 ? (
             <Button size="sm" variant="outline" disabled={busy} onClick={() => actions.collect(row.id)}>
@@ -689,7 +624,77 @@ function BookingDrawer({ row, actions, onClose }: { row: BookingRow; actions: Ac
             </Button>
           ) : null}
         </div>
-      </aside>
+      </div>
+      <div className="mt-6 grid gap-4 lg:grid-cols-3">
+        <section className="rounded-lg border border-[#e4e8ee] bg-white p-4 shadow-sm">
+          <h2 className="text-sm font-semibold text-[#1b2a6b]">Guest</h2>
+          <dl className="mt-2">
+            {line("Phone", <a href={`tel:+91${row.phone}`}>{row.phone}</a>)}
+            {line("Email", <a href={`mailto:${row.email}`}>{row.email}</a>)}
+            {line("Guests", row.guests)}
+          </dl>
+        </section>
+        <section className="rounded-lg border border-[#e4e8ee] bg-white p-4 shadow-sm">
+          <h2 className="text-sm font-semibold text-[#1b2a6b]">Stay</h2>
+          <dl className="mt-2">
+            {line("Room", `${row.rooms} × ${roomName(row.room_type)}`)}
+            {line("Check-in", formatLongDate(row.check_in))}
+            {line("Check-out", formatLongDate(row.check_out))}
+            {line("Nights", nightsBetween(row.check_in, row.check_out))}
+            {row.checked_in_at ? line("Checked in", format(new Date(row.checked_in_at), "d MMM, HH:mm")) : null}
+            {row.checked_out_at ? line("Checked out", format(new Date(row.checked_out_at), "d MMM, HH:mm")) : null}
+            {line("Booked on", format(new Date(row.created_at), "d MMM yyyy, HH:mm"))}
+          </dl>
+        </section>
+        <section className="rounded-lg border border-[#e4e8ee] bg-white p-4 shadow-sm">
+          <h2 className="text-sm font-semibold text-[#1b2a6b]">Payment</h2>
+          <dl className="mt-2">
+            {line("Total", formatInr(row.total_amount))}
+            {line("Paid", formatInr(row.amount_paid))}
+            {line("Due", live ? formatInr(row.balance) : "—")}
+            {line("Mode", { full: "Full online", advance: "Advance online", pay_at_hotel: "Pay at hotel" }[row.payment_mode] ?? row.payment_mode)}
+            {line("Status", paymentLabel(row.payment_status))}
+            {row.payment_id ? line("Razorpay", row.payment_id) : null}
+            {row.refund_amount > 0
+              ? line("Refund", `${formatInr(row.refund_amount)} · ${row.refund_status === "failed" ? "refund by hand" : row.refund_status}`)
+              : null}
+            {row.invoice_number
+              ? line(
+                  "Invoice",
+                  <a className="underline" href={`/invoice/${row.id}?t=${row.manage_token}`} target="_blank" rel="noreferrer">
+                    {row.invoice_number}
+                  </a>,
+                )
+              : null}
+          </dl>
+        </section>
+      </div>
+      {row.referral_code_id ? (
+        <section className="mt-4 rounded-lg border border-[#e4e8ee] bg-white p-4 shadow-sm">
+          <h2 className="text-sm font-semibold text-[#1b2a6b]">Referral</h2>
+          <dl className="mt-2 max-w-xl">
+            {line(
+              "Code",
+              <Link to="/owner/referrals" search={{ id: row.referral_code_id }} className="underline">
+                {row.referral_code ?? `#${row.referral_code_id}`}
+              </Link>,
+            )}
+            {row.list_amount !== null ? line("Before discount", formatInr(row.list_amount)) : null}
+            {line("Guest discount", `− ${formatInr(row.guest_discount_amount)}`)}
+            {line("Agent commission", formatInr(row.agent_commission_amount))}
+            {line("Commission paid", row.agent_commission_paid_at ? format(new Date(row.agent_commission_paid_at), "d MMM yyyy") : "Not yet")}
+          </dl>
+          <Button
+            size="sm"
+            variant="outline"
+            className="mt-3"
+            disabled={busy}
+            onClick={() => actions.commission(row.id, !row.agent_commission_paid_at)}
+          >
+            {row.agent_commission_paid_at ? "Mark commission unpaid" : "Mark commission paid"}
+          </Button>
+        </section>
+      ) : null}
     </div>
   );
 }
@@ -697,8 +702,8 @@ function BookingDrawer({ row, actions, onClose }: { row: BookingRow; actions: Ac
 function RoomRates() {
   return (
     <>
-      <h1 className="font-display text-4xl font-semibold">Room rates</h1>
-      <p className="mt-2 max-w-2xl text-sm text-ink-soft">
+      <h1 className="text-2xl font-semibold text-[#1b2a6b]">Room rates</h1>
+      <p className="mt-2 max-w-2xl text-sm text-[#5c6570]">
         Set the nightly rent for Deluxe and Suite. The price you save here is the price guests see on the website, and the price used for new bookings.
       </p>
       <RoomSettings only={["deluxe", "suite"]} />
@@ -737,8 +742,8 @@ function RoomSettings({ only }: { only?: string[] }) {
   }
   return (
     <section className="mt-8">
-      <h2 className="font-display text-3xl font-semibold">Nightly rent</h2>
-      <p className="mt-2 text-sm text-ink-soft">
+      <h2 className="text-lg font-semibold text-[#1b2a6b]">Nightly rent</h2>
+      <p className="mt-2 text-sm text-[#5c6570]">
         Enter the rent in rupees and press Save price. Refresh the public site to see the new rate.
       </p>
       {msg ? <p className="mt-3 text-sm text-ink-soft">{msg}</p> : null}
@@ -747,21 +752,21 @@ function RoomSettings({ only }: { only?: string[] }) {
           ? list
               .filter((r) => !only || only.includes(r.room_type))
               .map((r) => (
-              <div key={r.room_type} className="border border-ink/15 bg-cream p-4">
+              <div key={r.room_type} className="rounded-lg border border-[#e4e8ee] bg-white p-4 shadow-sm">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="font-display text-2xl font-semibold">{roomName(r.room_type)}</p>
+                  <p className="text-lg font-semibold text-[#1b2a6b]">{roomName(r.room_type)}</p>
                   <span className={cn("border px-2 py-0.5 text-xs", r.is_active ? "border-success/50 text-success" : "border-ink/20 text-muted")}>
                     {r.is_active ? "Shown on website" : "Hidden"}
                   </span>
                 </div>
-                <label className="mt-3 flex flex-col text-[11px] text-muted uppercase">
+                <label className="mt-3 flex flex-col text-[11px] font-medium text-[#6b7280]">
                   Price per night (₹)
                   <input
                     type="number"
                     min={1}
                     step={1}
                     inputMode="numeric"
-                    className="h-10 border border-ink/20 bg-transparent px-2 text-sm text-ink"
+                    className="h-10 rounded-md border border-[#d5dbe3] bg-white px-2 text-sm"
                     value={draft[r.room_type] ?? String(r.price)}
                     onChange={(e) => setDraft((d) => ({ ...d, [r.room_type]: e.target.value }))}
                   />
